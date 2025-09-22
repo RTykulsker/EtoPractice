@@ -35,7 +35,6 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.surftools.wimp.core.IDetailableMessage;
 import com.surftools.wimp.core.IMessageManager;
 import com.surftools.wimp.core.IParser;
 import com.surftools.wimp.core.MessageType;
@@ -99,15 +98,6 @@ public class ClassifierProcessor extends AbstractBaseProcessor {
         var list = tmpMessageMap.getOrDefault(parsedMessageType, new ArrayList<ExportedMessage>());
         list.add(parsedMessage);
         tmpMessageMap.put(parsedMessageType, list);
-
-        if (parsedMessage instanceof IDetailableMessage) {
-          var detailableMessage = (IDetailableMessage) parsedMessage;
-          var detailType = detailableMessage.getDetailMessageType();
-          var existingDetailList = tmpMessageMap.getOrDefault(detailType, new ArrayList<ExportedMessage>());
-          var newDetailList = detailableMessage.getDetailMessages();
-          existingDetailList.addAll(newDetailList);
-          tmpMessageMap.put(detailType, existingDetailList);
-        }
 
       } // end loop over messages
 
