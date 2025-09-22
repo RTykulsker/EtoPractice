@@ -89,6 +89,7 @@ public class PracticeGeneratorTool {
   @Option(name = "--outputDirName", usage = "path to output directory", required = true)
   private String outputDirName = null;
   private String referenceDirName = null;
+  private String exerciseYear = null;
 
   @Option(name = "--rngSeed", usage = "random number generator seed", required = false)
   private Long rngSeed = null;
@@ -137,6 +138,9 @@ public class PracticeGeneratorTool {
     }
 
     while (date.getYear() <= nowDate.getYear() + 4) {
+      exerciseYear = String.valueOf(date.getYear());
+      FileUtils.createDirectory(Path.of(referenceDirName, exerciseYear));
+
       var ord = PracticeUtils.getOrdinalDayOfWeek(date);
       generate(date, ord);
       date = date.plusDays(7);
@@ -146,7 +150,7 @@ public class PracticeGeneratorTool {
 
   private void generate(LocalDate date, int ord) {
     var messageType = MESSAGE_TYPE_MAP.get(ord);
-    var path = Path.of(referenceDirName, date.toString());
+    var path = Path.of(referenceDirName, exerciseYear, date.toString());
     FileUtils.createDirectory(path);
     switch (messageType) {
     case ICS_213:

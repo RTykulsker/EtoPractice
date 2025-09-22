@@ -109,7 +109,9 @@ public class PracticeProcessorTool {
 
       // fail fast on reading reference
       logger.info("referencePathName: " + referencePathName);
-      var referencePath = Path.of(referencePathName, exerciseDateString, messageType.toString() + ".json");
+      var exerciseYearString = String.valueOf(exerciseDate.getYear());
+      var referencePath = Path
+          .of(referencePathName, exerciseYearString, exerciseDateString, messageType.toString() + ".json");
       var jsonString = Files.readString(referencePath);
       var deserializer = new PracticeJsonMessageDeserializer();
       var referenceMessage = deserializer.deserialize(jsonString, messageType);
@@ -121,7 +123,7 @@ public class PracticeProcessorTool {
       var nextMessageType = PracticeGeneratorTool.MESSAGE_TYPE_MAP.get(nextOrd);
 
       var instructionPath = Path
-          .of(referencePathName + "/", nextExerciseDateString,
+          .of(referencePathName, exerciseYearString, nextExerciseDateString,
               nextExerciseDateString + "-" + nextMessageType.toString() + "_instructions.txt");
       var instructionText = Files.readString(instructionPath);
       var sb = new StringBuilder();
