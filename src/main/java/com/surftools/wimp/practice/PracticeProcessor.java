@@ -321,7 +321,7 @@ public class PracticeProcessor extends SingleMessageFeedbackProcessor {
         count(sts.test("Function should be #EV", refEntry.function(), entry.function()));
         count(sts.test("Channel Name should be #EV", refEntry.channelName(), entry.channelName()));
         count(sts.test("Assignment should be #EV", refEntry.assignment(), entry.assignment()));
-        count(sts.test("RX Freq should be #EV", refEntry.rxFrequency(), entry.rxFrequency()));
+        count(sts.testDouble("RX Freq should be #EV", refEntry.rxFrequency(), entry.rxFrequency()));
 
         if (refEntry.rxNarrowWide().isEmpty()) {
           count(sts.testIfEmpty("RX N or W should be empty", entry.rxNarrowWide()));
@@ -332,13 +332,13 @@ public class PracticeProcessor extends SingleMessageFeedbackProcessor {
         if (refEntry.rxTone().isEmpty()) {
           count(sts.testIfEmpty("RX Tone should be empty", entry.rxTone()));
         } else {
-          count(sts.test("RX Tone should be #EV", refEntry.rxTone(), entry.rxTone()));
+          count(sts.testDouble("RX Tone should be #EV", refEntry.rxTone(), entry.rxTone()));
         }
 
         if (refEntry.txFrequency().isEmpty()) {
           count(sts.testIfEmpty("TX Freq should be empty", entry.txFrequency()));
         } else {
-          count(sts.test("TX Freq should be #EV", refEntry.txFrequency(), entry.txFrequency()));
+          count(sts.testDouble("TX Freq should be #EV", refEntry.txFrequency(), entry.txFrequency()));
         }
 
         if (refEntry.txNarrowWide().isEmpty()) {
@@ -350,7 +350,7 @@ public class PracticeProcessor extends SingleMessageFeedbackProcessor {
         if (refEntry.txTone().isEmpty()) {
           count(sts.testIfEmpty("TX Tone should be empty", entry.txTone()));
         } else {
-          count(sts.test("TX Tone should be #EV", refEntry.txTone(), entry.txTone()));
+          count(sts.testDouble("TX Tone should be #EV", refEntry.txTone(), entry.txTone()));
         }
 
         count(sts.test("Mode should be #EV", refEntry.mode(), entry.mode()));
@@ -567,6 +567,7 @@ public class PracticeProcessor extends SingleMessageFeedbackProcessor {
     public List<String> explanations;
     public String messageId;
     public String messageType;
+    public ExportedMessage m;
 
     public static final String perfectMessageText = "Perfect messages!";
     public static final int perfectMessageCount = 0; // in case we need to adjust
@@ -578,6 +579,7 @@ public class PracticeProcessor extends SingleMessageFeedbackProcessor {
       this.dateTime = m.sortDateTime;
       this.messageId = m.messageId;
       this.explanations = sts.getExplanations();
+      this.m = m;
     }
 
     @Override

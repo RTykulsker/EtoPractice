@@ -51,8 +51,7 @@ import com.surftools.wimp.utils.config.IConfigurationManager;
  */
 public class ClassifierProcessor extends AbstractBaseProcessor {
 
-  public final static List<MessageType> IGNORED_TYPES = List
-      .of(MessageType.EXPORTED, MessageType.REJECTS, MessageType.EYEWARN_DETAIL);
+  public final static List<MessageType> IGNORED_TYPES = List.of(MessageType.EXPORTED, MessageType.REJECTS);
 
   private static final Logger logger = LoggerFactory.getLogger(ClassifierProcessor.class);
 

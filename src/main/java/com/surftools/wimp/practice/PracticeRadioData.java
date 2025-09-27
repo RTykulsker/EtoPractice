@@ -241,13 +241,13 @@ public class PracticeRadioData {
   private RadioEntry makeSimplex(int rowNumber, BAND band, WIDTH width) {
 
     final var twoMeterSimplex = List
-        .of("146.400", "146.415", "146.430", "146.445", "146.460", "146.475", "146.490", "146.505", "146.520",
-            "146.535", "146.550", "146.565", "146.580", "146.595", "147.405", "147.420", "147.435", "147.450",
-            "147.465", "147.480", "147.495", "147.510", "147.525", "147.540", "147.555", "147.570", "147.585");
+        .of("146.400", "146.415", "146.430", "146.445", "146.460", "146.475", "146.490", "146.505", "146.535",
+            "146.550", "146.565", "146.580", "146.595", "147.405", "147.420", "147.435", "147.450", "147.465",
+            "147.480", "147.495", "147.510", "147.525", "147.540", "147.555", "147.570", "147.585");
 
     final var seventySimplex = List
-        .of("445.925", "445.950", "445.975", "446.000", "446.025", "446.050", "446.075", "446.100", "446.125",
-            "446.150", "446.175");
+        .of("445.925", "445.950", "445.975", "446.025", "446.050", "446.075", "446.100", "446.125", "446.150",
+            "446.175");
 
     var list = band == BAND.VHF ? twoMeterSimplex : seventySimplex;
     var rxFreq = list.get(rng.nextInt(list.size()));
@@ -324,7 +324,7 @@ public class PracticeRadioData {
     var entry = new RadioEntry(rowNumber, "", String.valueOf(rowNumber), //
         "InterOp", name, "public safety", //
         rxFreq, "N", "156.7", //
-        "", "N", "", //
+        "", "", "", //
         "A", "Receive only. Do not Transmit!");
     return entry;
   }
@@ -353,7 +353,7 @@ public class PracticeRadioData {
     var entry = new RadioEntry(rowNumber, "", String.valueOf(rowNumber), //
         "Marine", name, function, //
         rxFreq, "W", "", //
-        "", "W", "", //
+        "", "", "", //
         "A", "Receive only. Do not Transmit!");
     return entry;
   }

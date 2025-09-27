@@ -138,6 +138,37 @@ public class SimpleTestService implements IService {
     return internalTest(entry, predicate, wrap(value), null);
   }
 
+  public TestResult testDouble(String rawLabel, String expectedValue, String value) {
+    if (rawLabel == null) {
+      throw new IllegalArgumentException("null label");
+    }
+
+    var label = rawLabel.contains("#EV") && expectedValue != null //
+        ? rawLabel.replaceAll("#EV", expectedValue)
+        : rawLabel;
+
+    var entry = entryMap.get(label);
+    if (entry == null) {
+      ++addCount;
+      entry = new TestEntry(label, expectedValue);
+      entryMap.put(label, entry);
+    }
+
+    expectedValue = entry.expectedValue;
+    var predicate = false;
+    if (value != null) {
+      try {
+        var valueDouble = Double.valueOf(value);
+        var expectedValueDouble = Double.valueOf(expectedValue);
+        predicate = valueDouble.compareTo(expectedValueDouble) == 0;
+      } catch (Exception e) {
+        ;
+      }
+    }
+
+    return internalTest(entry, predicate, wrap(value), null);
+  }
+
   /**
    * our most common use case, with two-line output
    *
