@@ -145,7 +145,7 @@ public class PracticeProcessorTool {
       // create our configuration on the fly
       cm.putString(Key.EXERCISE_DATE, exerciseDateString);
       cm.putString(Key.EXERCISE_NAME, "ETO Weekly Practice for " + exerciseDateString);
-      cm.putString(Key.PATH, exportedMessagesPathName + File.separator + exerciseDateString);
+      cm.putString(Key.PATH, exportedMessagesPathName + File.separator + exerciseYearString + File.separator + exerciseDateString);
       cm.putBoolean(Key.OUTPUT_PATH_CLEAR_ON_START, true);
       cm.putString(Key.EXPECTED_MESSAGE_TYPES, messageType.toString());
 
