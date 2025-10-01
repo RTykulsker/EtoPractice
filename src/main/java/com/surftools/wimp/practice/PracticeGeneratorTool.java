@@ -91,8 +91,12 @@ public class PracticeGeneratorTool {
   private String referenceDirName = null;
   private String exerciseYear = null;
 
-  @Option(name = "--rngSeed", usage = "random number generator seed", required = false)
+  @Option(name = "--rngSeed", usage = "random number generator seed, default: 2025", required = false)
   private Long rngSeed = null;
+  
+  @Option(name = "--nYears", usage = "number of years to generate, default: 5 years", required = false)
+  private Integer nYears = null;
+  
 
   private final DayOfWeek TARGET_DOW = DayOfWeek.THURSDAY;
 
@@ -124,10 +128,12 @@ public class PracticeGeneratorTool {
 
     rngSeed = rngSeed == null ? Long.valueOf(2025) : rngSeed;
     logger.info("rngSeed: " + String.valueOf(rngSeed));
+    
+    nYears = nYears == null ? Integer.valueOf(5): nYears;
+    logger.info("nYears: " + nYears);
 
-    // generate 5 years worth, from beginning of "this" year, through end of "next" year
-    var nowDate = LocalDate.now();
-    var startDate = LocalDate.of(nowDate.getYear(), 1, 1);
+    // generate nYears worth, from 2025; this is for idempotency
+    var startDate = LocalDate.of(2025, 1, 1);
     var date = startDate;
     while (true) {
       var ord = PracticeUtils.getOrdinalDayOfWeek(date);
@@ -137,7 +143,7 @@ public class PracticeGeneratorTool {
       date = date.plusDays(1);
     }
 
-    while (date.getYear() <= nowDate.getYear() + 4) {
+    while (date.getYear() <= startDate.getYear() + nYears - 1) {
       exerciseYear = String.valueOf(date.getYear());
       FileUtils.createDirectory(Path.of(referenceDirName, exerciseYear));
 

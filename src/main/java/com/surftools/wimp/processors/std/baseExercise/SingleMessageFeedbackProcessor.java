@@ -103,13 +103,6 @@ public abstract class SingleMessageFeedbackProcessor extends AbstractBaseFeedbac
       windowCloseDT = LocalDateTime.from(DTF.parse(windowCloseString));
     }
 
-    var secondaryDestinationsString = cm.getAsString(Key.SECONDARY_DESTINATIONS);
-    if (secondaryDestinationsString != null) {
-      var fields = secondaryDestinationsString.split(",");
-      for (var field : fields) {
-        secondaryDestinations.add(field.toUpperCase());
-      }
-    }
   }
 
   @Override

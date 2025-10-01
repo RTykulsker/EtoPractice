@@ -83,26 +83,6 @@ public abstract class BaseReadProcessor extends AbstractBaseProcessor {
 
   public void baseInitialize(IConfigurationManager cm, IMessageManager mm) {
     isReadFilteringEnabled = cm.getAsBoolean(Key.READ_FILTER_ENABLED, false);
-
-    var expectedDestinationsString = cm.getAsString(Key.EXPECTED_DESTINATIONS);
-    if (expectedDestinationsString != null) {
-      var fields = expectedDestinationsString.split(",");
-      for (var field : fields) {
-        expectedDestinations.add(field);
-      }
-
-      logger.info("Expected Destinations: " + expectedDestinations.toString());
-    }
-
-    var secondaryDestinationsString = cm.getAsString(Key.SECONDARY_DESTINATIONS);
-    if (secondaryDestinationsString != null) {
-      var fields = secondaryDestinationsString.split(",");
-      for (var field : fields) {
-        secondaryDestinations.add(field);
-      }
-
-      logger.info("Secondary Destinations: " + secondaryDestinations.toString());
-    }
   }
 
   @Override

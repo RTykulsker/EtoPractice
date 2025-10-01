@@ -57,21 +57,6 @@ public enum Key implements IConfigurationKey {
 
   DEDUPLICATION_RULES("deduplication.rules"), // json string: {messageTypeName:rule,...}
 
-  IMAGE_MAX_SIZE("image.maxSize"), // of attached images
-
-  MULTIPLE_CHOICE_MESSAGE_TYPE("multipleChoice.messageType"), // check_in, etc.
-  MULTIPLE_CHOICE_VALID_RESPONSES("multipleChoice.validResponses"), // comma-delimited string
-  MULTIPLE_CHOICE_CORRECT_RESPONSES("multipleChoice.correctResponses"), // comma-delimited string
-
-  OVERRIDE_LOCATION_PATH("overrideLocation.path"), // path to file with override locations
-
-  P2P_TARGET_PATH("p2p.targetPath"), // for P2P processing, target (destination) definitions
-  P2P_FIELD_PATH("p2p.fieldPath"), // for P2P processing, field (source) definitions
-  P2P_DISTANCE_THRESHOLD_METERS("p2p.distanceThreshold.meters"), // for jittering
-  P2P_BEGIN_PATH("p2p.beginPath"), // for Pickup before
-  P2P_END_PATH("p2p.endPath"), // for Pickup after
-  P2P_KML_TEMPLATE_PATH("p2p.kmlTemplatePath"), // for Pickup after
-
   PIPELINE_STDIN("pipeline.stdin"), // list of input processors
   PIPELINE_STDOUT("pipeline.stdout"), // list of output processors
   PIPELINE_MAIN("pipeline.main"), // list of main processors
@@ -87,27 +72,13 @@ public enum Key implements IConfigurationKey {
   EXERCISE_WINDOW_OPEN("exerciseWindowOpen"), //
   EXERCISE_WINDOW_CLOSE("exerciseWindowClose"), //
 
-  EXPECTED_DESTINATIONS("expectedDestinations"), // comma-delimited list, like ETO-01,ETO-02
-  SECONDARY_DESTINATIONS("secondaryDestinations"), // comma-delimited list, list ETO-BK
-
   MAX_DAYS_BEFORE_LATE("maxDaysBeforeLate"), // for warning about late messages
-
-  RMS_KML_MESSAGE_TYPES("rms.kml.messageTypes"), // for supported MessageTypes in the RmsKmlProcessor
-  RMS_KML_SHOW_MESSAGE_TYPES("rms.kml.show.messageTypes"), // show message types in descriptions
-  RMS_KML_SHOW_DATES("rms.kml.show.dates"), // for dates as well as times in descriptions
-
-  RMS_HF_GATEWAYS_FILE_NAME("rms.hf_gateways.fileName"), // for getting RMS location
-  RMS_VHF_GATEWAYS_FILE_NAME("rms.vhf_gateways.fileName"), // for getting RMS location
 
   OUTBOUND_MESSAGE_ENGINE_TYPE("outboundMessage.engineType"), // PAT, WINLINK_CMS, etc
   OUTBOUND_MESSAGE_SOURCE("outboundMessage.source"), // mbo address
   OUTBOUND_MESSAGE_SENDER("outboundMessage.sender"), // from address
   OUTBOUND_MESSAGE_SUBJECT("outboundMessage.subject"), // message subject
   OUTBOUND_MESSAGE_EXTRA_CONTEXT("outboundMessage.extraContext"), // where to find extra context for specific engine
-
-  CMS_AUTHORIZATION_KEY("cms.authorizationKey"), // for CMS access
-  CMS_CACHE_CHANNELS("cms.cacheChannels"), // onto local disk
-  CMS_CACHE_TRAFFIC("cms.cacheTraffic"), // onto local disk
 
   CSV_COLUMN_CUTTER_CONFIGURATION("csvColumnCutterConfiguration"), // columns to be cut
   CSV_COLUMN_HEADER_RENAME_CONFIGURATION("csvColumnHeaderRenameConfiguration"), // columns to be renamed
