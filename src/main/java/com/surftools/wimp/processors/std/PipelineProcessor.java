@@ -95,15 +95,7 @@ public class PipelineProcessor extends AbstractBaseProcessor {
     final var PREFIXES = List
         .of( //
             "com.surftools.wimp.processors.std.", //
-            "com.surftools.wimp.processors.exercise.eto_2025.", //
-            "com.surftools.wimp.practice.", //
-            "com.surftools.wimp.processors.exercise.miro.", //
-            "com.surftools.wimp.processors.exercise.other.", //
-            "com.surftools.wimp.processors.lineBased.", //
-            "com.surftools.wimp.processors.dev.", //
-            "com.surftools.wimp.processors.exercise.eto_2024.", //
-            "com.surftools.wimp.processors.exercise.eto_2023.", //
-            "com.surftools.wimp.processors.exercise.eto_2022.", //
+            "com.surftools.wimp.practice.processors.", //
             "");
     final var SUFFIXES = List.of("Processor", "");
 

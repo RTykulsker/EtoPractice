@@ -30,7 +30,7 @@ package com.surftools.wimp.service.map;
 import com.surftools.utils.location.LatLongPair;
 import com.surftools.wimp.core.IWritableTable;
 import com.surftools.wimp.feedback.FeedbackMessage;
-import com.surftools.wimp.practice.PracticeProcessor.Summary;
+import com.surftools.wimp.practice.processors.PracticeProcessor.Summary;
 
 public record MapEntry(String label, LatLongPair location, String message) {
 

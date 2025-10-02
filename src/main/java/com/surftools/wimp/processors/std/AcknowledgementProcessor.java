@@ -59,6 +59,8 @@ import com.surftools.wimp.utils.config.IConfigurationManager;
  */
 public class AcknowledgementProcessor extends AbstractBaseProcessor {
   private static final Logger logger = LoggerFactory.getLogger(AcknowledgementProcessor.class);
+  
+  public static final String DASHES = "----------------------------------------------------------------------------------------------\n";
 
   private static final boolean LAST_LOCATION_WINS = true;
 
@@ -122,8 +124,8 @@ public class AcknowledgementProcessor extends AbstractBaseProcessor {
         sb.append("\n");
         sb.append(expectedContent);
         sb.append("\n");
-        sb.append("----------------------------------------------------------------------------------------------");
-        sb.append("\n\n");
+        sb.append(DASHES);
+        sb.append("\n");
       }
       if (ackEntry.unexpectedMessageMap.size() > 0) {
         sb.append("The following unexpected message types are acknowledged:\n");

@@ -25,7 +25,7 @@ SOFTWARE.
 
 */
 
-package com.surftools.wimp.practice;
+package com.surftools.wimp.practice.processors;
 
 import java.nio.file.Path;
 import java.time.DayOfWeek;
@@ -52,13 +52,13 @@ import com.surftools.wimp.message.Hics259Message;
 import com.surftools.wimp.message.Ics205Message;
 import com.surftools.wimp.message.Ics213Message;
 import com.surftools.wimp.message.Ics213RRMessage;
+import com.surftools.wimp.practice.generator.PracticeUtils;
+import com.surftools.wimp.practice.tools.PracticeGeneratorTool;
+import com.surftools.wimp.practice.tools.PracticeProcessorTool;
 import com.surftools.wimp.processors.std.AcknowledgementProcessor;
 import com.surftools.wimp.processors.std.WriteProcessor;
 import com.surftools.wimp.processors.std.baseExercise.SingleMessageFeedbackProcessor;
 import com.surftools.wimp.service.kml.KmlService;
-import com.surftools.wimp.service.map.MapEntry;
-import com.surftools.wimp.service.map.MapHeader;
-import com.surftools.wimp.service.map.MapService;
 import com.surftools.wimp.utils.config.IConfigurationManager;
 
 public class PracticeProcessor extends SingleMessageFeedbackProcessor {
@@ -552,10 +552,6 @@ public class PracticeProcessor extends SingleMessageFeedbackProcessor {
     super.postProcess();
 
     kmlService.finalize(Path.of(outputPath.toString(), "feedback.kml"));
-
-    var mapEntries = summaries.stream().map(s -> MapEntry.fromSummary(s)).toList();
-    var mapService = new MapService(null, null);
-    mapService.makeMap(outputPath, new MapHeader("ETO-" + dateString + "--" + messageType.name(), ""), mapEntries);
   }
 
   public class Summary implements IWritableTable {
@@ -613,13 +609,6 @@ public class PracticeProcessor extends SingleMessageFeedbackProcessor {
       var longitude = location == null ? "0.0" : location.getLongitude();
       var date = dateTime == null ? "" : dateTime.toLocalDate().toString();
       var time = dateTime == null ? "" : dateTime.toLocalTime().toString();
-      // var feedbackCount = "0";
-      // var feedback = perfectMessageText;
-
-      // if (explanations.size() > 0) {
-      // feedbackCount = String.valueOf(explanations.size() - perfectMessageCount);
-      // feedback = String.join("\n", explanations);
-      // }
 
       var nsTo = to == null ? "(null)" : to;
 

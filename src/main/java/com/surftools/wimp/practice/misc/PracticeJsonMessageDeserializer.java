@@ -25,7 +25,7 @@ SOFTWARE.
 
 */
 
-package com.surftools.wimp.practice;
+package com.surftools.wimp.practice.misc;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

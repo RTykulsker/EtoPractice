@@ -81,9 +81,8 @@
 			<version>${junit.version}</version>
 			<scope>test</scope>
 		</dependency>
-
+		
 	</dependencies>
-
 
 	<build>
 		<plugins>
@@ -126,13 +125,13 @@
 					</platforms>					
 					<programs>
 						<program>
-							<mainClass>com.surftools.wimp.practice.PracticeGeneratorTool</mainClass>
+							<mainClass>com.surftools.wimp.practice.tools.PracticeGeneratorTool</mainClass>
 							<id>ppg</id>
 						</program>								
 						<program>
-							<mainClass>com.surftools.wimp.practice.PracticeProcessorTool</mainClass>
+							<mainClass>com.surftools.wimp.practice.tools.PracticeProcessorTool</mainClass>
 							<id>ppt</id>
-						</program>
+						</program>						
 					</programs>
 				</configuration>
 			</plugin>

@@ -25,24 +25,47 @@ SOFTWARE.
 
 */
 
-package com.surftools.wimp.practice;
+package com.surftools.wimp.practice.misc;
+
+import java.util.ArrayList;
 
 import com.surftools.utils.textEditor.ITextEditor;
+import com.surftools.wimp.processors.std.AcknowledgementProcessor;
 
-public class PracticeBodyTextEditor implements ITextEditor {
+public class PracticeAllFeedbackTextEditor implements ITextEditor {
 
   @Override
   /**
-   * just change a line ...
+   * skip over all lines up to and including feedback, break on first empty line
    */
   public String edit(String source) {
-    var result = source.replaceAll("INSTRUCTIONS for ETO Exercise Instructions for", "INSTRUCTIONS for");
+    boolean inFeedback = false;
+    var inputLines = source.split("\n");
+    var outputLines = new ArrayList<String>(inputLines.length);
+    for (var line : inputLines) {   
+      if (line.equals("FEEDBACK")) {
+        inFeedback = true;
+        continue;
+      }
+
+      if (!inFeedback) {
+        continue;
+      }
+
+      if (line.isEmpty()) {
+        break;
+      }
+
+      outputLines.add(line);
+    }
+
+    var result = String.join("\n", outputLines);
     return result;
   }
 
   @Override
   public String getName() {
-    return "PracticeBody";
+    return "PracticeAllFeedback";
   }
 
 }

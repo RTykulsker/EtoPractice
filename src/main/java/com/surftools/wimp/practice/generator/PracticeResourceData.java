@@ -25,7 +25,7 @@ SOFTWARE.
 
 */
 
-package com.surftools.wimp.practice;
+package com.surftools.wimp.practice.generator;
 
 import java.nio.file.Path;
 import java.time.LocalDate;
@@ -60,7 +60,7 @@ public class PracticeResourceData {
   // static to persist across multiple ctors/months
   private static final List<List<ResourceEntry>> resourceBucket = new ArrayList<>();
 
-  PracticeResourceData(Random _rng, String dirName) {
+  public PracticeResourceData(Random _rng, String dirName) {
     rng = _rng;
 
     var dataFilePath = Path.of(dirName, "practice-resources.csv");

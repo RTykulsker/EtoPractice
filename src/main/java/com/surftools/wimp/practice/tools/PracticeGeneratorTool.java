@@ -25,7 +25,7 @@ SOFTWARE.
 
 */
 
-package com.surftools.wimp.practice;
+package com.surftools.wimp.practice.tools;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -58,11 +58,16 @@ import com.surftools.wimp.message.FieldSituationMessage;
 import com.surftools.wimp.message.Hics259Message;
 import com.surftools.wimp.message.Ics205Message;
 import com.surftools.wimp.message.Ics205Message.RadioEntry;
+import com.surftools.wimp.practice.generator.PracticeData;
+import com.surftools.wimp.practice.generator.PracticeHicsData;
+import com.surftools.wimp.practice.generator.PracticeRadioData;
+import com.surftools.wimp.practice.generator.PracticeResourceData;
+import com.surftools.wimp.practice.generator.PracticeUtils;
+import com.surftools.wimp.practice.generator.PracticeData.ExerciseIdMethod;
+import com.surftools.wimp.practice.generator.PracticeData.ListType;
+import com.surftools.wimp.practice.generator.PracticeHicsData.Types;
 import com.surftools.wimp.message.Ics213Message;
 import com.surftools.wimp.message.Ics213RRMessage;
-import com.surftools.wimp.practice.PracticeData.ExerciseIdMethod;
-import com.surftools.wimp.practice.PracticeData.ListType;
-import com.surftools.wimp.practice.PracticeHicsData.Types;
 
 /**
  * Program to generate many weeks work "data" for ETO weekly "practice" semi-automatic exercises

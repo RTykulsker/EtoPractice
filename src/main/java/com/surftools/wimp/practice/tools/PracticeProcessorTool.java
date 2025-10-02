@@ -25,7 +25,7 @@ SOFTWARE.
 
 */
 
-package com.surftools.wimp.practice;
+package com.surftools.wimp.practice.tools;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -43,6 +43,8 @@ import org.slf4j.LoggerFactory;
 
 import com.surftools.wimp.configuration.Key;
 import com.surftools.wimp.core.MessageManager;
+import com.surftools.wimp.practice.generator.PracticeUtils;
+import com.surftools.wimp.practice.misc.PracticeJsonMessageDeserializer;
 import com.surftools.wimp.processors.std.PipelineProcessor;
 import com.surftools.wimp.utils.config.impl.MemoryConfigurationManager;
 
@@ -155,11 +157,11 @@ public class PracticeProcessorTool {
       cm.putString(Key.EXERCISE_WINDOW_CLOSE, dtf.format(windowCloseDate) + " 08:00");
 
       cm.putString(Key.PIPELINE_STDIN, "Read,Classifier,Acknowledgement,Deduplication");
-      cm.putString(Key.PIPELINE_MAIN, "PracticeProcessor"); // exercise-specific processors go here!
-      cm.putString(Key.PIPELINE_STDOUT, "Write");
+      cm.putString(Key.PIPELINE_MAIN, "Practice"); // exercise-specific processors go here!
+      cm.putString(Key.PIPELINE_STDOUT, "Write,Cleanup");
 
-      cm.putString(Key.PRACTICE_ALL_FEEDBACK_TEXT_EDITOR, "com.surftools.wimp.practice.PracticeAllFeedbackTextEditor");
-      cm.putString(Key.PRACTICE_BODY_TEXT_EDITOR, "com.surftools.wimp.practice.PracticeBodyTextEditor");
+      cm.putString(Key.PRACTICE_ALL_FEEDBACK_TEXT_EDITOR, "com.surftools.wimp.practice.misc.PracticeAllFeedbackTextEditor");
+      cm.putString(Key.PRACTICE_BODY_TEXT_EDITOR, "com.surftools.wimp.practice.misc.PracticeBodyTextEditor");
 
       cm.putString(Key.OUTBOUND_MESSAGE_SOURCE, outboundMessageSource);
       cm.putString(Key.OUTBOUND_MESSAGE_SENDER, "ETO-PRACTICE");
