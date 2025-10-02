@@ -55,83 +55,82 @@ public class CleanupProcessor extends AbstractBaseProcessor {
   public void process() {
   }
 
-
   @Override
   public void postProcess() {
-	// move unused files
-	var unusedDirPath = Path.of(outputPath.toString(), "unused");
-	var unusedDirName = unusedDirPath.toString();
-	FileUtils.deleteDirectory(unusedDirPath);
-	FileUtils.makeDirIfNeeded(unusedDirPath.toString());
+    // move unused files
+    var unusedDirPath = Path.of(outputPath.toString(), "unused");
+    var unusedDirName = unusedDirPath.toString();
+    FileUtils.deleteDirectory(unusedDirPath);
+    FileUtils.makeDirIfNeeded(unusedDirPath.toString());
 
-	var outputDir = new File(outputPath.toString());
-	var outputFiles = outputDir.listFiles();
+    var outputDir = new File(outputPath.toString());
+    var outputFiles = outputDir.listFiles();
 
-	var knownUnusedList = List.of("feedback.kml","acknowledgment-winlinkExpressOutboundMessages.xml");
-	for (var outputFile : outputFiles) {
-		if (!outputFile.isFile()) {
-			continue;
-		}
+    var knownUnusedList = List.of("feedback.kml", "acknowledgment-winlinkExpressOutboundMessages.xml");
+    for (var outputFile : outputFiles) {
+      if (!outputFile.isFile()) {
+        continue;
+      }
 
-		var name = outputFile.getName();
-		if (name.endsWith(".csv") || knownUnusedList.contains(name) ) {
-			try {
-				Files.move(outputFile.toPath(), Path.of(unusedDirName, name), StandardCopyOption.ATOMIC_MOVE);
-				logger.info("moved output/" + name + " to usused/");
-			} catch (Exception e) {
-				logger.error("Exception moving file: " + outputFile.toString(),  e.getMessage());
-			}
-		}
-	}
+      var name = outputFile.getName();
+      if (name.endsWith(".csv") || knownUnusedList.contains(name)) {
+        try {
+          Files.move(outputFile.toPath(), Path.of(unusedDirName, name), StandardCopyOption.ATOMIC_MOVE);
+          logger.info("moved output/" + name + " to usused/");
+        } catch (Exception e) {
+          logger.error("Exception moving file: " + outputFile.toString(), e.getMessage());
+        }
+      }
+    }
 
-	// copy allFeedback.txt to usused
-	var allFeedbackSource = Path.of(pathName.toString(), "allFeedback.txt");
-	var allFeedbackDestination = Path.of(unusedDirName, "allFeedback.txt");
-	try {
-		Files.copy(allFeedbackSource, allFeedbackDestination, StandardCopyOption.REPLACE_EXISTING);
-		logger.info("copied allFeedback.txt to unused/");
-	} catch (Exception e) {
-		logger.error("Exception copying file: " + allFeedbackSource.toString(),  e.getMessage());
-	}
+    // copy allFeedback.txt to usused
+    var allFeedbackSource = Path.of(pathName.toString(), "allFeedback.txt");
+    var allFeedbackDestination = Path.of(unusedDirName, "allFeedback.txt");
+    try {
+      Files.copy(allFeedbackSource, allFeedbackDestination, StandardCopyOption.REPLACE_EXISTING);
+      logger.info("copied allFeedback.txt to unused/");
+    } catch (Exception e) {
+      logger.error("Exception copying file: " + allFeedbackSource.toString(), e.getMessage());
+    }
 
-	// rename chart and map files
-	outputFiles = outputDir.listFiles();
-	for (var outputFile : outputFiles) {
-		if (!outputFile.isFile()) {
-			continue;
-		}
+    // rename chart, map and Winlink import files
+    outputFiles = outputDir.listFiles();
+    for (var outputFile : outputFiles) {
+      if (!outputFile.isFile()) {
+        continue;
+      }
 
-		var name = outputFile.getName();
-		if (name.endsWith("chart.html") ) {
-			try {
-				var newFile = Path.of(outputPathName, "chart-" + dateString + ".html").toFile();
-				outputFile.renameTo(newFile);
-				logger.info("renamed chart file to: " + newFile.getName());
-			} catch (Exception e) {
-				logger.error("Exception renaming file: " + name,  e.getMessage());
-			}
-		}
+      var name = outputFile.getName();
+      if (name.endsWith("chart.html")) {
+        try {
+          var newFile = Path.of(outputPathName, "chart-" + dateString + ".html").toFile();
+          outputFile.renameTo(newFile);
+          logger.info("renamed chart file to: " + newFile.getName());
+        } catch (Exception e) {
+          logger.error("Exception renaming file: " + name, e.getMessage());
+        }
+      }
 
-		if (name.startsWith("leaflet")) {
-			try {
-				var newFile = Path.of(outputPathName, "map-" + dateString + ".html").toFile();
-				outputFile.renameTo(newFile);
-				logger.info("renamed map file to: " + newFile.getName());
-			} catch (Exception e) {
-				logger.error("Exception renaming file: " + name,  e.getMessage());
-			}
-		}
-		
-		if (name.startsWith("all-winlink")) {
-			try {
-				var newFile = Path.of(outputPathName, "Winlink_ImportMessages-" + dateString + ".xml").toFile();
-				outputFile.renameTo(newFile);
-				logger.info("renamed Winlink import file to: " + newFile.getName());
-			} catch (Exception e) {
-				logger.error("Exception renaming file: " + name,  e.getMessage());
-			}
-		}		
-	}
+      if (name.startsWith("leaflet")) {
+        try {
+          var newFile = Path.of(outputPathName, "map-" + dateString + ".html").toFile();
+          outputFile.renameTo(newFile);
+          logger.info("renamed map file to: " + newFile.getName());
+        } catch (Exception e) {
+          logger.error("Exception renaming file: " + name, e.getMessage());
+        }
+      }
+
+      if (name.startsWith("all-winlink")) {
+        try {
+          var newFile = Path.of(outputPathName, "Winlink_ImportMessages-" + dateString + ".xml").toFile();
+          outputFile.renameTo(newFile);
+          logger.info("renamed Winlink import file to: " + newFile.getName());
+        } catch (Exception e) {
+          logger.error("Exception renaming file: " + name, e.getMessage());
+        }
+      }
+    }
   }
 
 }

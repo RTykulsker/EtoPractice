@@ -30,7 +30,6 @@ package com.surftools.wimp.practice.misc;
 import java.util.ArrayList;
 
 import com.surftools.utils.textEditor.ITextEditor;
-import com.surftools.wimp.processors.std.AcknowledgementProcessor;
 
 public class PracticeAllFeedbackTextEditor implements ITextEditor {
 
@@ -42,7 +41,7 @@ public class PracticeAllFeedbackTextEditor implements ITextEditor {
     boolean inFeedback = false;
     var inputLines = source.split("\n");
     var outputLines = new ArrayList<String>(inputLines.length);
-    for (var line : inputLines) {   
+    for (var line : inputLines) {
       if (line.equals("FEEDBACK")) {
         inFeedback = true;
         continue;
