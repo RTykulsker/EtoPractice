@@ -46,7 +46,7 @@ import com.surftools.wimp.core.MessageManager;
 import com.surftools.wimp.practice.generator.PracticeUtils;
 import com.surftools.wimp.practice.misc.PracticeJsonMessageDeserializer;
 import com.surftools.wimp.processors.std.PipelineProcessor;
-import com.surftools.wimp.utils.config.impl.MemoryConfigurationManager;
+import com.surftools.wimp.utils.config.impl.PropertyFileConfigurationManager;
 
 public class PracticeProcessorTool {
   public static final String REFERENCE_MESSAGE_KEY = "referenceMessage";
@@ -61,17 +61,8 @@ public class PracticeProcessorTool {
   @Option(name = "--exerciseDate", usage = "date of practice exercise in yyyy-MM-dd format", required = true)
   private String exerciseDateString = null;
 
-  @Option(name = "--exportedMessagesPathName", usage = "path name where ExportedMessages.xml file is located", required = false)
-  private String exportedMessagesPathName = null;
-
-  @Option(name = "--referencePathName", usage = "path name where reference files are located", required = true)
-  private String referencePathName = null;
-
-  @Option(name = "--winlinkCallsign", usage = "Winlink Express callsign for sending feedback", required = true)
-  private String outboundMessageSource = null;
-
-  @Option(name = "--enableLegacy", usage = "set true to generate HICS_259 instructions on week 2", required = false)
-  private boolean enableLegacy = false;
+  @Option(name = "--config", usage = "practice onfiguration file name", required = true)
+  private String configurationFileName;
 
   public static void main(String[] args) {
     var tool = new PracticeProcessorTool();
@@ -107,16 +98,25 @@ public class PracticeProcessorTool {
           .info("Exercise Date: " + exerciseDate.toString() + ", " + PracticeUtils.getOrdinalLabel(ord)
               + " Thursday; exercise message type: " + messageType.toString());
 
-      logger.info("exportedMessagesPathName" + exportedMessagesPathName);
+      var cm = new PropertyFileConfigurationManager(configurationFileName, Key.values());
+      var exportedMessagesPathName = cm.getAsString(Key.PRACTICE_EXPORTED_MESSAGES_HOME);
+      logger.info("exportedMessages home" + exportedMessagesPathName);
 
       // fail fast on reading reference
-      logger.info("referencePathName: " + referencePathName);
+      var referencePathName = cm.getAsString(Key.PRACTICE_REFERENCE_HOME);
+      logger.info("reference home: " + referencePathName);
       var exerciseYearString = String.valueOf(exerciseDate.getYear());
       var referencePath = Path
           .of(referencePathName, exerciseYearString, exerciseDateString, messageType.toString() + ".json");
       var jsonString = Files.readString(referencePath);
       var deserializer = new PracticeJsonMessageDeserializer();
       var referenceMessage = deserializer.deserialize(jsonString, messageType);
+
+      var winlinkCallsign = cm.getAsString(Key.PRACTICE_WINLINK_CALLSIGN);
+      logger.info("Winlink callsign: " + winlinkCallsign);
+
+      var enableLegacy = cm.getAsBoolean(Key.PRACTICE_ENABLE_LEGACY, Boolean.FALSE);
+      logger.info("enable Legacy (3rd week practice instructions send on 2nd week): " + enableLegacy);
 
       final var dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
       var nextExerciseDate = exerciseDate.plusDays((ord == 2 && !enableLegacy) ? 14 : 7);
@@ -142,12 +142,12 @@ public class PracticeProcessorTool {
       }
       instructionText = sb.toString();
 
-      var cm = new MemoryConfigurationManager(Key.values());
-
-      // create our configuration on the fly
+      // create the rest of our configuration on the fly
       cm.putString(Key.EXERCISE_DATE, exerciseDateString);
       cm.putString(Key.EXERCISE_NAME, "ETO Weekly Practice for " + exerciseDateString);
-      cm.putString(Key.PATH, exportedMessagesPathName + File.separator + exerciseYearString + File.separator + exerciseDateString);
+      cm
+          .putString(Key.PATH,
+              exportedMessagesPathName + File.separator + exerciseYearString + File.separator + exerciseDateString);
       cm.putBoolean(Key.OUTPUT_PATH_CLEAR_ON_START, true);
       cm.putString(Key.EXPECTED_MESSAGE_TYPES, messageType.toString());
 
@@ -160,10 +160,11 @@ public class PracticeProcessorTool {
       cm.putString(Key.PIPELINE_MAIN, "Practice"); // exercise-specific processors go here!
       cm.putString(Key.PIPELINE_STDOUT, "Write,Cleanup");
 
-      cm.putString(Key.PRACTICE_ALL_FEEDBACK_TEXT_EDITOR, "com.surftools.wimp.practice.misc.PracticeAllFeedbackTextEditor");
-      cm.putString(Key.PRACTICE_BODY_TEXT_EDITOR, "com.surftools.wimp.practice.misc.PracticeBodyTextEditor");
+      var edPrefix = "com.surftools.wimp.practice.misc.Practice";
+      cm.putString(Key.PRACTICE_ALL_FEEDBACK_TEXT_EDITOR, edPrefix + "AllFeedbackTextEditor");
+      cm.putString(Key.PRACTICE_BODY_TEXT_EDITOR, edPrefix + "BodyTextEditor");
 
-      cm.putString(Key.OUTBOUND_MESSAGE_SOURCE, outboundMessageSource);
+      cm.putString(Key.OUTBOUND_MESSAGE_SOURCE, winlinkCallsign);
       cm.putString(Key.OUTBOUND_MESSAGE_SENDER, "ETO-PRACTICE");
       cm.putString(Key.OUTBOUND_MESSAGE_SUBJECT, "ETO Practice Exercise Feedback");
       cm.putString(Key.OUTBOUND_MESSAGE_ENGINE_TYPE, "WINLINK_EXPRESS");

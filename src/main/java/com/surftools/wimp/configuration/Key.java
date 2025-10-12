@@ -36,14 +36,14 @@ import com.surftools.wimp.utils.config.IConfigurationKey;
  *
  */
 public enum Key implements IConfigurationKey {
+  PRACTICE_EXPORTED_MESSAGES_HOME("exportedMessages.home"), // where we find exported messages
+  PRACTICE_REFERENCE_HOME("reference.home"), //
+  PRACTICE_WINLINK_CALLSIGN("winlink.callsign"), // mbo address
+  PRACTICE_ENABLE_LEGACY("enable.legacy"),
 
   PATH("path"), // path to message files
-  NEW_DATABASE_PATH("newDatabasePath"), // path to input database summary files
   OUTPUT_PATH("output.path"), // to override as subdir of path
   OUTPUT_PATH_CLEAR_ON_START("output.path.clearOnStart"), // if true contents of outputDir cleared
-
-  DATABASE_PATH("databasePath"), // path to input database summary files
-  DATABASE_ENGINE_TYPE("databaseEngineType"), // what implements the database
 
   EXPECTED_MESSAGE_TYPES("expectedMessageTypes"), // MessageTypes that we will handle
 
@@ -62,17 +62,15 @@ public enum Key implements IConfigurationKey {
   PIPELINE_MAIN("pipeline.main"), // list of main processors
 
   PRACTICE_PATH("practice.path"), // path where practice files are written
+
   PRACTICE_ALL_FEEDBACK_TEXT_EDITOR("practice.all_feedback.textEditor"), // class name of text editor for AllFeedback
   PRACTICE_BODY_TEXT_EDITOR("practice.body.textEditor"), // class name of text editor for outbound message body
 
   EXERCISE_DATE("exerciseDate"), // for Summarizer
   EXERCISE_NAME("exerciseName"), // for Summarizer
   EXERCISE_DESCRIPTION("exerciseDescription"), // for Summarizer
-  EXERCISE_ORGANIZATION("exerciseOrganization"), // for Database
   EXERCISE_WINDOW_OPEN("exerciseWindowOpen"), //
   EXERCISE_WINDOW_CLOSE("exerciseWindowClose"), //
-
-  MAX_DAYS_BEFORE_LATE("maxDaysBeforeLate"), // for warning about late messages
 
   OUTBOUND_MESSAGE_ENGINE_TYPE("outboundMessage.engineType"), // PAT, WINLINK_CMS, etc
   OUTBOUND_MESSAGE_SOURCE("outboundMessage.source"), // mbo address
@@ -80,14 +78,7 @@ public enum Key implements IConfigurationKey {
   OUTBOUND_MESSAGE_SUBJECT("outboundMessage.subject"), // message subject
   OUTBOUND_MESSAGE_EXTRA_CONTEXT("outboundMessage.extraContext"), // where to find extra context for specific engine
 
-  CSV_COLUMN_CUTTER_CONFIGURATION("csvColumnCutterConfiguration"), // columns to be cut
-  CSV_COLUMN_HEADER_RENAME_CONFIGURATION("csvColumnHeaderRenameConfiguration"), // columns to be renamed
-
   CHART_CONFIG("chartConfig"), // as a JSON blob
-
-  DYFI_DETAIL_LEVEL("dyfi.detailLevel"), // to control number of fields, etc.
-
-  WEB_SERVER_PORT("web.serverPort"), // that we listen on
 
   READ_FILTER_ENABLED("read.filterEnabled"), // to filter in/out messages by sender/from in BaseReadProcessor
   ;
