@@ -39,7 +39,8 @@ public class PracticeRadioData {
   private Random rng;
 
   private enum BONUS {
-    WX, GMRS, TAC, MARINE
+    WX, GMRS, TAC,
+    // MARINE remove marine, because descriptions too long to fit into form!!
   }
 
   private static List<BONUS> bonusBucket = new ArrayList<>();
@@ -118,9 +119,9 @@ public class PracticeRadioData {
       entry = makeTac(lineNumber);
       break;
 
-    case BONUS.MARINE:
-      entry = makeMarine(lineNumber);
-      break;
+//    case BONUS.MARINE:
+//      entry = makeMarine(lineNumber);
+//      break;
 
     default:
       break;
@@ -187,7 +188,8 @@ public class PracticeRadioData {
     double rxFreq = 0;
     if (band == BAND.VHF) {
       rxFreq = 147_000;
-      // Repeaters above 147 typically use positive offsets, while those below 147 often use negative offsets.
+      // Repeaters above 147 typically use positive offsets, while those below 147
+      // often use negative offsets.
       if (offset == OFFSET.POSITIVE) {
         rxFreq = rxFreq + (rng.nextInt(50) * 10);
       } else {
@@ -195,7 +197,8 @@ public class PracticeRadioData {
       }
     } else {
       rxFreq = 442_000;
-      // Repeaters above 442 generally use +5 offset, while those below 445 may use –5 offset
+      // Repeaters above 442 generally use +5 offset, while those below 445 may use –5
+      // offset
       if (offset == OFFSET.POSITIVE) {
         rxFreq = rxFreq + (rng.nextInt(60) * 50);
       } else {
@@ -218,13 +221,12 @@ public class PracticeRadioData {
   }
 
   private String getTone() {
-    final var list = List
-        .of( //
-            "67.0", "69.3", "71.9", "74.4", "77.0", "79.7", "82.5", "85.4", "88.5", "91.5", "94.8", "97.4", "100.0",
-            "103.5", "107.2", "110.9", "114.8", "118.8", "123.0", "127.3", "131.8", "136.5", "141.3", "146.2", "151.4",
-            "156.7", "159.8", "162.2", "165.5", "167.9", "171.3", "173.8", "177.3", "179.9", "183.5", "186.2", "189.9",
-            "192.8", "196.6", "199.5", "203.5", "206.5", "210.7", "218.1", "225.7", "229.1", "233.6", "241.8", "250.3",
-            "254.1");
+    final var list = List.of( //
+        "67.0", "69.3", "71.9", "74.4", "77.0", "79.7", "82.5", "85.4", "88.5", "91.5", "94.8", "97.4", "100.0",
+        "103.5", "107.2", "110.9", "114.8", "118.8", "123.0", "127.3", "131.8", "136.5", "141.3", "146.2", "151.4",
+        "156.7", "159.8", "162.2", "165.5", "167.9", "171.3", "173.8", "177.3", "179.9", "183.5", "186.2", "189.9",
+        "192.8", "196.6", "199.5", "203.5", "206.5", "210.7", "218.1", "225.7", "229.1", "233.6", "241.8", "250.3",
+        "254.1");
     var freq = list.get(rng.nextInt(list.size()));
 
     return freq;
@@ -240,14 +242,12 @@ public class PracticeRadioData {
 
   private RadioEntry makeSimplex(int rowNumber, BAND band, WIDTH width) {
 
-    final var twoMeterSimplex = List
-        .of("146.400", "146.415", "146.430", "146.445", "146.460", "146.475", "146.490", "146.505", "146.535",
-            "146.550", "146.565", "146.580", "146.595", "147.405", "147.420", "147.435", "147.450", "147.465",
-            "147.480", "147.495", "147.510", "147.525", "147.540", "147.555", "147.570", "147.585");
+    final var twoMeterSimplex = List.of("146.400", "146.415", "146.430", "146.445", "146.460", "146.475", "146.490",
+        "146.505", "146.535", "146.550", "146.565", "146.580", "146.595", "147.405", "147.420", "147.435", "147.450",
+        "147.465", "147.480", "147.495", "147.510", "147.525", "147.540", "147.555", "147.570", "147.585");
 
-    final var seventySimplex = List
-        .of("445.925", "445.950", "445.975", "446.025", "446.050", "446.075", "446.100", "446.125", "446.150",
-            "446.175");
+    final var seventySimplex = List.of("445.925", "445.950", "445.975", "446.025", "446.050", "446.075", "446.100",
+        "446.125", "446.150", "446.175");
 
     var list = band == BAND.VHF ? twoMeterSimplex : seventySimplex;
     var rxFreq = list.get(rng.nextInt(list.size()));
@@ -272,10 +272,9 @@ public class PracticeRadioData {
   }
 
   private RadioEntry makeWx(int rowNumber) {
-    final var list = List
-        .of( //
-            "WX1 - 162.400", "WX2 - 162.425", "WX3 - 162.450", "WX4 - 162.475", "WX5 - 162.500", "WX6 - 162.525",
-            "WX7 - 162.550");
+    final var list = List.of( //
+        "WX1 - 162.400", "WX2 - 162.425", "WX3 - 162.450", "WX4 - 162.475", "WX5 - 162.500", "WX6 - 162.525",
+        "WX7 - 162.550");
     var data = list.get(rng.nextInt(list.size()));
     var fields = data.split(" - ");
     var name = fields[0];
@@ -290,13 +289,12 @@ public class PracticeRadioData {
   }
 
   private RadioEntry makeGmrs(int rowNumber) {
-    final var list = List
-        .of(//
-            "GMRS 1 - 462.5625", "GMRS 2 - 462.5875", "GMRS 3 - 462.6125", "GMRS 4 - 462.6375", "GMRS 5 - 462.6625",
-            "GMRS 6 - 462.6875", "GMRS 7 - 462.7125", "GMRS 8 - 467.5625", "GMRS 9 - 467.5875", "GMRS 10 - 467.6125",
-            "GMRS 11 - 467.6375", "GMRS 12 - 467.6625", "GMRS 13 - 467.6875", "GMRS 14 - 467.7125",
-            "GMRS 15 - 462.5500", "GMRS 16 - 462.5750", "GMRS 17 - 462.6000", "GMRS 18 - 462.6250",
-            "GMRS 19 - 462.6500", "GMRS 20 - 462.6750", "GMRS 21 - 462.7000", "GMRS 22 - 462.7250");
+    final var list = List.of(//
+        "GMRS 1 - 462.5625", "GMRS 2 - 462.5875", "GMRS 3 - 462.6125", "GMRS 4 - 462.6375", "GMRS 5 - 462.6625",
+        "GMRS 6 - 462.6875", "GMRS 7 - 462.7125", "GMRS 8 - 467.5625", "GMRS 9 - 467.5875", "GMRS 10 - 467.6125",
+        "GMRS 11 - 467.6375", "GMRS 12 - 467.6625", "GMRS 13 - 467.6875", "GMRS 14 - 467.7125", "GMRS 15 - 462.5500",
+        "GMRS 16 - 462.5750", "GMRS 17 - 462.6000", "GMRS 18 - 462.6250", "GMRS 19 - 462.6500", "GMRS 20 - 462.6750",
+        "GMRS 21 - 462.7000", "GMRS 22 - 462.7250");
     var data = list.get(rng.nextInt(list.size()));
     var fields = data.split(" - ");
     var name = fields[0];
@@ -312,9 +310,9 @@ public class PracticeRadioData {
 
   private RadioEntry makeTac(int rowNumber) {
     // CTCSS tone 156.7 Hz is commonly used for analog FM operation
-    final var list = List
-        .of("VCALL10 - 155.7525", "VTAC11 - 151.1375", "VTAC12 - 154.4525", "VTAC13 - 158.7375", "VTAC14 - 159.4725",
-            "VTAC17 - 161.8500", "UCALL40 - 453.2125", "UTAC41 - 453.4625", "UTAC42 - 453.7125", "UTAC43 - 453.8625");
+    final var list = List.of("VCALL10 - 155.7525", "VTAC11 - 151.1375", "VTAC12 - 154.4525", "VTAC13 - 158.7375",
+        "VTAC14 - 159.4725", "VTAC17 - 161.8500", "UCALL40 - 453.2125", "UTAC41 - 453.4625", "UTAC42 - 453.7125",
+        "UTAC43 - 453.8625");
     var data = list.get(rng.nextInt(list.size()));
     var fields = data.split(" - ");
 
@@ -329,20 +327,20 @@ public class PracticeRadioData {
     return entry;
   }
 
+  @SuppressWarnings("unused")
   private RadioEntry makeMarine(int rowNumber) {
-    final var list = List
-        .of(//
-            "Channel 06 - 156.300 - Intership Safety",
-            "Channel 09 - 156.450 - Boater Calling (Commercial & Non-Commercial)",
-            "Channel 13 - 156.650 - Bridge-to-Bridge Navigation Safety",
-            "Channel 16 - 156.800 - Distress, Safety, and Calling",
-            "Channel 22A - 157.100 - Coast Guard Liaison & Safety Broadcasts",
-            "Channel 68 - 156.425 - Non-Commercial Working Channel",
-            "Channel 69 - 156.475 - Non-Commercial Working Channel",
-            "Channel 71 - 156.575 - Non-Commercial Working Channel",
-            "Channel 72 - 156.625 - Non-Commercial (Intership Only)", //
-            "Channel 73 - 156.675 - Port Operations", //
-            "Channel 77 - 156.875 - Port Operations (Intership Only)");
+    final var list = List.of(//
+        "Channel 06 - 156.300 - Intership Safety",
+        "Channel 09 - 156.450 - Boater Calling (Commercial & Non-Commercial)",
+        "Channel 13 - 156.650 - Bridge-to-Bridge Navigation Safety",
+        "Channel 16 - 156.800 - Distress, Safety, and Calling",
+        "Channel 22A - 157.100 - Coast Guard Liaison & Safety Broadcasts",
+        "Channel 68 - 156.425 - Non-Commercial Working Channel",
+        "Channel 69 - 156.475 - Non-Commercial Working Channel",
+        "Channel 71 - 156.575 - Non-Commercial Working Channel",
+        "Channel 72 - 156.625 - Non-Commercial (Intership Only)", //
+        "Channel 73 - 156.675 - Port Operations", //
+        "Channel 77 - 156.875 - Port Operations (Intership Only)");
     var data = list.get(rng.nextInt(list.size()));
     var fields = data.split(" - ");
 
