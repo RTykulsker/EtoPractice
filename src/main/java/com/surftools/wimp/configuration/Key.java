@@ -41,6 +41,8 @@ public enum Key implements IConfigurationKey {
   PRACTICE_WINLINK_CALLSIGN("winlink.callsign"), // mbo address
   PRACTICE_ENABLE_LEGACY("enable.legacy"),
 
+  PERSISTENCE_SQLITE_URL("persistence.sqlite.url"), //
+
   PATH("path"), // path to message files
   OUTPUT_PATH("output.path"), // to override as subdir of path
   OUTPUT_PATH_CLEAR_ON_START("output.path.clearOnStart"), // if true contents of outputDir cleared
