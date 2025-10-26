@@ -29,6 +29,7 @@ package com.surftools.wimp.persistence;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -69,7 +70,7 @@ public class SQLIteNativeEngine implements IPersistenceEngine {
       Statement statement = connection.createStatement();
       var rs = statement.executeQuery(sql);
       while (rs.next()) {
-        System.out.println(rs.getString(2));
+        logger.debug(rs.getString(2));
         var dateJoined = LocalDate.parse(rs.getString(5));
         var user = new User(rs.getInt(1), rs.getString(2), rs.getString(3), rs.getBoolean(4), dateJoined);
         users.add(user);
@@ -78,7 +79,7 @@ public class SQLIteNativeEngine implements IPersistenceEngine {
       connection.close();
     } catch (Exception e) {
       logger.error("SQL Exception: " + e.getMessage());
-      throw new RuntimeException(e);
+      return new ReturnRecord(ReturnStatus.ERROR, e.getMessage(), null);
     }
 
     return new ReturnRecord(ReturnStatus.OK, "", users);
@@ -114,14 +115,15 @@ public class SQLIteNativeEngine implements IPersistenceEngine {
         connection.rollback(); // roll back transaction on error
       } catch (Exception ee) {
         logger.error("SQL Exception rolling back transaction: " + ee.getMessage());
+        return new ReturnRecord(ReturnStatus.ERROR, ee.getMessage(), null);
       }
       logger.error("SQL Exception: " + e.getMessage());
-      throw new RuntimeException(e);
+      return new ReturnRecord(ReturnStatus.ERROR, e.getMessage(), null);
     }
     return new ReturnRecord(ReturnStatus.OK, null, null);
   }
 
-  private Event bulkInsert_event(Connection connection, Event event) throws Exception {
+  private Event bulkInsert_event(Connection connection, Event event) throws SQLException {
     long eventId = -1;
 
     var sql = """
@@ -153,13 +155,13 @@ public class SQLIteNativeEngine implements IPersistenceEngine {
       if (eventId >= 0) {
         rs.close();
         ps1.close();
-        logger.info("User/call: " + event.call() + ", eventId: " + eventId);
+        logger.debug("User/call: " + event.call() + ", eventId: " + eventId);
       }
     }
     return Event.updateEventId(event, eventId);
   }
 
-  private Event bulkInsert_user(Connection connection, Event event, long exerciseId) throws Exception {
+  private Event bulkInsert_user(Connection connection, Event event, long exerciseId) throws SQLException {
     long userId = -1;
 
     var sql = """
@@ -182,13 +184,13 @@ public class SQLIteNativeEngine implements IPersistenceEngine {
       if (userId >= 0) {
         rs.close();
         ps1.close();
-        logger.info("User/call: " + event.call() + ", userId: " + userId);
+        logger.debug("User/call: " + event.call() + ", userId: " + userId);
       }
     }
     return Event.updateUserId(event, userId, exerciseId);
   }
 
-  private long bulkInsert_exercise(Connection connection, Exercise exercise) throws Exception {
+  private long bulkInsert_exercise(Connection connection, Exercise exercise) throws SQLException {
     var sql = """
         INSERT INTO Exercises (Date,Type,Name,Description) VALUES (?,?,?,?)
         ON CONFLICT(Date,Type,Name)
@@ -215,10 +217,38 @@ public class SQLIteNativeEngine implements IPersistenceEngine {
       if (exerciseId >= 0) {
         rs.close();
         ps1.close();
-        logger.info("new exerciseId: " + exerciseId);
+        logger.debug("new exerciseId: " + exerciseId);
       }
     }
     return exerciseId;
+  }
+
+  @Override
+  public ReturnRecord getHealth() {
+    List<User> users = new ArrayList<>();
+
+    var sql = "SELECT 1";
+
+    Connection connection = null;
+    try {
+      Class.forName("org.sqlite.JDBC");
+      connection = DriverManager.getConnection("jdbc:sqlite:" + url);
+      Statement statement = connection.createStatement();
+      var rs = statement.executeQuery(sql);
+      if (rs.next()) {
+        var val = rs.getInt(1);
+        if (val != 1) {
+          new ReturnRecord(ReturnStatus.ERROR, "Unexpected value: " + val, null);
+        }
+      }
+      statement.close();
+      connection.close();
+    } catch (Exception e) {
+      logger.error("SQL Exception: " + e.getMessage());
+      return new ReturnRecord(ReturnStatus.ERROR, e.getMessage(), null);
+    }
+
+    return new ReturnRecord(ReturnStatus.OK, "", users);
   }
 
 }

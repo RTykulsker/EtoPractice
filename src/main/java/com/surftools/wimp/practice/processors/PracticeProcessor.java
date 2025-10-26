@@ -52,6 +52,11 @@ import com.surftools.wimp.message.Hics259Message;
 import com.surftools.wimp.message.Ics205Message;
 import com.surftools.wimp.message.Ics213Message;
 import com.surftools.wimp.message.Ics213RRMessage;
+import com.surftools.wimp.persistence.PersistenceManager;
+import com.surftools.wimp.persistence.dto.BulkInsertEntry;
+import com.surftools.wimp.persistence.dto.Event;
+import com.surftools.wimp.persistence.dto.Exercise;
+import com.surftools.wimp.persistence.dto.ReturnStatus;
 import com.surftools.wimp.practice.generator.PracticeUtils;
 import com.surftools.wimp.practice.tools.PracticeGeneratorTool;
 import com.surftools.wimp.practice.tools.PracticeProcessorTool;
@@ -559,6 +564,61 @@ public class PracticeProcessor extends SingleMessageFeedbackProcessor {
     super.postProcess();
 
     kmlService.finalize(Path.of(outputPath.toString(), "feedback.kml"));
+
+    var db = new PersistenceManager(cm);
+    var input = makeDbInput(summaries);
+    var dbResult = db.bulkInsert(input);
+    if (dbResult.status() == ReturnStatus.ERROR) {
+      logger.error("### database update failed: " + dbResult.content());
+    }
+  }
+
+  private BulkInsertEntry makeDbInput(List<Summary> summaries) {
+    var exerciseId = getExerciseId(referenceMessage);
+    Exercise exercise = new Exercise(-1, date, "Practice", exerciseId, messageType.name());
+    List<Event> events = new ArrayList<>();
+    for (var summary : summaries) {
+      var event = new Event(-1, -1, -1, summary.from, summary.location, //
+          summary.feedbackCount, summary.getFeedback(), //
+          "{\"messageId\":\"" + summary.messageId + "\"}");
+      events.add(event);
+    }
+    return new BulkInsertEntry(exercise, events);
+  }
+
+  private String getExerciseId(ExportedMessage ref) {
+    String fullExerciseId = null;
+    var messageType = ref.getMessageType();
+    switch (messageType) {
+    case ICS_213:
+      fullExerciseId = ((Ics213Message) ref).formMessage;
+      break;
+    case ICS_213_RR:
+      fullExerciseId = ((Ics213RRMessage) ref).requestNumber;
+      break;
+    case HICS_259:
+      fullExerciseId = ((Hics259Message) ref).incidentName;
+      break;
+    case ICS_205:
+      fullExerciseId = ((Ics205Message) ref).specialInstructions;
+      break;
+    case FIELD_SITUATION:
+      fullExerciseId = ((FieldSituationMessage) ref).additionalComments;
+      break;
+    default:
+      throw new RuntimeException("unsupported messageType: " + ref.getMessageType().toString());
+    }
+
+    if (fullExerciseId == null) {
+      return null;
+    }
+
+    var fields = fullExerciseId.split(" ");
+    if (fields.length == 3) {
+      return fields[2].trim();
+    } else {
+      return null;
+    }
   }
 
   public class Summary implements IWritableTable {

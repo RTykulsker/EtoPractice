@@ -77,8 +77,13 @@ public class PracticePersistenceTool {
 
       var cm = new PropertyFileConfigurationManager(configurationFileName, Key.values());
       var db = new PersistenceManager(cm);
+      var ret = db.getHealth();
+      if (ret.status() != ReturnStatus.OK) {
+        logger.error("Health Check failed: " + ret.content());
+        System.exit(1);
+      }
 
-      var ret = db.getAllUsers();
+      ret = db.getAllUsers();
       if (ret.status() == ReturnStatus.OK) {
         @SuppressWarnings("unchecked")
         var users = ((List<User>) (ret.data()));

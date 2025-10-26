@@ -41,4 +41,11 @@ public interface IPersistenceEngine {
 
   public ReturnRecord bulkInsert(BulkInsertEntry input);
 
+  /**
+   * can we connect to our database, etc.
+   *
+   * @return
+   */
+  public ReturnRecord getHealth();
+
 }

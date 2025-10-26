@@ -29,6 +29,7 @@ package com.surftools.wimp.persistence;
 
 import com.surftools.wimp.persistence.dto.BulkInsertEntry;
 import com.surftools.wimp.persistence.dto.ReturnRecord;
+import com.surftools.wimp.persistence.dto.ReturnStatus;
 import com.surftools.wimp.utils.config.IConfigurationManager;
 
 public class PersistenceManager implements IPersistenceManager {
@@ -54,5 +55,17 @@ public class PersistenceManager implements IPersistenceManager {
   @Override
   public ReturnRecord bulkInsert(BulkInsertEntry input) {
     return engine.bulkInsert(input);
+  }
+
+  @Override
+  public ReturnRecord getHealth() {
+    var ret = engine.getHealth();
+    if (ret == null) {
+      throw new RuntimeException("null return from getHealth()");
+    }
+    if (ret.status() == ReturnStatus.ERROR) {
+      throw new RuntimeException("Database health error: " + ret.content());
+    }
+    return ret;
   }
 }

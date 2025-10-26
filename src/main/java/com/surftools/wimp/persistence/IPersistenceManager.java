@@ -33,6 +33,17 @@ import com.surftools.wimp.persistence.dto.ReturnRecord;
 public interface IPersistenceManager {
 
   /**
+   * can we connect to our database, etc.
+   *
+   * @return
+   */
+  ReturnRecord getHealth();
+
+  /**
+   * ReturnRecord getHealth();
+   */
+
+  /**
    * get all Users, no filtering
    *
    * @return
