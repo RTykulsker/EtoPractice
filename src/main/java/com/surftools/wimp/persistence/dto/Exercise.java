@@ -33,4 +33,8 @@ import java.time.LocalDate;
  * Data Transfer Object (DTO) for Exercise
  */
 public record Exercise(long id, LocalDate date, String type, String name, String description) {
+
+  public static Exercise updateExerciseId(Exercise old, long exerciseId) {
+    return new Exercise(exerciseId, old.date, old.type, old.name, old.description);
+  }
 }

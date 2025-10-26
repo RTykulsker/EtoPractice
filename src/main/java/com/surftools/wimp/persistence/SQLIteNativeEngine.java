@@ -101,12 +101,15 @@ public class SQLIteNativeEngine implements IPersistenceEngine {
 
       var exercise = input.exercise();
       var exerciseId = bulkInsert_exercise(connection, exercise);
+      exercise = Exercise.updateExerciseId(exercise, exerciseId);
 
       var events = input.events();
       for (var event : events) {
         event = bulkInsert_user(connection, event, exerciseId);
         bulkInsert_event(connection, event);
       }
+
+      logger.info("persisted exercise: " + exercise.toString() + ", plus " + events.size() + " events to: " + url);
 
       connection.commit();
       connection.close();
