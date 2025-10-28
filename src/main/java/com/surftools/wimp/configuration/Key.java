@@ -42,6 +42,7 @@ public enum Key implements IConfigurationKey {
   PRACTICE_ENABLE_LEGACY("enable.legacy"),
 
   PERSISTENCE_SQLITE_URL("persistence.sqlite.url"), //
+  PERSISTENCE_ALLOW_FUTURE("persistence.allow.future"), // allow/disallow future exercises into db
 
   PATH("path"), // path to message files
   OUTPUT_PATH("output.path"), // to override as subdir of path

@@ -51,10 +51,31 @@ public interface IPersistenceManager {
   ReturnRecord getAllUsers();
 
   /**
+   * get all Exercises, no filtering
+   *
+   * @return
+   */
+  ReturnRecord getAllExercises();
+
+  /**
+   * get all Exercises, no filtering
+   *
+   * @return
+   */
+  ReturnRecord getAllEvents();
+
+  /**
    * support an exercise, by inserting events, etc.
    *
    * @param input
    * @return
    */
   ReturnRecord bulkInsert(BulkInsertEntry input);
+
+  /**
+   * update the User.DateJoined with first exercise date
+   *
+   * @return
+   */
+  public ReturnRecord updateDateJoined();
 }

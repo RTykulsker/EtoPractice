@@ -37,10 +37,6 @@ public class PersistenceManager implements IPersistenceManager {
   protected IPersistenceEngine engine;
   protected EngineType engineType;
 
-  public PersistenceManager() {
-
-  }
-
   public PersistenceManager(IConfigurationManager cm) {
     this.cm = cm;
     this.engineType = EngineType.SQLITE_NATIVE;
@@ -53,8 +49,23 @@ public class PersistenceManager implements IPersistenceManager {
   }
 
   @Override
+  public ReturnRecord getAllExercises() {
+    return engine.getAllExercises();
+  }
+
+  @Override
+  public ReturnRecord getAllEvents() {
+    return engine.getAllEvents();
+  }
+
+  @Override
   public ReturnRecord bulkInsert(BulkInsertEntry input) {
     return engine.bulkInsert(input);
+  }
+
+  @Override
+  public ReturnRecord updateDateJoined() {
+    return engine.updateDateJoined();
   }
 
   @Override
@@ -68,4 +79,5 @@ public class PersistenceManager implements IPersistenceManager {
     }
     return ret;
   }
+
 }

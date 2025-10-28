@@ -27,23 +27,14 @@ SOFTWARE.
 
 package com.surftools.wimp.practice.tools;
 
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.surftools.utils.location.LatLongPair;
 import com.surftools.wimp.configuration.Key;
 import com.surftools.wimp.persistence.PersistenceManager;
-import com.surftools.wimp.persistence.dto.BulkInsertEntry;
-import com.surftools.wimp.persistence.dto.Event;
-import com.surftools.wimp.persistence.dto.Exercise;
 import com.surftools.wimp.persistence.dto.ReturnStatus;
-import com.surftools.wimp.persistence.dto.User;
 import com.surftools.wimp.utils.config.impl.PropertyFileConfigurationManager;
 
 public class PracticePersistenceTool {
@@ -83,28 +74,30 @@ public class PracticePersistenceTool {
         System.exit(1);
       }
 
-      ret = db.getAllUsers();
-      if (ret.status() == ReturnStatus.OK) {
-        @SuppressWarnings("unchecked")
-        var users = ((List<User>) (ret.data()));
-        for (var user : users) {
-          logger.info(user.toString());
-        }
-      }
+      // ret = db.getAllUsers();
+      // if (ret.status() == ReturnStatus.OK) {
+      // @SuppressWarnings("unchecked")
+      // var users = ((List<User>) (ret.data()));
+      // for (var user : users) {
+      // logger.info(user.toString());
+      // }
+      // }
 
-      var exercise = new Exercise(-1, LocalDate.now(), "Debug", "testing", "1,2,3");
-      var events = new ArrayList<Event>();
-      events
-          .add(new Event(-1, -1, -1, "KM6SO", new LatLongPair("47.537366", "-122.238909"), 0, "Perfect Message",
-              "Testing"));
-      events
-          .add(new Event(-1, -1, -1, "W7OWO", new LatLongPair("45.296333 ", "-123.010632"), 2, "Some Silly Mistake",
-              "Testing"));
-      events
-          .add(new Event(-1, -1, -1, "KW6REX", new LatLongPair("33.53 ", "-117.75"), 0, "Perfect Message", "Testing"));
+      // var exercise = new Exercise(-1, LocalDate.now(), "Debug", "testing", "1,2,3");
+      // var events = new ArrayList<Event>();
+      // events
+      // .add(new Event(-1, -1, -1, "KM6SO", new LatLongPair("47.537366", "-122.238909"), 0, "Perfect Message",
+      // "Testing"));
+      // events
+      // .add(new Event(-1, -1, -1, "W7OWO", new LatLongPair("45.296333 ", "-123.010632"), 2, "Some Silly Mistake",
+      // "Testing"));
+      // events
+      // .add(new Event(-1, -1, -1, "KW6REX", new LatLongPair("33.53 ", "-117.75"), 0, "Perfect Message", "Testing"));
+      //
+      // var input = new BulkInsertEntry(exercise, events);
+      // ret = db.bulkInsert(input);
 
-      var input = new BulkInsertEntry(exercise, events);
-      ret = db.bulkInsert(input);
+      ret = db.updateDateJoined();
 
     } catch (Exception e) {
       logger.error("Exception: " + e.getLocalizedMessage());

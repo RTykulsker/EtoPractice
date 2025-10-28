@@ -39,6 +39,20 @@ public interface IPersistenceEngine {
    */
   public ReturnRecord getAllUsers();
 
+  /**
+   * get all Exercises, no filtering
+   *
+   * @return
+   */
+  ReturnRecord getAllExercises();
+
+  /**
+   * get all Exercises, no filtering
+   *
+   * @return
+   */
+  ReturnRecord getAllEvents();
+
   public ReturnRecord bulkInsert(BulkInsertEntry input);
 
   /**
@@ -47,5 +61,12 @@ public interface IPersistenceEngine {
    * @return
    */
   public ReturnRecord getHealth();
+
+  /**
+   * update the User.DateJoined with first exercise date
+   *
+   * @return
+   */
+  public ReturnRecord updateDateJoined();
 
 }
