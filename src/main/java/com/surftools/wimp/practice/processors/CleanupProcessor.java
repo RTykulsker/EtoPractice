@@ -113,7 +113,8 @@ public class CleanupProcessor extends AbstractBaseProcessor {
 
       if (name.startsWith("leaflet")) {
         try {
-          var newFile = Path.of(outputPathName, "map-" + dateString + ".html").toFile();
+          var newName = name.replace("leaflet", "map");
+          var newFile = Path.of(outputPathName, newName).toFile();
           outputFile.renameTo(newFile);
           logger.info("renamed map file to: " + newFile.getName());
         } catch (Exception e) {

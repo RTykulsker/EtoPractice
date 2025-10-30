@@ -27,6 +27,8 @@ SOFTWARE.
 
 package com.surftools.wimp.practice.tools;
 
+import java.util.Set;
+
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 import org.slf4j.Logger;
@@ -97,7 +99,11 @@ public class PracticePersistenceTool {
       // var input = new BulkInsertEntry(exercise, events);
       // ret = db.bulkInsert(input);
 
-      ret = db.updateDateJoined();
+      // ret = db.updateDateJoined();
+
+      ret = db.getUsersMissingExercises(Set.of("Practice"), null, 3);
+
+      ret = db.getUsersHistory(Set.of("Practice"), null, false);
 
     } catch (Exception e) {
       logger.error("Exception: " + e.getLocalizedMessage());

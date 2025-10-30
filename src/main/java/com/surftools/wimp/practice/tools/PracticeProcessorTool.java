@@ -158,7 +158,7 @@ public class PracticeProcessorTool {
 
       cm.putString(Key.PIPELINE_STDIN, "Read,Classifier,Acknowledgement,Deduplication");
       cm.putString(Key.PIPELINE_MAIN, "Practice"); // exercise-specific processors go here!
-      cm.putString(Key.PIPELINE_STDOUT, "Write,Cleanup");
+      cm.putString(Key.PIPELINE_STDOUT, "Write,MissedExercise,HistoryMap,Cleanup");
 
       var edPrefix = "com.surftools.wimp.practice.misc.Practice";
       cm.putString(Key.PRACTICE_ALL_FEEDBACK_TEXT_EDITOR, edPrefix + "AllFeedbackTextEditor");

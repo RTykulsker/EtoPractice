@@ -32,10 +32,10 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,15 +50,14 @@ import com.surftools.wimp.persistence.dto.ReturnStatus;
 import com.surftools.wimp.persistence.dto.User;
 import com.surftools.wimp.utils.config.IConfigurationManager;
 
-public class SQLIteNativeEngine extends AbstractBaseQueryEngine {
+public class SQLIteNativeEngine extends BaseQueryEngine {
   private static final Logger logger = LoggerFactory.getLogger(SQLIteNativeEngine.class);
-  private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
   private final String url;
-  private final boolean allowFuture;
 
   public SQLIteNativeEngine(IConfigurationManager cm) {
+    super(cm);
     url = cm.getAsString(Key.PERSISTENCE_SQLITE_URL);
-    allowFuture = cm.getAsBoolean(Key.PERSISTENCE_ALLOW_FUTURE, false);
   }
 
   @Override
@@ -336,16 +335,7 @@ public class SQLIteNativeEngine extends AbstractBaseQueryEngine {
 
   @Override
   public ReturnRecord updateDateJoined() {
-    if (isDirty) {
-      idUserMap.clear();
-      callUserMap.clear();
-      idExerciseMap.clear();
-      idEventMap.clear();
-
-      loadTables();
-
-      isDirty = false;
-    }
+    handleDirty();
 
     Connection connection = null;
     try {
@@ -353,7 +343,7 @@ public class SQLIteNativeEngine extends AbstractBaseQueryEngine {
       connection = DriverManager.getConnection("jdbc:sqlite:" + url);
       connection.setAutoCommit(false); // begin transaction
 
-      for (var entry : joinMap.values()) {
+      for (var entry : allJoinMap.values()) {
         var user = entry.user;
         var lastExerciseIndex = entry.exercises.size() - 1;
         var firstExercise = entry.exercises.get(lastExerciseIndex);
@@ -413,12 +403,40 @@ public class SQLIteNativeEngine extends AbstractBaseQueryEngine {
     if (debug == true) {
       logger.info("users (call): " + idUserMap.size());
       logger.info("users (id): " + idUserMap.size());
-      logger.info("users (join): " + joinMap.size());
+      logger.info("users (join): " + allJoinMap.size());
       logger.info("active users (join): " + activeJoinMap.size());
       logger.info("exercies: " + idExerciseMap.size());
       logger.info("events: " + idEventMap.size());
       logger.info("lastExercise: " + lastExercise);
     }
+  }
+
+  private void handleDirty() {
+    if (isDirty) {
+      idUserMap.clear();
+      callUserMap.clear();
+      idExerciseMap.clear();
+      idEventMap.clear();
+
+      loadTables();
+
+      isDirty = false;
+    }
+  }
+
+  @Override
+  public ReturnRecord getUsersMissingExercises(Set<String> requiredExerciseTypes, Exercise fromExercise,
+      int missLimit) {
+
+    handleDirty();
+    return super.getUsersMissingExercises(requiredExerciseTypes, fromExercise, missLimit);
+  }
+
+  @Override
+  public ReturnRecord getUsersHistory(Set<String> requiredExerciseTypes, Exercise fromExercise, boolean doPartition) {
+
+    handleDirty();
+    return super.getUsersHistory(requiredExerciseTypes, fromExercise, doPartition);
   }
 
 }

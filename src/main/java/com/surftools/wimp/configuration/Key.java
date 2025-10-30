@@ -43,6 +43,11 @@ public enum Key implements IConfigurationKey {
 
   PERSISTENCE_SQLITE_URL("persistence.sqlite.url"), //
   PERSISTENCE_ALLOW_FUTURE("persistence.allow.future"), // allow/disallow future exercises into db
+  PERSISTENCE_ONLY_USE_ACTIVE("persistence.only.use.active"), // true -> only active; false -> active & inactive
+  PERSISTENCE_MISS_LIMIT("persistence.miss.limit"), // max # of missed exercises before we don't bother any more
+  PERSISTENCE_MISS_SUBJECT("persistence.miss.subject"), // subject for outbound message
+  PERSISTENCE_MISS_BODY_PATH("persistence.miss.body.path"), // path to file containing body for outbound message
+  PERSISTENCE_HISTORY_MAP_TYPES("persistence.history.map.types"), // HistoryTypes to produce maps for
 
   PATH("path"), // path to message files
   OUTPUT_PATH("output.path"), // to override as subdir of path

@@ -27,7 +27,10 @@ SOFTWARE.
 
 package com.surftools.wimp.persistence;
 
+import java.util.Set;
+
 import com.surftools.wimp.persistence.dto.BulkInsertEntry;
+import com.surftools.wimp.persistence.dto.Exercise;
 import com.surftools.wimp.persistence.dto.ReturnRecord;
 import com.surftools.wimp.persistence.dto.ReturnStatus;
 import com.surftools.wimp.utils.config.IConfigurationManager;
@@ -66,6 +69,18 @@ public class PersistenceManager implements IPersistenceManager {
   @Override
   public ReturnRecord updateDateJoined() {
     return engine.updateDateJoined();
+  }
+
+  @Override
+  public ReturnRecord getUsersMissingExercises(Set<String> requiredExerciseTypes, Exercise fromExercise,
+      int missLimit) {
+
+    return engine.getUsersMissingExercises(requiredExerciseTypes, fromExercise, missLimit);
+  }
+
+  @Override
+  public ReturnRecord getUsersHistory(Set<String> requiredExerciseTypes, Exercise fromExercise, boolean doPartition) {
+    return engine.getUsersHistory(requiredExerciseTypes, fromExercise, doPartition);
   }
 
   @Override
