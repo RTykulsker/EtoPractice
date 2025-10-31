@@ -143,10 +143,6 @@ public class HistoryMapProcessor extends AbstractBaseProcessor {
 
       mapService.makeMap(outputPath, mapHeader, mapEntries);
     }
-
-    if (true) {
-      var x = 0;
-    }
   }
 
 }
