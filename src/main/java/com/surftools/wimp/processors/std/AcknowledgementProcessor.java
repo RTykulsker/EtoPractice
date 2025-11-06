@@ -47,7 +47,6 @@ import com.surftools.wimp.core.MessageType;
 import com.surftools.wimp.message.ExportedMessage;
 import com.surftools.wimp.processors.std.baseExercise.AbstractBaseProcessor;
 import com.surftools.wimp.service.outboundMessage.OutboundMessage;
-import com.surftools.wimp.service.outboundMessage.OutboundMessageService;
 import com.surftools.wimp.utils.config.IConfigurationManager;
 
 /**
@@ -59,7 +58,7 @@ import com.surftools.wimp.utils.config.IConfigurationManager;
  */
 public class AcknowledgementProcessor extends AbstractBaseProcessor {
   private static final Logger logger = LoggerFactory.getLogger(AcknowledgementProcessor.class);
-  
+
   public static final String DASHES = "----------------------------------------------------------------------------------------------\n";
 
   private static final boolean LAST_LOCATION_WINS = true;
@@ -179,10 +178,7 @@ public class AcknowledgementProcessor extends AbstractBaseProcessor {
         outboundAcknowledgementList.add(outboundMessage);
       }
 
-      var fileName = "acknowledgment-winlinkExpressOutboundMessages.xml";
-      var service = (OutboundMessageService) null;
-      service = new OutboundMessageService(cm, fileName);
-      service.sendAll(outboundAcknowledgementList);
+      // we no longer send acknowledgement messages here, we do it from PracticeProcessor
     }
   }
 

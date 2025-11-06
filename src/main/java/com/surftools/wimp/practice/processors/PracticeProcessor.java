@@ -27,7 +27,6 @@ SOFTWARE.
 
 package com.surftools.wimp.practice.processors;
 
-import java.nio.file.Path;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -63,7 +62,6 @@ import com.surftools.wimp.practice.tools.PracticeProcessorTool;
 import com.surftools.wimp.processors.std.AcknowledgementProcessor;
 import com.surftools.wimp.processors.std.WriteProcessor;
 import com.surftools.wimp.processors.std.baseExercise.SingleMessageFeedbackProcessor;
-import com.surftools.wimp.service.kml.KmlService;
 import com.surftools.wimp.utils.config.IConfigurationManager;
 
 public class PracticeProcessor extends SingleMessageFeedbackProcessor {
@@ -80,8 +78,6 @@ public class PracticeProcessor extends SingleMessageFeedbackProcessor {
   protected String nextInstructions;
 
   protected final List<String> clearinghouseList = new ArrayList<String>();
-
-  private KmlService kmlService;
 
   @SuppressWarnings("unchecked")
   @Override
@@ -121,9 +117,6 @@ public class PracticeProcessor extends SingleMessageFeedbackProcessor {
     for (var extra : List.of("ETO-10", "ETO-BK", "ETO-CAN", "ETO-DX")) {
       clearinghouseList.add(extra + "@winlink.org");
     }
-
-    kmlService = new KmlService("ETO Practice Exercise for " + dateString,
-        "ETO Practice for " + dateString + " using " + messageType.toString() + " messages");
   }
 
   @Override
@@ -165,10 +158,6 @@ public class PracticeProcessor extends SingleMessageFeedbackProcessor {
 
     var summary = new Summary(m);
     summaries.add(summary);
-
-    var values = summary.getValues();
-    var description = "Feedback count: " + values[6] + "\n\n" + values[7];
-    kmlService.addPin(summary.location, summary.from, description);
   }
 
   private void handle_Ics213(ExportedMessage message) {
@@ -562,8 +551,6 @@ public class PracticeProcessor extends SingleMessageFeedbackProcessor {
   public void postProcess() {
     WriteProcessor.writeTable("practice-summary.csv", summaries);
     super.postProcess();
-
-    kmlService.finalize(Path.of(outputPath.toString(), "feedback.kml"));
 
     var db = new PersistenceManager(cm);
     var input = makeDbInput(summaries);

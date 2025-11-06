@@ -31,7 +31,6 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,14 +65,13 @@ public class CleanupProcessor extends AbstractBaseProcessor {
     var outputDir = new File(outputPath.toString());
     var outputFiles = outputDir.listFiles();
 
-    var knownUnusedList = List.of("feedback.kml", "acknowledgment-winlinkExpressOutboundMessages.xml");
     for (var outputFile : outputFiles) {
       if (!outputFile.isFile()) {
         continue;
       }
 
       var name = outputFile.getName();
-      if (name.endsWith(".csv") || knownUnusedList.contains(name)) {
+      if (name.endsWith(".csv")) {
         try {
           Files.move(outputFile.toPath(), Path.of(unusedDirName, name), StandardCopyOption.ATOMIC_MOVE);
           logger.info("moved output/" + name + " to usused/");

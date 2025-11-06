@@ -170,10 +170,14 @@ public abstract class AbstractBaseOutboundMessageEngine implements IOutboundMess
     }
 
     try {
-      var path = cm.getAsString(Key.PATH);
-      Files.writeString(Path.of(path, "allFeedback.txt"), allOutput.toString());
+      var path = Path.of(cm.getAsString(Key.PATH));
+      var outputPath = Path.of(cm.getAsString(Key.PATH), "output");
+      var filePath = fileName.equals("allFeedback.txt") //
+          ? Path.of(path.toString(), fileName)
+          : Path.of(outputPath.toString(), fileName);
+      Files.writeString(filePath, allOutput.toString());
     } catch (Exception e) {
-      logger.error("error writing allFeedback.txt: " + e.getLocalizedMessage());
+      logger.error("error writing: " + fileName + e.getLocalizedMessage());
     }
 
   }

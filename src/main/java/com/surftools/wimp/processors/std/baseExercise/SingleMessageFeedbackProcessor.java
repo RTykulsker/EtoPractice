@@ -251,7 +251,7 @@ public abstract class SingleMessageFeedbackProcessor extends AbstractBaseFeedbac
     WriteProcessor.writeTable(results, Path.of(outputPathName, "feedback-" + messageType.toString() + ".csv"));
 
     if (doOutboundMessaging) {
-      var service = new OutboundMessageService(cm, mm, outboundMessageExtraContent);
+      var service = new OutboundMessageService(cm, mm, outboundMessageExtraContent, "allFeedback.txt");
       outboundMessageList = service.sendAll(outboundMessageList);
       writeTable("outBoundMessages.csv", new ArrayList<IWritableTable>(outboundMessageList));
     }

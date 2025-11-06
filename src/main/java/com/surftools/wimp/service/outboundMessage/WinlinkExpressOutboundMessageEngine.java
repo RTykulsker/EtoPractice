@@ -147,7 +147,7 @@ public class WinlinkExpressOutboundMessageEngine extends AbstractBaseOutboundMes
     text = text.replaceAll("#MESSAGES#", allMessages.toString());
     text = text.replaceAll("\n", "\r\n");
 
-    var aFileName = fileName == null ? "all-winlinkExpressOutboundMessages.xml" : fileName;
+    var aFileName = fileName.equals("allFeedback.txt") ? "all-winlinkExpressOutboundMessages.xml" : fileName;
     WriteProcessor.writeString(text, aFileName);
     logger.info("Oubound message file " + aFileName + " written; use Winlink Express to send!");
   }
