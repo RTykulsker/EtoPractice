@@ -35,6 +35,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Set;
 
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
@@ -79,6 +80,7 @@ public class PracticeProcessorTool {
   public void run() {
     logger.info("begin run");
     try {
+      exerciseDateString = parse(exerciseDateString);
       var exerciseDate = LocalDate.parse(exerciseDateString);
       if (exerciseDate.getDayOfWeek() != DayOfWeek.THURSDAY) {
         throw new RuntimeException("Exercise Date: " + exerciseDateString + " must be a THURSDAY");
@@ -183,5 +185,48 @@ public class PracticeProcessorTool {
       e.printStackTrace();
     }
     logger.info("end run");
+  }
+
+  /**
+   * return a date string if passed a known symbolic value
+   *
+   * @param input
+   * @return
+   */
+  private String parse(String input) {
+    if (input == null) {
+      return input;
+    }
+
+    final var knownSet = Set.of("last", "current", "next");
+    var s = input.toLowerCase();
+    if (!knownSet.contains(s)) {
+      return s;
+    }
+
+    var date = LocalDate.now();
+    switch (s) {
+    case "last":
+      while (true) {
+        date = date.minusDays(1);
+        if (date.getDayOfWeek() == DayOfWeek.THURSDAY) {
+          return date.toString();
+        }
+      }
+
+    case "current":
+      return date.toString();
+
+    case "next":
+      while (true) {
+        date = date.plusDays(1);
+        if (date.getDayOfWeek() == DayOfWeek.THURSDAY) {
+          return date.toString();
+        }
+      }
+
+    default:
+      return s;
+    }
   }
 }
