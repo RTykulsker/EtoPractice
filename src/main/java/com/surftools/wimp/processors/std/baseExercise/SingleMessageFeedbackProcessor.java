@@ -258,8 +258,8 @@ public abstract class SingleMessageFeedbackProcessor extends AbstractBaseFeedbac
       var ackTextMap = (Map<String, String>) (mm.getContextObject(AcknowledgementProcessor.ACK_TEXT_MAP));
       var nextInstructions = (String) mm.getContextObject(PracticeProcessorTool.INSTRUCTIONS_KEY);
       var allSenderSet = new HashSet<String>(ackTextMap.keySet());
-      var expectedSenderSet = new HashSet<String>(mIdFeedbackMap.keySet());
-      allSenderSet.removeAll(expectedSenderSet);
+      var expectedSenderList = outboundMessageList.stream().map(m -> m.to()).toList();
+      allSenderSet.removeAll(expectedSenderList);
       var unexpectedSenderSet = allSenderSet;
       logger.info("Senders who only sent unexpected messages: " + String.join(",", unexpectedSenderSet));
       for (var sender : unexpectedSenderSet) {
