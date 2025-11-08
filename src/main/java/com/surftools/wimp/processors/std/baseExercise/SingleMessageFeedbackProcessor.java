@@ -31,6 +31,7 @@ import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,6 +48,8 @@ import com.surftools.wimp.core.MessageType;
 import com.surftools.wimp.feedback.FeedbackMessage;
 import com.surftools.wimp.feedback.FeedbackResult;
 import com.surftools.wimp.message.ExportedMessage;
+import com.surftools.wimp.practice.tools.PracticeProcessorTool;
+import com.surftools.wimp.processors.std.AcknowledgementProcessor;
 import com.surftools.wimp.processors.std.WriteProcessor;
 import com.surftools.wimp.service.chart.ChartServiceFactory;
 import com.surftools.wimp.service.map.MapEntry;
@@ -244,6 +247,35 @@ public abstract class SingleMessageFeedbackProcessor extends AbstractBaseFeedbac
         feedbackMessage.message().mapLocation = newLocation;
         var newFeedbackMessage = feedbackMessage.updateLocation(newLocation);
         mIdFeedbackMap.put(messageId, newFeedbackMessage);
+      }
+    }
+
+    // this is how we get feedback to folks who only send unexpected messages, back-port?
+    var enableFeedbackForOnlyUnexpected = true;
+    if (enableFeedbackForOnlyUnexpected) {
+      final var DASHES = "----------------------------------------------------------------------------------------------";
+      @SuppressWarnings("unchecked")
+      var ackTextMap = (Map<String, String>) (mm.getContextObject(AcknowledgementProcessor.ACK_TEXT_MAP));
+      var nextInstructions = (String) mm.getContextObject(PracticeProcessorTool.INSTRUCTIONS_KEY);
+      var allSenderSet = new HashSet<String>(ackTextMap.keySet());
+      var expectedSenderSet = new HashSet<String>(mIdFeedbackMap.keySet());
+      allSenderSet.removeAll(expectedSenderSet);
+      var unexpectedSenderSet = allSenderSet;
+      logger.info("Senders who only sent unexpected messages: " + String.join(",", unexpectedSenderSet));
+      for (var sender : unexpectedSenderSet) {
+        var ackText = ackTextMap.get(sender);
+        var sb1 = new StringBuilder();
+        sb1.append("ACKNOWLEDGEMENTS" + "\n");
+        sb1.append(ackText);
+        sb1.append("\n" + DASHES + "\n");
+        sb1.append("\nFEEDBACK" + "\n");
+        sb1.append("no " + messageType.name() + " message received\n");
+        sb1.append("\n" + DASHES);
+        sb1.append(nextInstructions);
+        sb1.append(outboundMessagePostfixContent);
+        var text = sb1.toString();
+        var outboundMessage = new OutboundMessage(outboundMessageSender, sender, outboundMessageSubject, text, null);
+        outboundMessageList.add(outboundMessage);
       }
     }
 
