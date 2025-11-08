@@ -39,7 +39,8 @@ public enum Key implements IConfigurationKey {
   PRACTICE_EXPORTED_MESSAGES_HOME("exportedMessages.home"), // where we find exported messages
   PRACTICE_REFERENCE_HOME("reference.home"), //
   PRACTICE_WINLINK_CALLSIGN("winlink.callsign"), // mbo address
-  PRACTICE_ENABLE_LEGACY("enable.legacy"),
+  PRACTICE_ENABLE_LEGACY("enable.legacy"), //
+  PRACTICE_EXTRA_CONTENT_PATH("extra.content.path"), // for end-of-year nag
 
   PERSISTENCE_SQLITE_URL("persistence.sqlite.url"), //
   PERSISTENCE_ALLOW_FUTURE("persistence.allow.future"), // allow/disallow future exercises into db

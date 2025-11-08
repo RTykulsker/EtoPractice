@@ -27,6 +27,8 @@ SOFTWARE.
 
 package com.surftools.wimp.practice.processors;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -61,6 +63,7 @@ import com.surftools.wimp.practice.tools.PracticeGeneratorTool;
 import com.surftools.wimp.practice.tools.PracticeProcessorTool;
 import com.surftools.wimp.processors.std.AcknowledgementProcessor;
 import com.surftools.wimp.processors.std.WriteProcessor;
+import com.surftools.wimp.processors.std.baseExercise.FeedbackProcessor;
 import com.surftools.wimp.processors.std.baseExercise.SingleMessageFeedbackProcessor;
 import com.surftools.wimp.utils.config.IConfigurationManager;
 
@@ -116,6 +119,24 @@ public class PracticeProcessor extends SingleMessageFeedbackProcessor {
     }
     for (var extra : List.of("ETO-10", "ETO-BK", "ETO-CAN", "ETO-DX")) {
       clearinghouseList.add(extra + "@winlink.org");
+    }
+
+    outboundMessageExtraContent = FeedbackProcessor.OB_DISCLAIMER;
+    var extraContentPathName = cm.getAsString(Key.PRACTICE_EXTRA_CONTENT_PATH);
+    if (extraContentPathName != null) {
+      try {
+        var extraContentPath = Path.of(extraContentPathName);
+        var lines = Files.readAllLines(extraContentPath);
+        var extraContent = String.join("\n", lines.stream().filter(s -> !s.trim().startsWith("#")).toList()).trim();
+        if (extraContent != null && extraContent.length() > 0) {
+          outboundMessageExtraContent = extraContent;
+          logger
+              .info("file: " + extraContentPathName + " provides the following extra content:\n"
+                  + outboundMessageExtraContent);
+        }
+      } catch (Exception e) {
+        logger.error("Could not get extra content for outbound messages. Using default");
+      }
     }
   }
 
