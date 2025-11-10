@@ -265,7 +265,7 @@ public class PracticeGeneratorTool {
     sb.append(INDENT + "Approved by: " + approvedBy + NL);
     sb.append(INDENT + "Position / Title: " + position + NL);
     sb.append(NL);
-    sb.append("Ensure that you have a valid and appropriate Latitude and Longitude/" + NL);
+    sb.append("Ensure that you have a valid and appropriate Latitude and Longitude." + NL);
     sb.append(NL);
     sb.append("Send the message via the Session type of your choice to ETO-PRACTICE." + NL);
     sb.append(NL);
@@ -713,7 +713,7 @@ public class PracticeGeneratorTool {
     sb.append(INDENT + "POC: " + poc + NL);
 
     sb.append(NL);
-    sb.append("Ensure that you have a valid and appropriate Latitude and Longitude/" + NL);
+    sb.append("Ensure that you have a valid and appropriate Latitude and Longitude." + NL);
     sb.append(NL);
     sb.append("Send the message via the Session type of your choice to ETO-PRACTICE." + NL);
     sb.append(NL);
