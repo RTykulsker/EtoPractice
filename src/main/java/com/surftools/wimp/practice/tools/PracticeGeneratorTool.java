@@ -247,7 +247,7 @@ public class PracticeGeneratorTool {
 
     var sb = new StringBuilder(); // exercise instructions
     sb.append("ETO Exercise Instructions for Thursday, " + dtf.format(date) + NL + NL);
-    sb.append("Complete an ICS-213 General Message" + NL + NL);
+    sb.append("Task: Complete an ICS-213 General Message" + NL + NL);
     var windowOpenDate = date.minusDays(5);
     var windowCloseDate = date.plusDays(1);
     sb.append("Exercise window: " + dow_dtf.format(windowOpenDate) + " 00:00 UTC - " + //
@@ -324,7 +324,7 @@ public class PracticeGeneratorTool {
 
     var sb = new StringBuilder(); // exercise instructions
     sb.append("ETO Exercise Instructions for Thursday, " + dtf.format(date) + NL + NL);
-    sb.append("Complete an ICS-213 Resource Request Message" + NL + NL);
+    sb.append("Task: Complete an ICS-213 Resource Request Message" + NL + NL);
     var windowOpenDate = date.minusDays(5);
     var windowCloseDate = date.plusDays(1);
     sb.append("Exercise window: " + dow_dtf.format(windowOpenDate) + " 00:00 UTC - " + //
@@ -417,7 +417,7 @@ public class PracticeGeneratorTool {
     var dow_dtf = DateTimeFormatter.ofPattern("EEE yyyy-MM-dd");
     var sb = new StringBuilder(); // exercise instructions
     sb.append("ETO Exercise Instructions for Thursday, " + date_dtf.format(date) + NL + NL);
-    sb.append("Complete an HICS 259 Hospital Casualty/Fatality Report Message" + NL + NL);
+    sb.append("Task: Complete an HICS 259 Hospital Casualty/Fatality Report Message" + NL + NL);
     sb.append("Exercise window: " + dow_dtf.format(windowOpenDate) + " 00:00 UTC - " + //
         dow_dtf.format(windowCloseDate) + " 08:00 UTC" + NL + NL);
     sb.append("Use the following values when completing the form:" + NL);
@@ -503,7 +503,7 @@ public class PracticeGeneratorTool {
 
     var sb = new StringBuilder(); // exercise instructions
     sb.append("ETO Exercise Instructions for Thursday, " + dtf.format(date) + NL + NL);
-    sb.append("Complete an ICS-205 Incident Radio Communications Plan Message" + NL + NL);
+    sb.append("Task: Complete an ICS-205 Incident Radio Communications Plan Message" + NL + NL);
     sb.append("Exercise window: " + dow_dtf.format(windowOpenDate) + " 00:00 UTC - " + //
         dow_dtf.format(windowCloseDate) + " 08:00 UTC" + NL + NL);
 
@@ -656,7 +656,7 @@ public class PracticeGeneratorTool {
     var windowCloseDate = date.plusDays(1);
     var sb = new StringBuilder();
     sb.append("ETO Exercise Instructions for Thursday, " + dtf.format(date) + NL + NL);
-    sb.append("Complete a Field SituationReport Message" + NL + NL);
+    sb.append("Task: Complete a Field SituationReport Message" + NL + NL);
     sb.append("Exercise window: " + dow_dtf.format(windowOpenDate) + " 00:00 UTC - " + //
         dow_dtf.format(windowCloseDate) + " 08:00 UTC" + NL + NL);
 
