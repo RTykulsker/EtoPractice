@@ -49,8 +49,7 @@ import com.surftools.wimp.persistence.dto.User;
 import com.surftools.wimp.utils.config.IConfigurationManager;
 
 /**
- * because some queries are too complicated for me to figure out in SQL, I'll do
- * it in code
+ * because some queries are too complicated for me to figure out in SQL, I'll do it in code
  */
 public abstract class BaseQueryEngine implements IPersistenceEngine {
   private static final Logger logger = LoggerFactory.getLogger(BaseQueryEngine.class);
@@ -156,13 +155,16 @@ public abstract class BaseQueryEngine implements IPersistenceEngine {
       if (candidateExercises.size() <= missLimit) {
         candidateExercises.add(exercise);
         logger.debug("adding candidateExercise: " + exercise);
+      } else {
+        break;
       }
     }
     logger.debug("candidateExercises.size(): " + candidateExercises.size());
 
     var candidateJoins = new ArrayList<JoinedUser>();
     for (var join : joinMap.values()) {
-      if (join.exercises.get(0).id() == firstFilteredExercise.id()) {
+      var joinExerciseIds = new HashSet<Long>(join.exercises.stream().map(e -> e.id()).toList());
+      if (joinExerciseIds.contains(firstFilteredExercise.id())) {
         logger.debug("skipping call: " + join.user.call() + " because they participated in last exercise");
         continue;
       } else {
@@ -173,14 +175,16 @@ public abstract class BaseQueryEngine implements IPersistenceEngine {
           join.context = intersection;
           candidateJoins.add(join);
         } else {
-          logger.debug("skipping call: " + join.user.call() + " because didn't participate in previous " + missLimit
-              + " exercises");
+          logger
+              .debug("skipping call: " + join.user.call() + " because didn't participate in previous " + missLimit
+                  + " exercises");
         }
       }
     } // end for over all calls/joins
     logger.info("candidateJoins.size(): " + candidateJoins.size());
 
     return new ReturnRecord(ReturnStatus.OK, null, candidateJoins);
+
   }
 
   @Override
