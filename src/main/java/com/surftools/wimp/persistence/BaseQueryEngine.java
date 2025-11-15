@@ -49,7 +49,8 @@ import com.surftools.wimp.persistence.dto.User;
 import com.surftools.wimp.utils.config.IConfigurationManager;
 
 /**
- * because some queries are too complicated for me to figure out in SQL, I'll do it in code
+ * because some queries are too complicated for me to figure out in SQL, I'll do
+ * it in code
  */
 public abstract class BaseQueryEngine implements IPersistenceEngine {
   private static final Logger logger = LoggerFactory.getLogger(BaseQueryEngine.class);
@@ -90,7 +91,7 @@ public abstract class BaseQueryEngine implements IPersistenceEngine {
     }
 
     for (var entry : allJoinMap.values()) {
-      entry.finalize();
+      entry.finish();
     }
 
     var tmpExercises = new ArrayList<Exercise>(idExerciseMap.values());
@@ -172,9 +173,8 @@ public abstract class BaseQueryEngine implements IPersistenceEngine {
           join.context = intersection;
           candidateJoins.add(join);
         } else {
-          logger
-              .debug("skipping call: " + join.user.call() + " because didn't participate in previous " + missLimit
-                  + " exercises");
+          logger.debug("skipping call: " + join.user.call() + " because didn't participate in previous " + missLimit
+              + " exercises");
         }
       }
     } // end for over all calls/joins
