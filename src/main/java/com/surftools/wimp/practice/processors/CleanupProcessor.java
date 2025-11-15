@@ -129,7 +129,65 @@ public class CleanupProcessor extends AbstractBaseProcessor {
           logger.error("Exception renaming file: " + name, e.getMessage());
         }
       }
+    } // end rename loop over files
+
+    // because I'd rather write 50 lines of code than point and click to import two files into Winlink Express ...
+    try {
+      outputFiles = outputDir.listFiles();
+      var messageLines = new StringBuffer();
+      for (var outputFile : outputFiles) {
+        if (!outputFile.isFile()) {
+          continue;
+        }
+
+        var name = outputFile.getName();
+        if (name.endsWith(".xml")) {
+          var lines = Files.readAllLines(Path.of(outputFile.getCanonicalPath()));
+          var inMessages = false;
+          for (var line : lines) {
+            var testLine = line.toLowerCase().trim();
+            if (!inMessages && testLine.equals("<message_list>")) {
+              inMessages = true;
+              Files.move(outputFile.toPath(), Path.of(unusedDirName, name), StandardCopyOption.ATOMIC_MOVE);
+              logger.info("moved Winlink import file: " + name + "  to unused");
+              continue;
+            }
+            if (inMessages && testLine.equals("</message_list>")) {
+              break; // loop over lines
+            }
+            if (inMessages) {
+              messageLines.append(line + "\n");
+            }
+          } // end loop over lines
+        } // end if .xml file
+      } // end merge outbound message merge loop over files
+      if (messageLines.length() > 0) {
+        final String header = """
+            <?xml version="1.0"?>
+            <Winlink_Express_message_export>
+              <export_parameters>
+                <xml_file_version>1.0</xml_file_version>
+                <winlink_express_version>1.7.24.0</winlink_express_version>
+              </export_parameters>
+              <message_list>
+              """;
+
+        final String footer = """
+              </message_list>
+            </Winlink_Express_message_export>
+            """;
+
+        messageLines.insert(0, header);
+        messageLines.append(footer);
+        var path = Path.of(outputPathName, "merged-Winlink-ImportMessages-" + dateString + ".xml");
+
+        Files.writeString(path, messageLines.toString());
+        logger.info("created merged Winlink import file: " + path.toFile().getName());
+      }
+    } catch (Exception e) {
+      logger.error("Exception merging Winlink message files: " + e.getMessage());
     }
-  }
+
+  } // end postProcess
 
 }
