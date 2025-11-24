@@ -87,6 +87,10 @@ public class MissedExerciseProcessor extends AbstractBaseProcessor {
 
     var template = DEFAULT_TEMPLATE;
     var templatePath = cm.getAsString(Key.PERSISTENCE_MISS_BODY_PATH);
+    if (templatePath.contains("$HOME")) {
+      var homePath = cm.getAsString(Key.PRACTICE_PATH_HOME);
+      templatePath = templatePath.replace("$HOME", homePath);
+    }
     if (templatePath != null) {
       try {
         template = Files.readString(Path.of(templatePath));

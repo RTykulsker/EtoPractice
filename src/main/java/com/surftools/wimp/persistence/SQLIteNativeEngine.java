@@ -53,11 +53,15 @@ import com.surftools.wimp.utils.config.IConfigurationManager;
 public class SQLIteNativeEngine extends BaseQueryEngine {
   private static final Logger logger = LoggerFactory.getLogger(SQLIteNativeEngine.class);
 
-  private final String url;
+  private String url;
 
   public SQLIteNativeEngine(IConfigurationManager cm) {
     super(cm);
     url = cm.getAsString(Key.PERSISTENCE_SQLITE_URL);
+    if (url.contains("$HOME")) {
+      var homePath = cm.getAsString(Key.PRACTICE_PATH_HOME);
+      url = url.replace("$HOME", homePath);
+    }
   }
 
   @Override

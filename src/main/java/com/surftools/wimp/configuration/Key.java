@@ -36,11 +36,18 @@ import com.surftools.wimp.utils.config.IConfigurationKey;
  *
  */
 public enum Key implements IConfigurationKey {
-  PRACTICE_EXPORTED_MESSAGES_HOME("exportedMessages.home"), // where we find exported messages
-  PRACTICE_REFERENCE_HOME("reference.home"), //
   PRACTICE_WINLINK_CALLSIGN("winlink.callsign"), // mbo address
+
+  PRACTICE_PATH_HOME("practice.path.home"), // root; C:\ETO_Practice
+  PRACTICE_PATH_REFERENCE("practice.path.reference"), // dir where reference dirs/files are
+  PRACTICE_PATH_EXPORTED_MESSAGES_HOME("practice.path.exportedMessages"), // dir where we find exported messages
+  PRACTICE_PATH_RESOUCE_CONTENT("practice.path.resourceContent"), // FILE for ICS-213 RR generation
+  PRACTICE_PATH_NAG_CONTENT("practice.path.nagContent"), // path to FILE where end-of-year nag is
+
+  PRACTICE_GENERATOR_RNG_SEED("practice.generator.rngSeed"), // to get consistent results
+  PRACTICE_GENERATOR_N_YEARS("practice.generator.nYears"), // number of years to generate
+
   PRACTICE_ENABLE_LEGACY("enable.legacy"), //
-  PRACTICE_EXTRA_CONTENT_PATH("extra.content.path"), // for end-of-year nag
 
   PERSISTENCE_SQLITE_URL("persistence.sqlite.url"), //
   PERSISTENCE_ALLOW_FUTURE("persistence.allow.future"), // allow/disallow future exercises into db
@@ -70,7 +77,7 @@ public enum Key implements IConfigurationKey {
   PIPELINE_STDOUT("pipeline.stdout"), // list of output processors
   PIPELINE_MAIN("pipeline.main"), // list of main processors
 
-  PRACTICE_PATH("practice.path"), // path where practice files are written
+  // PRACTICE_PATH("practice.path"), // path where practice files are written
 
   PRACTICE_ALL_FEEDBACK_TEXT_EDITOR("practice.all_feedback.textEditor"), // class name of text editor for AllFeedback
   PRACTICE_BODY_TEXT_EDITOR("practice.body.textEditor"), // class name of text editor for outbound message body

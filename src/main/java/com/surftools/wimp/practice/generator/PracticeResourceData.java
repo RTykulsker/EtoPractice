@@ -37,9 +37,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import com.surftools.wimp.configuration.Key;
 import com.surftools.wimp.message.Ics213RRMessage;
 import com.surftools.wimp.message.Ics213RRMessage.LineItem;
 import com.surftools.wimp.processors.std.ReadProcessor;
+import com.surftools.wimp.utils.config.IConfigurationManager;
 
 public class PracticeResourceData {
 
@@ -60,10 +62,16 @@ public class PracticeResourceData {
   // static to persist across multiple ctors/months
   private static final List<List<ResourceEntry>> resourceBucket = new ArrayList<>();
 
-  public PracticeResourceData(Random _rng, String dirName) {
+  public PracticeResourceData(Random _rng, IConfigurationManager cm) {
     rng = _rng;
 
-    var dataFilePath = Path.of(dirName, "practice-resources.csv");
+    var dataPathName = cm.getAsString(Key.PRACTICE_PATH_RESOUCE_CONTENT);
+    if (dataPathName.contains("$HOME")) {
+      var homePathName = cm.getAsString(Key.PRACTICE_PATH_HOME);
+      dataPathName = dataPathName.replace("$HOME", homePathName);
+    }
+
+    var dataFilePath = Path.of(dataPathName);
 
     try {
       var listOfStringArrays = ReadProcessor.readCsvFileIntoFieldsArray(dataFilePath);

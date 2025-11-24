@@ -122,8 +122,12 @@ public class PracticeProcessor extends SingleMessageFeedbackProcessor {
     }
 
     outboundMessageExtraContent = FeedbackProcessor.OB_DISCLAIMER;
-    var extraContentPathName = cm.getAsString(Key.PRACTICE_EXTRA_CONTENT_PATH);
+    var extraContentPathName = cm.getAsString(Key.PRACTICE_PATH_NAG_CONTENT);
     if (extraContentPathName != null) {
+      if (extraContentPathName.contains("$HOME")) {
+        var homePathName = cm.getAsString(Key.PRACTICE_PATH_HOME);
+        extraContentPathName = extraContentPathName.replace("$HOME", homePathName);
+      }
       try {
         var extraContentPath = Path.of(extraContentPathName);
         var lines = Files.readAllLines(extraContentPath);

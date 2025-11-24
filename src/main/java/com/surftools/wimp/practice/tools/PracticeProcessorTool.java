@@ -101,11 +101,14 @@ public class PracticeProcessorTool {
               + " Thursday; exercise message type: " + messageType.toString());
 
       var cm = new PropertyFileConfigurationManager(configurationFileName, Key.values());
-      var exportedMessagesPathName = cm.getAsString(Key.PRACTICE_EXPORTED_MESSAGES_HOME);
+      var homePath = cm.getAsString(Key.PRACTICE_PATH_HOME);
+      var exportedMessagesPathName = cm.getAsString(Key.PRACTICE_PATH_EXPORTED_MESSAGES_HOME);
+      exportedMessagesPathName = exportedMessagesPathName.replace("$HOME", homePath);
       logger.info("exportedMessages home" + exportedMessagesPathName);
 
       // fail fast on reading reference
-      var referencePathName = cm.getAsString(Key.PRACTICE_REFERENCE_HOME);
+      var referencePathName = cm.getAsString(Key.PRACTICE_PATH_REFERENCE);
+      referencePathName = referencePathName.replace("$HOME", homePath);
       logger.info("reference home: " + referencePathName);
       var exerciseYearString = String.valueOf(exerciseDate.getYear());
       var referencePath = Path

@@ -27,7 +27,6 @@ SOFTWARE.
 
 package com.surftools.wimp.practice.tools;
 
-import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.DayOfWeek;
@@ -52,6 +51,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.surftools.utils.FileUtils;
 import com.surftools.utils.WeightedRandomChooser;
 import com.surftools.utils.location.LatLongPair;
+import com.surftools.wimp.configuration.Key;
 import com.surftools.wimp.core.MessageType;
 import com.surftools.wimp.message.ExportedMessage;
 import com.surftools.wimp.message.FieldSituationMessage;
@@ -68,6 +68,8 @@ import com.surftools.wimp.practice.generator.PracticeHicsData.Types;
 import com.surftools.wimp.practice.generator.PracticeRadioData;
 import com.surftools.wimp.practice.generator.PracticeResourceData;
 import com.surftools.wimp.practice.generator.PracticeUtils;
+import com.surftools.wimp.utils.config.IConfigurationManager;
+import com.surftools.wimp.utils.config.impl.PropertyFileConfigurationManager;
 
 /**
  * Program to generate many weeks work "data" for ETO weekly "practice" semi-automatic exercises
@@ -93,15 +95,12 @@ public class PracticeGeneratorTool {
     System.setProperty("logback.configurationFile", "src/main/resources/logback.xml");
   }
 
-  @Option(name = "--outputDirName", usage = "path to output directory", required = true)
-  private String outputDirName = null;
+  @Option(name = "--config", usage = "practice configuration file name", required = true)
+  private String configurationFileName;
+
   private String referenceDirName = null;
   private String exerciseYear = null;
-
-  @Option(name = "--rngSeed", usage = "random number generator seed, default: 2025", required = false)
   private Long rngSeed = null;
-
-  @Option(name = "--nYears", usage = "number of years to generate, default: 5 years", required = false)
   private Integer nYears = null;
 
   private final DayOfWeek TARGET_DOW = DayOfWeek.THURSDAY;
@@ -124,18 +123,28 @@ public class PracticeGeneratorTool {
     }
   }
 
-  private void run() {
+  private void run() throws Exception {
     logger.info("begin run");
-    logger.info("outputDir: " + outputDirName);
 
-    referenceDirName = outputDirName + File.separator + "reference";
+    logger.info("");
+    var cm = new PropertyFileConfigurationManager(configurationFileName, Key.values());
+    logger.info("Using configuration file: " + configurationFileName);
+
+    var practiceHomeString = cm.getAsString(Key.PRACTICE_PATH_HOME);
+    logger.info("practice.path.home: " + practiceHomeString);
+
+    referenceDirName = cm.getAsString(Key.PRACTICE_PATH_REFERENCE);
+    referenceDirName = referenceDirName.replace("$HOME", practiceHomeString);
     FileUtils.deleteDirectory(Path.of(referenceDirName));
     FileUtils.createDirectory(Path.of(referenceDirName));
+    logger.info("reference path: " + referenceDirName);
 
-    rngSeed = rngSeed == null ? Long.valueOf(2025) : rngSeed;
-    logger.info("rngSeed: " + String.valueOf(rngSeed));
+    var rngSeedString = cm.getAsString(Key.PRACTICE_GENERATOR_RNG_SEED, "2025");
+    rngSeed = Long.valueOf(rngSeedString);
+    logger.info("rngSeed: " + rngSeed);
 
-    nYears = nYears == null ? Integer.valueOf(5) : nYears;
+    var nYearsString = cm.getAsString(Key.PRACTICE_GENERATOR_N_YEARS, "5");
+    nYears = Integer.valueOf(nYearsString);
     logger.info("nYears: " + nYears);
 
     // generate nYears worth, from 2025; this is for idempotency
@@ -154,13 +163,13 @@ public class PracticeGeneratorTool {
       FileUtils.createDirectory(Path.of(referenceDirName, exerciseYear));
 
       var ord = PracticeUtils.getOrdinalDayOfWeek(date);
-      generate(date, ord);
+      generate(date, ord, cm);
       date = date.plusDays(7);
     }
     logger.info("end run");
   }
 
-  private void generate(LocalDate date, int ord) {
+  private void generate(LocalDate date, int ord, IConfigurationManager cm) {
     var messageType = MESSAGE_TYPE_MAP.get(ord);
     var path = Path.of(referenceDirName, exerciseYear, date.toString());
     FileUtils.createDirectory(path);
@@ -169,7 +178,7 @@ public class PracticeGeneratorTool {
       handle_Ics213(date, ord, path);
       break;
     case ICS_213_RR:
-      handle_Ics213RR(date, ord, path);
+      handle_Ics213RR(date, ord, path, cm);
       break;
     case HICS_259:
       handle_Hics259(date, ord, path);
@@ -292,13 +301,13 @@ public class PracticeGeneratorTool {
     logger.info("generated date: " + date + ", " + ordName + " " + date.getDayOfWeek().toString() + ", ICS_213");
   }
 
-  private void handle_Ics213RR(LocalDate date, int ord, Path path) {
+  private void handle_Ics213RR(LocalDate date, int ord, Path path, IConfigurationManager cm) {
     final int nLineItems = 3;
     Ics213RRMessage.setLineItemsToDisplay(nLineItems);
 
     var rng = new Random(rngSeed + date.toString().hashCode());
     var pd = new PracticeData(rng);
-    var prd = new PracticeResourceData(rng, outputDirName);
+    var prd = new PracticeResourceData(rng, cm);
 
     var incidentName = "ETO Weekly Practice";
     var requestNumber = "Exercise Id: " + pd.getExerciseId(ExerciseIdMethod.PHONE);

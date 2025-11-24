@@ -28,7 +28,6 @@ SOFTWARE.
 package com.surftools.wimp.processors.std.baseExercise;
 
 import java.nio.file.Path;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -95,16 +94,6 @@ public abstract class SingleMessageFeedbackProcessor extends AbstractBaseFeedbac
           + String.join(",", expectedMessageTypes.stream().map(s -> s.toString()).toList()));
     }
     messageType = expectedMessageTypes.iterator().next();
-
-    var windowOpenString = cm.getAsString(Key.EXERCISE_WINDOW_OPEN);
-    if (windowOpenString != null) {
-      windowOpenDT = LocalDateTime.from(DTF.parse(windowOpenString));
-    }
-
-    var windowCloseString = cm.getAsString(Key.EXERCISE_WINDOW_CLOSE);
-    if (windowCloseString != null) {
-      windowCloseDT = LocalDateTime.from(DTF.parse(windowCloseString));
-    }
 
   }
 
