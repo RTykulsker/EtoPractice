@@ -42,11 +42,13 @@ import org.kohsuke.args4j.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.surftools.utils.FileUtils;
 import com.surftools.wimp.configuration.Key;
 import com.surftools.wimp.core.MessageManager;
 import com.surftools.wimp.practice.generator.PracticeUtils;
 import com.surftools.wimp.practice.misc.PracticeJsonMessageDeserializer;
 import com.surftools.wimp.processors.std.PipelineProcessor;
+import com.surftools.wimp.utils.config.IConfigurationManager;
 import com.surftools.wimp.utils.config.impl.PropertyFileConfigurationManager;
 
 public class PracticeProcessorTool {
@@ -80,7 +82,9 @@ public class PracticeProcessorTool {
   public void run() {
     logger.info("begin run");
     try {
-      exerciseDateString = parse(exerciseDateString);
+      var cm = new PropertyFileConfigurationManager(configurationFileName, Key.values());
+
+      exerciseDateString = parse(exerciseDateString, cm);
       var exerciseDate = LocalDate.parse(exerciseDateString);
       if (exerciseDate.getDayOfWeek() != DayOfWeek.THURSDAY) {
         throw new RuntimeException("Exercise Date: " + exerciseDateString + " must be a THURSDAY");
@@ -100,7 +104,6 @@ public class PracticeProcessorTool {
           .info("Exercise Date: " + exerciseDate.toString() + ", " + PracticeUtils.getOrdinalLabel(ord)
               + " Thursday; exercise message type: " + messageType.toString());
 
-      var cm = new PropertyFileConfigurationManager(configurationFileName, Key.values());
       var homePath = cm.getAsString(Key.PRACTICE_PATH_HOME);
       var exportedMessagesPathName = cm.getAsString(Key.PRACTICE_PATH_EXPORTED_MESSAGES_HOME);
       exportedMessagesPathName = exportedMessagesPathName.replace("$HOME", homePath);
@@ -116,6 +119,9 @@ public class PracticeProcessorTool {
       var jsonString = Files.readString(referencePath);
       var deserializer = new PracticeJsonMessageDeserializer();
       var referenceMessage = deserializer.deserialize(jsonString, messageType);
+
+      // make exercises folder if needed
+      FileUtils.createDirectory(Path.of(exportedMessagesPathName, exerciseYearString, exerciseDateString));
 
       var winlinkCallsign = cm.getAsString(Key.PRACTICE_WINLINK_CALLSIGN);
       logger.info("Winlink callsign: " + winlinkCallsign);
@@ -194,9 +200,10 @@ public class PracticeProcessorTool {
    * return a date string if passed a known symbolic value
    *
    * @param input
+   * @param cm
    * @return
    */
-  private String parse(String input) {
+  private String parse(String input, IConfigurationManager cm) {
     if (input == null) {
       return input;
     }
@@ -207,12 +214,17 @@ public class PracticeProcessorTool {
       return s;
     }
 
+    var legacyEnabled = cm.getAsBoolean(Key.PRACTICE_ENABLE_LEGACY, Boolean.FALSE);
+
     var date = LocalDate.now();
     switch (s) {
     case "last":
       while (true) {
         date = date.minusDays(1);
         if (date.getDayOfWeek() == DayOfWeek.THURSDAY) {
+          if (PracticeUtils.getOrdinalDayOfWeek(date) == 3 && !legacyEnabled) {
+            date = date.minusWeeks(1);
+          }
           return date.toString();
         }
       }
@@ -224,6 +236,9 @@ public class PracticeProcessorTool {
       while (true) {
         date = date.plusDays(1);
         if (date.getDayOfWeek() == DayOfWeek.THURSDAY) {
+          if (PracticeUtils.getOrdinalDayOfWeek(date) == 3 && !legacyEnabled) {
+            date = date.plusWeeks(1);
+          }
           return date.toString();
         }
       }
