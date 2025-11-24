@@ -104,14 +104,11 @@ public class PracticeProcessorTool {
           .info("Exercise Date: " + exerciseDate.toString() + ", " + PracticeUtils.getOrdinalLabel(ord)
               + " Thursday; exercise message type: " + messageType.toString());
 
-      var homePath = cm.getAsString(Key.PRACTICE_PATH_HOME);
       var exportedMessagesPathName = cm.getAsString(Key.PRACTICE_PATH_EXPORTED_MESSAGES_HOME);
-      exportedMessagesPathName = exportedMessagesPathName.replace("$HOME", homePath);
       logger.info("exportedMessages home" + exportedMessagesPathName);
 
       // fail fast on reading reference
       var referencePathName = cm.getAsString(Key.PRACTICE_PATH_REFERENCE);
-      referencePathName = referencePathName.replace("$HOME", homePath);
       logger.info("reference home: " + referencePathName);
       var exerciseYearString = String.valueOf(exerciseDate.getYear());
       var referencePath = Path

@@ -58,10 +58,6 @@ public class SQLIteNativeEngine extends BaseQueryEngine {
   public SQLIteNativeEngine(IConfigurationManager cm) {
     super(cm);
     url = cm.getAsString(Key.PERSISTENCE_SQLITE_URL);
-    if (url.contains("$HOME")) {
-      var homePath = cm.getAsString(Key.PRACTICE_PATH_HOME);
-      url = url.replace("$HOME", homePath);
-    }
   }
 
   @Override

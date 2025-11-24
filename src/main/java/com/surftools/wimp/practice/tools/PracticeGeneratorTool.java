@@ -130,11 +130,7 @@ public class PracticeGeneratorTool {
     var cm = new PropertyFileConfigurationManager(configurationFileName, Key.values());
     logger.info("Using configuration file: " + configurationFileName);
 
-    var practiceHomeString = cm.getAsString(Key.PRACTICE_PATH_HOME);
-    logger.info("practice.path.home: " + practiceHomeString);
-
     referenceDirName = cm.getAsString(Key.PRACTICE_PATH_REFERENCE);
-    referenceDirName = referenceDirName.replace("$HOME", practiceHomeString);
     FileUtils.deleteDirectory(Path.of(referenceDirName));
     FileUtils.createDirectory(Path.of(referenceDirName));
     logger.info("reference path: " + referenceDirName);

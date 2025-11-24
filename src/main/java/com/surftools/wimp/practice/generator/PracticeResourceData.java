@@ -66,11 +66,6 @@ public class PracticeResourceData {
     rng = _rng;
 
     var dataPathName = cm.getAsString(Key.PRACTICE_PATH_RESOUCE_CONTENT);
-    if (dataPathName.contains("$HOME")) {
-      var homePathName = cm.getAsString(Key.PRACTICE_PATH_HOME);
-      dataPathName = dataPathName.replace("$HOME", homePathName);
-    }
-
     var dataFilePath = Path.of(dataPathName);
 
     try {

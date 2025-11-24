@@ -38,7 +38,6 @@ import com.surftools.wimp.utils.config.IConfigurationKey;
 public enum Key implements IConfigurationKey {
   PRACTICE_WINLINK_CALLSIGN("winlink.callsign"), // mbo address
 
-  PRACTICE_PATH_HOME("practice.path.home"), // root; C:\ETO_Practice
   PRACTICE_PATH_REFERENCE("practice.path.reference"), // dir where reference dirs/files are
   PRACTICE_PATH_EXPORTED_MESSAGES_HOME("practice.path.exportedMessages"), // dir where we find exported messages
   PRACTICE_PATH_RESOUCE_CONTENT("practice.path.resourceContent"), // FILE for ICS-213 RR generation
