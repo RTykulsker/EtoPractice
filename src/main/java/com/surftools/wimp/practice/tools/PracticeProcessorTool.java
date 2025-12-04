@@ -206,7 +206,7 @@ public class PracticeProcessorTool {
       return input;
     }
 
-    final var knownSet = Set.of("last", "current", "next");
+    final var knownSet = Set.of("last", "current", "today", "this", "next");
     var s = input.toLowerCase();
     if (!knownSet.contains(s)) {
       return s;
@@ -228,6 +228,8 @@ public class PracticeProcessorTool {
       }
 
     case "current":
+    case "today":
+    case "this":
       return date.toString();
 
     case "next":
