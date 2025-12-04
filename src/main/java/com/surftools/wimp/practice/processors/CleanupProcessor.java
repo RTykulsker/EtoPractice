@@ -109,7 +109,16 @@ public class CleanupProcessor extends AbstractBaseProcessor {
         }
       }
 
-      if (name.startsWith("leaflet")) {
+      if (name.startsWith("leaflet-ETO Weekly Practice for ")) {
+        try {
+          var newName = name.replace("leaflet-ETO Weekly Practice for ", "map-");
+          var newFile = Path.of(outputPathName, newName).toFile();
+          outputFile.renameTo(newFile);
+          logger.info("renamed map file to: " + newFile.getName());
+        } catch (Exception e) {
+          logger.error("Exception renaming file: " + name, e.getMessage());
+        }
+      } else if (name.startsWith("leaflet")) {
         try {
           var newName = name.replace("leaflet", "map");
           var newFile = Path.of(outputPathName, newName).toFile();
@@ -131,7 +140,8 @@ public class CleanupProcessor extends AbstractBaseProcessor {
       }
     } // end rename loop over files
 
-    // because I'd rather write 50 lines of code than point and click to import two files into Winlink Express ...
+    // because I'd rather write 50 lines of code than point and click to import two
+    // files into Winlink Express ...
     try {
       outputFiles = outputDir.listFiles();
       var messageLines = new StringBuffer();

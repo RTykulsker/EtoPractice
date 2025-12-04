@@ -48,6 +48,7 @@ import com.surftools.wimp.utils.config.IConfigurationManager;
  */
 public class UploadProcessor extends AbstractBaseProcessor {
   private static final Logger logger = LoggerFactory.getLogger(UploadProcessor.class);
+  @SuppressWarnings("unused")
   private String dateString = null;
 
   private FTPClient ftp;
