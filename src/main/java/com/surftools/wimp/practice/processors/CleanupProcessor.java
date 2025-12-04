@@ -101,7 +101,7 @@ public class CleanupProcessor extends AbstractBaseProcessor {
       var name = outputFile.getName();
       if (name.endsWith("chart.html")) {
         try {
-          var newFile = Path.of(outputPathName, "chart-" + dateString + ".html").toFile();
+          var newFile = Path.of(outputPathName, dateString + "-chart.html").toFile();
           outputFile.renameTo(newFile);
           logger.info("renamed chart file to: " + newFile.getName());
         } catch (Exception e) {
@@ -111,8 +111,7 @@ public class CleanupProcessor extends AbstractBaseProcessor {
 
       if (name.startsWith("leaflet-ETO Weekly Practice for ")) {
         try {
-          var newName = name.replace("leaflet-ETO Weekly Practice for ", "map-");
-          var newFile = Path.of(outputPathName, newName).toFile();
+          var newFile = Path.of(outputPathName, dateString + "-map.html").toFile();
           outputFile.renameTo(newFile);
           logger.info("renamed map file to: " + newFile.getName());
         } catch (Exception e) {
