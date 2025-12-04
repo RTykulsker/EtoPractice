@@ -87,6 +87,13 @@ public enum Key implements IConfigurationKey {
   EXERCISE_WINDOW_OPEN("exerciseWindowOpen"), //
   EXERCISE_WINDOW_CLOSE("exerciseWindowClose"), //
 
+  EMAIL_NOTIFICATION_FROM("email.notification.from"), //
+  EMAIL_NOTIFICATION_TO("email.notification.to"), // comma-delimited list
+  EMAIL_NOTIFICATION_PASSWORD_FILEPATH("email.notification.password.filePath"), // no password in config
+  EMAIL_NOTIFICATION_SUBJECT("email.notification.subject"), // with #DATE# substitution
+  EMAIL_NOTIFICATION_BODY("email.notification.body"), // with #DATE# substitution
+  EMAIL_NOTIFICATION_ENABLED_ON_COMMAND_LINE("email.notification.enabled.on.command.line"), // set to true to enable
+
   OUTBOUND_MESSAGE_ENGINE_TYPE("outboundMessage.engineType"), // PAT, WINLINK_CMS, etc
   OUTBOUND_MESSAGE_SOURCE("outboundMessage.source"), // mbo address
   OUTBOUND_MESSAGE_SENDER("outboundMessage.sender"), // from address

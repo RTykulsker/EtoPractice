@@ -87,13 +87,19 @@ public class PropertyFileConfigurationManager extends DefaultConfigurationManage
       }
 
       if (propertiesWithoutConfigurationKeys.size() > 0) {
-        logger
-            .warn("the following properties had no associated ConfigurationKey: "
-                + String.join(", ", propertiesWithoutConfigurationKeys));
+        logger.warn("the following properties had no associated ConfigurationKey: "
+            + String.join(", ", propertiesWithoutConfigurationKeys));
       }
 
       if (substitutionMap.size() > 0) {
         doSubstitutions(substitutionMap);
+      }
+
+      var dumpMap = false;
+      if (dumpMap) {
+        for (var key : map.keySet()) {
+          logger.info("DUMP key: " + key + " -> " + map.get(key));
+        }
       }
     } catch (Exception e) {
       logger.error("Exception processing configuration file: " + configFileName + ": " + e.getMessage());
