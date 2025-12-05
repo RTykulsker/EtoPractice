@@ -71,7 +71,15 @@ public class CleanupProcessor extends AbstractBaseProcessor {
       }
 
       var name = outputFile.getName();
-      if (name.endsWith(".csv")) {
+      if (name.equals("practice-summary.csv")) {
+        try {
+          Files.move(outputFile.toPath(), Path.of(outputPathName, dateString + "-summary.csv"),
+              StandardCopyOption.ATOMIC_MOVE);
+          logger.info("renamed practice-summary.csv" + name + " to: " + dateString + "-summary.csv");
+        } catch (Exception e) {
+          logger.error("Exception renaming file: " + outputFile.toString(), e.getMessage());
+        }
+      } else if (name.endsWith(".csv")) {
         try {
           Files.move(outputFile.toPath(), Path.of(unusedDirName, name), StandardCopyOption.ATOMIC_MOVE);
           logger.info("moved output/" + name + " to usused/");
@@ -79,7 +87,7 @@ public class CleanupProcessor extends AbstractBaseProcessor {
           logger.error("Exception moving file: " + outputFile.toString(), e.getMessage());
         }
       }
-    }
+    } // end loop over files
 
     // copy allFeedback.txt to usused
     var allFeedbackSource = Path.of(pathName.toString(), "allFeedback.txt");
@@ -119,8 +127,8 @@ public class CleanupProcessor extends AbstractBaseProcessor {
         }
       } else if (name.startsWith("leaflet")) {
         try {
-          var newName = name.replace("leaflet", "map");
-          var newFile = Path.of(outputPathName, newName).toFile();
+          var newName = name.replace("leaflet", dateString + "-map");
+          var newFile = Path.of(unusedDirName, newName).toFile();
           outputFile.renameTo(newFile);
           logger.info("renamed map file to: " + newFile.getName());
         } catch (Exception e) {
