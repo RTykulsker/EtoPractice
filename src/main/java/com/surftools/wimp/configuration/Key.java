@@ -46,7 +46,8 @@ public enum Key implements IConfigurationKey {
   PRACTICE_GENERATOR_RNG_SEED("practice.generator.rngSeed"), // to get consistent results
   PRACTICE_GENERATOR_N_YEARS("practice.generator.nYears"), // number of years to generate
 
-  PRACTICE_ENABLE_LEGACY("enable.legacy"), //
+  PRACTICE_ENABLE_LEGACY("enable.legacy"), // allows for 3rd week practice, instead of monthly training
+  PRACTICE_ENABLE_FINALIZE("enable.finalize"), // set to true to enable, renames output, sends email
 
   PERSISTENCE_SQLITE_URL("persistence.sqlite.url"), //
   PERSISTENCE_ALLOW_FUTURE("persistence.allow.future"), // allow/disallow future exercises into db
@@ -92,7 +93,6 @@ public enum Key implements IConfigurationKey {
   EMAIL_NOTIFICATION_PASSWORD_FILEPATH("email.notification.password.filePath"), // no password in config
   EMAIL_NOTIFICATION_SUBJECT("email.notification.subject"), // with #DATE# substitution
   EMAIL_NOTIFICATION_BODY("email.notification.body"), // with #DATE# substitution
-  EMAIL_NOTIFICATION_ENABLED_ON_COMMAND_LINE("email.notification.enabled.on.command.line"), // set to true to enable
 
   OUTBOUND_MESSAGE_ENGINE_TYPE("outboundMessage.engineType"), // PAT, WINLINK_CMS, etc
   OUTBOUND_MESSAGE_SOURCE("outboundMessage.source"), // mbo address

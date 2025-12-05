@@ -31,6 +31,8 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,10 +46,12 @@ import com.surftools.wimp.utils.config.IConfigurationManager;
 public class CleanupProcessor extends AbstractBaseProcessor {
   private static final Logger logger = LoggerFactory.getLogger(CleanupProcessor.class);
   private String dateString = null;
+  private boolean isFinalizing = false;
 
   @Override
   public void initialize(IConfigurationManager cm, IMessageManager mm) {
     dateString = cm.getAsString(Key.EXERCISE_DATE);
+    isFinalizing = cm.getAsBoolean(Key.PRACTICE_ENABLE_FINALIZE);
   }
 
   @Override
@@ -203,6 +207,16 @@ public class CleanupProcessor extends AbstractBaseProcessor {
       }
     } catch (Exception e) {
       logger.error("Exception merging Winlink message files: " + e.getMessage());
+    }
+
+    if (isFinalizing) {
+      var formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm-ss");
+      LocalDateTime now = LocalDateTime.now();
+      var timestamp = now.format(formatter);
+
+      var finalPath = Path.of(outputPath + "-FINAL-" + timestamp);
+      FileUtils.copyDirectory(outputPath, finalPath);
+      logger.info("copied output dir to: " + finalPath.toString());
     }
 
   } // end postProcess

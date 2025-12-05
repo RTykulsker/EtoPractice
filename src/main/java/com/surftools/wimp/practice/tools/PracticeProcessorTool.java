@@ -64,8 +64,8 @@ public class PracticeProcessorTool {
   @Option(name = "--exerciseDate", usage = "date of practice exercise in yyyy-MM-dd format", required = true)
   private String exerciseDateString = null;
 
-  @Option(name = "--enableEmailNotification", usage = "send email to ETO folks upon completion", required = false)
-  private boolean enableEmailNotification = false;
+  @Option(name = "--enableFinalize", usage = "to rename output,  email to ETO folks upon completion", required = false)
+  private boolean enableFinalize = false;
 
   @Option(name = "--config", usage = "practice onfiguration file name", required = true)
   private String configurationFileName;
@@ -173,7 +173,7 @@ public class PracticeProcessorTool {
       cm.putString(Key.OUTBOUND_MESSAGE_SUBJECT, "ETO Practice Exercise Feedback");
       cm.putString(Key.OUTBOUND_MESSAGE_ENGINE_TYPE, "WINLINK_EXPRESS");
 
-      cm.putBoolean(Key.EMAIL_NOTIFICATION_ENABLED_ON_COMMAND_LINE, enableEmailNotification);
+      cm.putBoolean(Key.PRACTICE_ENABLE_FINALIZE, enableFinalize);
 
       var mm = new MessageManager();
       mm.putContextObject(REFERENCE_MESSAGE_KEY, referenceMessage);
