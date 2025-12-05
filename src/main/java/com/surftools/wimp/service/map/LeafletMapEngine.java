@@ -55,8 +55,8 @@ public class LeafletMapEngine implements IMapService {
   public void makeMap(Path outputPath, MapHeader mapHeader, List<MapEntry> entries) {
     var sb = new StringBuilder();
 
-    final Set<String> validColors = Set
-        .of("blue", "gold", "red", "green", "orange", "yellow", "violet", "grey", "black");
+    final Set<String> validColors = Set.of("blue", "gold", "red", "green", "orange", "yellow", "violet", "grey",
+        "black");
     var labelIndex = 0;
     for (var entry : entries) {
       var color = entry.iconColor() == null ? "blue" : entry.iconColor();
@@ -106,7 +106,7 @@ public class LeafletMapEngine implements IMapService {
 
           <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
            integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-           crossorigin=""/>
+           crossorigin="">
 
           <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
@@ -183,16 +183,19 @@ public class LeafletMapEngine implements IMapService {
   // public static void main(String[] args) throws Exception {
   // var outputPath = Path.of("2025-08-21/output");
   // var inputPath = Path.of(outputPath.toString(), "feedback-hics_259.csv");
-  // var fieldsArray = ReadProcessor.readCsvFileIntoFieldsArray(inputPath, ',', false, 1);
+  // var fieldsArray = ReadProcessor.readCsvFileIntoFieldsArray(inputPath, ',',
+  // false, 1);
   // var mapEntries = new ArrayList<MapEntry>(fieldsArray.size());
   // for (var fieldEntry : fieldsArray) {
   // var pair = new LatLongPair(fieldEntry[1], fieldEntry[2]);
-  // var content = "MessageId: " + fieldEntry[5] + "\n" + "Feedback Count: " + fieldEntry[3] + "\n" + "Feedback: "
+  // var content = "MessageId: " + fieldEntry[5] + "\n" + "Feedback Count: " +
+  // fieldEntry[3] + "\n" + "Feedback: "
   // + fieldEntry[4];
   // var mapEntry = new MapEntry(fieldEntry[0], pair, content);
   // mapEntries.add(mapEntry);
   // }
   // var mapService = new MapService(null, null);
-  // mapService.makeMap(outputPath, new MapHeader("ETO-2025-08-21--HIC-259", ""), mapEntries);
+  // mapService.makeMap(outputPath, new MapHeader("ETO-2025-08-21--HIC-259", ""),
+  // mapEntries);
   // }
 }
