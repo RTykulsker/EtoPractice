@@ -89,7 +89,7 @@ public class PracticeGeneratorTool {
 
   public final static Set<Integer> VALID_ORDINALS = MESSAGE_TYPE_MAP.keySet();
 
-  public final static String PRACTICE_URL = "https://emcomm-training.org/Weekly_Practice.html";
+  public static String practiceInstructionURL = "https://qsl.net/km6so/eto/ (temporary site)";
 
   private static final Logger logger = LoggerFactory.getLogger(PracticeGeneratorTool.class);
   static {
@@ -143,6 +143,10 @@ public class PracticeGeneratorTool {
     var nYearsString = cm.getAsString(Key.PRACTICE_GENERATOR_N_YEARS, "5");
     nYears = Integer.valueOf(nYearsString);
     logger.info("nYears: " + nYears);
+
+    practiceInstructionURL = cm.getAsString(Key.PRACTICE_GENERATOR_INSTRUCTION_URL,
+        "https://emcomm-training.org/Weekly_Practice.html");
+    logger.info("practiceInstructionURL: " + practiceInstructionURL);
 
     // generate nYears worth, from 2025; this is for idempotency
     var startDate = LocalDate.of(2025, 1, 1);
@@ -275,7 +279,7 @@ public class PracticeGeneratorTool {
     sb.append(NL);
     sb.append("Send the message via the Session type of your choice to ETO-PRACTICE." + NL);
     sb.append(NL);
-    sb.append("Refer to " + PRACTICE_URL + " for further instructions " + NL);
+    sb.append("Refer to " + practiceInstructionURL + " for further instructions " + NL);
     sb.append(" about the weekly practice exercises and/or monthly training exercises." + NL);
 
     var m = new Ics213Message(exportedMessage, organization, incidentName, //
@@ -364,7 +368,7 @@ public class PracticeGeneratorTool {
     sb.append(NL);
     sb.append("Send the message via the Session type of your choice to ETO-PRACTICE." + NL);
     sb.append(NL);
-    sb.append("Refer to " + PRACTICE_URL + " for further instructions " + NL);
+    sb.append("Refer to " + practiceInstructionURL + " for further instructions " + NL);
     sb.append("about the weekly practice exercises and/or monthly training exercises." + NL);
 
     var m = new Ics213RRMessage(exportedMessage, organization, incidentName, //
@@ -445,7 +449,7 @@ public class PracticeGeneratorTool {
     sb.append(NL);
     sb.append("Send the message via the Session type of your choice to ETO-PRACTICE." + NL);
     sb.append(NL);
-    sb.append("Refer to " + PRACTICE_URL + " for further instructions " + NL);
+    sb.append("Refer to " + practiceInstructionURL + " for further instructions " + NL);
     sb.append("about the weekly practice exercises and/or monthly training exercises." + NL);
 
     var m = new Hics259Message(exportedMessage, //
@@ -545,7 +549,7 @@ public class PracticeGeneratorTool {
     sb.append(NL);
     sb.append("Send the message via the Session type of your choice to ETO-PRACTICE." + NL);
     sb.append(NL);
-    sb.append("Refer to " + PRACTICE_URL + " for further instructions " + NL);
+    sb.append("Refer to " + practiceInstructionURL + " for further instructions " + NL);
     sb.append("about the weekly practice exercises and/or monthly training exercises." + NL);
 
     var m = new Ics205Message(exportedMessage, organization, incidentName, NA, //
@@ -711,7 +715,7 @@ public class PracticeGeneratorTool {
     sb.append(NL);
     sb.append("Send the message via the Session type of your choice to ETO-PRACTICE." + NL);
     sb.append(NL);
-    sb.append("Refer to " + PRACTICE_URL + " for further instructions " + NL);
+    sb.append("Refer to " + practiceInstructionURL + " for further instructions " + NL);
     sb.append(" about the weekly practice exercises and/or monthly training exercises." + NL);
 
     var m = new FieldSituationMessage(//

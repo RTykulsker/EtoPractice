@@ -45,6 +45,7 @@ public enum Key implements IConfigurationKey {
 
   PRACTICE_GENERATOR_RNG_SEED("practice.generator.rngSeed"), // to get consistent results
   PRACTICE_GENERATOR_N_YEARS("practice.generator.nYears"), // number of years to generate
+  PRACTICE_GENERATOR_INSTRUCTION_URL("practice.generator.instruction.url"), // url at the bottom of each instruction
 
   PRACTICE_ENABLE_LEGACY("enable.legacy"), // allows for 3rd week practice, instead of monthly training
   PRACTICE_ENABLE_FINALIZE("enable.finalize"), // set to true to enable, renames output, sends email
