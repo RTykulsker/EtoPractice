@@ -49,19 +49,12 @@ import com.surftools.wimp.utils.config.IConfigurationManager;
  */
 public class UploadProcessor extends AbstractBaseProcessor {
   private static final Logger logger = LoggerFactory.getLogger(UploadProcessor.class);
-  @SuppressWarnings("unused")
   private String dateString = null;
-
-//  private FTPClient ftp;
 
   private String outputPathName;
   private Path outputPath;
   private String ftpLocalPathName;
   private Path ftpLocalPath;
-
-//
-//  ftp.addProtocolCommandListener(new PrintCommandListener(new PrintWriter(System.out)));
-
   private boolean isInitialized = false;
 
   @Override
@@ -89,47 +82,6 @@ public class UploadProcessor extends AbstractBaseProcessor {
     logger.info("ftpLocalPath: " + ftpLocalPath);
 
     isInitialized = true;
-
-//
-// https://dlptest.com/ftp-test/
-//    var server = "ftp.dlptest.com";
-//    var port = 21;
-//    var user = "dlpuser";
-//    var password = "rNrKYTX9g7z3RgJRmxWuGHbeu";
-//
-//    try {
-//      ftp = new FTPClient();
-//      ftp.addProtocolCommandListener(new PrintCommandListener(new PrintWriter(System.out)));
-//      ftp.connect(server, port);
-//
-//      int reply = ftp.getReplyCode();
-//      if (!FTPReply.isPositiveCompletion(reply)) {
-//        ftp.disconnect();
-//        throw new IOException("Exception in connecting to FTP Server");
-//      }
-//
-//      boolean ret = ftp.login(user, password);
-//      if (!ret) {
-//        throw new IllegalArgumentException("failed to log in");
-//      }
-//
-//    } catch (Exception e) {
-//      logger.error("Error connecting to server: " + server + ":" + port + ", " + e.getLocalizedMessage());
-//      isInitialized = false;
-//      return;
-//    }
-//
-//    try {
-//      FTPFile[] files = ftp.listDirectories();
-//      var fileNames = Arrays.stream(files).map(FTPFile::getName).toList();
-//      logger.info("files: " + String.join(",", fileNames));
-//      isInitialized = true;
-//    } catch (Exception e) {
-//      logger.error("Error connecting to server: " + server + ":" + port + ", " + e.getLocalizedMessage());
-//      isInitialized = false;
-//      return;
-//    }
-
   }
 
   @Override
@@ -144,7 +96,6 @@ public class UploadProcessor extends AbstractBaseProcessor {
     }
 
     uploadToTemporary();
-
   } // end postProcess
 
   private void uploadToTemporary() {
