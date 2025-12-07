@@ -61,6 +61,17 @@ public class UploadProcessor extends AbstractBaseProcessor {
   public void initialize(IConfigurationManager cm, IMessageManager mm) {
     dateString = cm.getAsString(Key.EXERCISE_DATE);
 
+    var allowFuture = cm.getAsBoolean(Key.PERSISTENCE_ALLOW_FUTURE, false);
+    if (!allowFuture) {
+      var exerciseDate = LocalDate.parse(dateString);
+      var nowDate = LocalDate.now();
+      if (exerciseDate.isAfter(nowDate)) {
+        var message = "skipping upload because Exercise date: " + exerciseDate + " is in future of now: " + nowDate;
+        logger.warn("### " + message);
+        return;
+      }
+    }
+
     outputPathName = cm.getAsString(Key.OUTPUT_PATH);
     if (outputPathName == null) {
       var pathString = cm.getAsString(Key.PATH);
