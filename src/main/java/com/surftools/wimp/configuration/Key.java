@@ -42,6 +42,7 @@ public enum Key implements IConfigurationKey {
   PRACTICE_PATH_EXPORTED_MESSAGES_HOME("practice.path.exportedMessages"), // dir where we find exported messages
   PRACTICE_PATH_RESOUCE_CONTENT("practice.path.resourceContent"), // FILE for ICS-213 RR generation
   PRACTICE_PATH_NAG_CONTENT("practice.path.nagContent"), // path to FILE where end-of-year nag is
+  PRACTICE_PATH_UPLOAD_FTP_LOCAL("practice.path.upload.ftp.local"), // path where local FTP dir is
 
   PRACTICE_GENERATOR_RNG_SEED("practice.generator.rngSeed"), // to get consistent results
   PRACTICE_GENERATOR_N_YEARS("practice.generator.nYears"), // number of years to generate

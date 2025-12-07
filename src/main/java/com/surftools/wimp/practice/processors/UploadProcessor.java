@@ -27,17 +27,18 @@ SOFTWARE.
 
 package com.surftools.wimp.practice.processors;
 
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.Arrays;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
 
-import org.apache.commons.net.PrintCommandListener;
-import org.apache.commons.net.ftp.FTPClient;
-import org.apache.commons.net.ftp.FTPFile;
-import org.apache.commons.net.ftp.FTPReply;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.surftools.utils.FileUtils;
 import com.surftools.wimp.configuration.Key;
 import com.surftools.wimp.core.IMessageManager;
 import com.surftools.wimp.processors.std.baseExercise.AbstractBaseProcessor;
@@ -51,7 +52,12 @@ public class UploadProcessor extends AbstractBaseProcessor {
   @SuppressWarnings("unused")
   private String dateString = null;
 
-  private FTPClient ftp;
+//  private FTPClient ftp;
+
+  private String outputPathName;
+  private Path outputPath;
+  private String ftpLocalPathName;
+  private Path ftpLocalPath;
 
 //
 //  ftp.addProtocolCommandListener(new PrintCommandListener(new PrintWriter(System.out)));
@@ -62,44 +68,67 @@ public class UploadProcessor extends AbstractBaseProcessor {
   public void initialize(IConfigurationManager cm, IMessageManager mm) {
     dateString = cm.getAsString(Key.EXERCISE_DATE);
 
-//    https://dlptest.com/ftp-test/
-    var server = "ftp.dlptest.com";
-    var port = 21;
-    var user = "dlpuser";
-    var password = "rNrKYTX9g7z3RgJRmxWuGHbeu";
-
-    try {
-      ftp = new FTPClient();
-      ftp.addProtocolCommandListener(new PrintCommandListener(new PrintWriter(System.out)));
-      ftp.connect(server, port);
-
-      int reply = ftp.getReplyCode();
-      if (!FTPReply.isPositiveCompletion(reply)) {
-        ftp.disconnect();
-        throw new IOException("Exception in connecting to FTP Server");
-      }
-
-      boolean ret = ftp.login(user, password);
-      if (!ret) {
-        throw new IllegalArgumentException("failed to log in");
-      }
-
-    } catch (Exception e) {
-      logger.error("Error connecting to server: " + server + ":" + port + ", " + e.getLocalizedMessage());
-      isInitialized = false;
-      return;
+    outputPathName = cm.getAsString(Key.OUTPUT_PATH);
+    if (outputPathName == null) {
+      var pathString = cm.getAsString(Key.PATH);
+      var path = Path.of(pathString);
+      outputPath = Path.of(path.toAbsolutePath().toString(), "output");
+      outputPathName = outputPath.toString();
+      logger.info("outputPath: " + outputPath);
+    } else {
+      outputPath = Path.of(outputPathName);
     }
 
-    try {
-      FTPFile[] files = ftp.listDirectories();
-      var fileNames = Arrays.stream(files).map(FTPFile::getName).toList();
-      logger.info("files: " + String.join(",", fileNames));
-      isInitialized = true;
-    } catch (Exception e) {
-      logger.error("Error connecting to server: " + server + ":" + port + ", " + e.getLocalizedMessage());
-      isInitialized = false;
-      return;
+    ftpLocalPathName = cm.getAsString(Key.PRACTICE_PATH_UPLOAD_FTP_LOCAL);
+    ftpLocalPath = Path.of(ftpLocalPathName);
+    var ftpLocalDir = ftpLocalPath.toFile();
+    if (!ftpLocalDir.exists()) {
+      logger.error("FTP local dir: " + ftpLocalPathName + " doesn not exist");
+      System.exit(1);
     }
+    logger.info("ftpLocalPath: " + ftpLocalPath);
+
+    isInitialized = true;
+
+//
+// https://dlptest.com/ftp-test/
+//    var server = "ftp.dlptest.com";
+//    var port = 21;
+//    var user = "dlpuser";
+//    var password = "rNrKYTX9g7z3RgJRmxWuGHbeu";
+//
+//    try {
+//      ftp = new FTPClient();
+//      ftp.addProtocolCommandListener(new PrintCommandListener(new PrintWriter(System.out)));
+//      ftp.connect(server, port);
+//
+//      int reply = ftp.getReplyCode();
+//      if (!FTPReply.isPositiveCompletion(reply)) {
+//        ftp.disconnect();
+//        throw new IOException("Exception in connecting to FTP Server");
+//      }
+//
+//      boolean ret = ftp.login(user, password);
+//      if (!ret) {
+//        throw new IllegalArgumentException("failed to log in");
+//      }
+//
+//    } catch (Exception e) {
+//      logger.error("Error connecting to server: " + server + ":" + port + ", " + e.getLocalizedMessage());
+//      isInitialized = false;
+//      return;
+//    }
+//
+//    try {
+//      FTPFile[] files = ftp.listDirectories();
+//      var fileNames = Arrays.stream(files).map(FTPFile::getName).toList();
+//      logger.info("files: " + String.join(",", fileNames));
+//      isInitialized = true;
+//    } catch (Exception e) {
+//      logger.error("Error connecting to server: " + server + ":" + port + ", " + e.getLocalizedMessage());
+//      isInitialized = false;
+//      return;
+//    }
 
   }
 
@@ -110,10 +139,95 @@ public class UploadProcessor extends AbstractBaseProcessor {
   @Override
   public void postProcess() {
     if (!isInitialized) {
-      logger.info("NO ftp uploads");
+      logger.info("NOT initiized. Nothing uploaded");
       return;
     }
 
+    uploadToTemporary();
+
   } // end postProcess
+
+  private void uploadToTemporary() {
+    // copy the map, chart and summary files to the ftp content/year/date dir
+    var thisDate = LocalDate.parse(dateString);
+    var thisYear = String.valueOf((thisDate.getYear()));
+    var contentPath = Path.of(ftpLocalPath.toString(), thisYear, dateString);
+    FileUtils.makeDirIfNeeded(contentPath);
+    var baseNames = List.of("map.html", "chart.html", "summary.csv");
+    for (var baseName : baseNames) {
+      var sourcePath = Path.of(outputPathName, dateString + "-" + baseName);
+      var targetPath = Path.of(contentPath.toString(), dateString + "-" + baseName);
+      try {
+        Files.copy(sourcePath, targetPath, StandardCopyOption.REPLACE_EXISTING);
+        logger.info("copied " + baseName + " to " + targetPath);
+      } catch (Exception e) {
+        logger.error("Exception copying " + baseName + " to ftp content dir: " + contentPath.toString() + ", "
+            + e.getLocalizedMessage());
+      }
+    } // end loop over files
+
+    // copy index.html to backup dir
+    var formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm-ss");
+    LocalDateTime now = LocalDateTime.now();
+    var timestamp = now.format(formatter);
+    var sourcePath = Path.of(ftpLocalPathName, "index.html");
+    var targetPath = Path.of(ftpLocalPathName, "backup", "index-" + timestamp + ".html");
+    try {
+      Files.copy(sourcePath, targetPath, StandardCopyOption.REPLACE_EXISTING);
+      logger.info("copied index.html  to " + targetPath);
+    } catch (Exception e) {
+      logger.error("Exception copying index.html to backup: " + targetPath.toString() + ", " + e.getLocalizedMessage());
+    }
+
+    // read index fix and edit it
+    var nextDate = thisDate.plusWeeks(1);
+    var nextDateString = nextDate.toString();
+    var outputLines = new StringBuilder();
+    var editPath = Path.of(ftpLocalPathName, "index.html");
+    final var NL = "\n";
+    try {
+      var inputLines = Files.readAllLines(editPath);
+      for (var line : inputLines) {
+
+        // turn off highlighting for current week
+        var expectedTR = "<tr id=\"" + dateString + "-row\" class=\"highlight-row\">";
+        if (line.equals(expectedTR)) {
+          line = "<tr id=\"" + dateString + "-row\" class=\"normal-row\">";
+          outputLines.append(line + NL);
+          continue;
+        }
+
+        // expand content
+        var expectedTD = "<td id=\"" + dateString + "-content\"></td>";
+        if (line.equals(expectedTD)) {
+          var sb = new StringBuilder();
+          final var format = "<a href=\"content/" + thisYear + "/" + dateString + "/" + dateString + "-%s\">%s</a>";
+          sb.append("<td id=\"" + dateString + "-content\">" + NL);
+          sb.append(String.format(format, "map.html", "map") + NL);
+          sb.append("<span>/</span>" + NL);
+          sb.append(String.format(format, "chart.html", "chart") + NL);
+          sb.append("<span>/</span>" + NL);
+          sb.append(String.format(format, "summary.csv", "table") + NL);
+          sb.append("</td>" + NL);
+          outputLines.append(sb.toString());
+          continue;
+        }
+
+        // turn on highlighting for next week
+        expectedTR = "<tr id=\"" + nextDateString + "-row\" class=\"normal-row\">";
+        if (line.equals(expectedTR)) {
+          line = "<tr id=\"" + nextDateString + "-row\" class=\"highlight-row\">";
+          outputLines.append(line + NL);
+          continue;
+        }
+
+        outputLines.append(line + NL);
+      }
+      Files.writeString(editPath, outputLines.toString());
+    } catch (Exception e) {
+      logger.error("Exception editing index.html: " + editPath.toString() + ", " + e.getLocalizedMessage());
+    }
+
+  } // end uploadToTemporary
 
 }
