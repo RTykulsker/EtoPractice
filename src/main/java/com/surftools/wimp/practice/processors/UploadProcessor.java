@@ -113,9 +113,9 @@ public class UploadProcessor extends AbstractBaseProcessor {
     // copy the map, chart and summary files to the ftp content/year/date dir
     var thisDate = LocalDate.parse(dateString);
     var thisYear = String.valueOf((thisDate.getYear()));
-    var contentPath = Path.of(ftpLocalPath.toString(), thisYear, dateString);
+    var contentPath = Path.of(ftpLocalPath.toString(), "content", thisYear, dateString);
     FileUtils.makeDirIfNeeded(contentPath);
-    var baseNames = List.of("map.html", "chart.html", "summary.csv");
+    var baseNames = List.of("map.html", "chart.html", "standard-summary.csv");
     for (var baseName : baseNames) {
       var sourcePath = Path.of(outputPathName, dateString + "-" + baseName);
       var targetPath = Path.of(contentPath.toString(), dateString + "-" + baseName);
@@ -169,7 +169,7 @@ public class UploadProcessor extends AbstractBaseProcessor {
           sb.append("<span>/</span>" + NL);
           sb.append(String.format(format, "chart.html", "chart") + NL);
           sb.append("<span>/</span>" + NL);
-          sb.append(String.format(format, "summary.csv", "table") + NL);
+          sb.append(String.format(format, "standard-summary.csv", "table") + NL);
           sb.append("</td>" + NL);
           outputLines.append(sb.toString());
           continue;
