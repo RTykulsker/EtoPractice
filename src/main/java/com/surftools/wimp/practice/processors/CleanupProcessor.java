@@ -77,7 +77,7 @@ public class CleanupProcessor extends AbstractBaseProcessor {
       var name = outputFile.getName();
       if (name.equals("practice-summary.csv")) {
         try {
-          Files.move(outputFile.toPath(), Path.of(outputPathName, dateString + "-summary.csv"),
+          Files.move(outputFile.toPath(), Path.of(outputPathName, dateString + "-standard-summary.csv"),
               StandardCopyOption.ATOMIC_MOVE);
           logger.info("renamed practice-summary.csv" + name + " to: " + dateString + "-summary.csv");
         } catch (Exception e) {
@@ -200,7 +200,7 @@ public class CleanupProcessor extends AbstractBaseProcessor {
 
         messageLines.insert(0, header);
         messageLines.append(footer);
-        var path = Path.of(outputPathName, "merged-Winlink-ImportMessages-" + dateString + ".xml");
+        var path = Path.of(outputPathName, dateString + "-Winlink-Import-All-Messages.xml");
 
         Files.writeString(path, messageLines.toString());
         logger.info("created merged Winlink import file: " + path.toFile().getName());
