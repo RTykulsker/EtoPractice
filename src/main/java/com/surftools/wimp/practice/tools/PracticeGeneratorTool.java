@@ -89,7 +89,7 @@ public class PracticeGeneratorTool {
 
   public final static Set<Integer> VALID_ORDINALS = MESSAGE_TYPE_MAP.keySet();
 
-  public static String practiceInstructionURL = "https://qsl.net/km6so/eto/ (temporary site)";
+  public static String practiceInstructionURL = "https://emcomm-training.org/Winlink_Thursdays.html";
 
   private static final Logger logger = LoggerFactory.getLogger(PracticeGeneratorTool.class);
   static {
