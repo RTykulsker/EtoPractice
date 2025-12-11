@@ -25,7 +25,7 @@ SOFTWARE.
 
 */
 
-package com.surftools.wimp.practice.processors;
+package com.surftools.wimp.processors.std;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -41,7 +41,6 @@ import org.slf4j.LoggerFactory;
 import com.surftools.utils.FileUtils;
 import com.surftools.wimp.configuration.Key;
 import com.surftools.wimp.core.IMessageManager;
-import com.surftools.wimp.processors.std.baseExercise.AbstractBaseProcessor;
 import com.surftools.wimp.utils.config.IConfigurationManager;
 
 /**

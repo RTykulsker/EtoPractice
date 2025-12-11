@@ -25,7 +25,7 @@ SOFTWARE.
 
 */
 
-package com.surftools.wimp.practice.processors;
+package com.surftools.wimp.processors.std;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -44,7 +44,6 @@ import com.surftools.wimp.persistence.JoinedUser;
 import com.surftools.wimp.persistence.PersistenceManager;
 import com.surftools.wimp.persistence.dto.Exercise;
 import com.surftools.wimp.persistence.dto.ReturnStatus;
-import com.surftools.wimp.processors.std.baseExercise.AbstractBaseProcessor;
 import com.surftools.wimp.service.map.MapEntry;
 import com.surftools.wimp.service.map.MapHeader;
 import com.surftools.wimp.service.map.MapService;

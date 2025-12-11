@@ -25,7 +25,7 @@ SOFTWARE.
 
 */
 
-package com.surftools.wimp.practice.processors.exercise;
+package com.surftools.wimp.practice.processors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

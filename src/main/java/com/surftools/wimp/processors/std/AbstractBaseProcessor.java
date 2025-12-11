@@ -25,7 +25,7 @@ SOFTWARE.
 
 */
 
-package com.surftools.wimp.processors.std.baseExercise;
+package com.surftools.wimp.processors.std;
 
 import java.nio.file.Files;
 import java.nio.file.Path;

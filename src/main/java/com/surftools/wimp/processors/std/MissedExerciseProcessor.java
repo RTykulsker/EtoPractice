@@ -25,7 +25,7 @@ SOFTWARE.
 
 */
 
-package com.surftools.wimp.practice.processors;
+package com.surftools.wimp.processors.std;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -42,7 +42,6 @@ import com.surftools.wimp.persistence.JoinedUser;
 import com.surftools.wimp.persistence.PersistenceManager;
 import com.surftools.wimp.persistence.dto.ReturnStatus;
 import com.surftools.wimp.practice.tools.PracticeProcessorTool;
-import com.surftools.wimp.processors.std.baseExercise.AbstractBaseProcessor;
 import com.surftools.wimp.service.outboundMessage.OutboundMessage;
 import com.surftools.wimp.service.outboundMessage.OutboundMessageService;
 import com.surftools.wimp.utils.config.IConfigurationManager;
