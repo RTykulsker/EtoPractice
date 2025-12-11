@@ -32,7 +32,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -66,7 +65,7 @@ public class AcknowledgementProcessor extends AbstractBaseProcessor {
   public static final String ACK_MAP = "ackMap";
   public static final String ACK_TEXT_MAP = "ackTextMap";
 
-  private Set<MessageType> expectedMessageTypes;
+  private MessageType expectedMessageType;
   private Map<String, AckEntry> ackMap;
   private Map<String, String> ackTextMap;
   private List<String> badLocationSenders;
@@ -82,8 +81,13 @@ public class AcknowledgementProcessor extends AbstractBaseProcessor {
       throw new RuntimeException("No AcknowledgementSpecification found for: " + ackSpecString);
     }
 
+    var messageTypeString = cm.getAsString(Key.EXPECTED_MESSAGE_TYPES);
+    expectedMessageType = MessageType.fromString(messageTypeString);
+    if (expectedMessageType == null) {
+      throw new IllegalArgumentException("unknown messageType: " + messageTypeString);
+    }
+
     badLocationSenders = new ArrayList<>();
-    expectedMessageTypes = getExpectedMessageTypes();
     ackMap = new HashMap<>();
     ackTextMap = new HashMap<>();
     mm.putContextObject(ACK_TEXT_MAP, ackTextMap);
@@ -160,26 +164,25 @@ public class AcknowledgementProcessor extends AbstractBaseProcessor {
     var selectedAckMap = acknowledgments.stream().collect(Collectors.toMap(AckEntry::getId, item -> item));
     mm.putContextObject("selectedAckMap", selectedAckMap);
 
-    Collections.sort(acknowledgments);
-    writeTable("acknowledgments.csv", acknowledgments);
+    WriteProcessor.writeTable(new ArrayList<IWritableTable>(acknowledgments), "acknowledgements.csv");
 
     // must defer until post-processing to fix bad locations, etc.
-    if (doOutboundMessaging) {
-      var outboundAcknowledgementList = new ArrayList<OutboundMessage>();
-      var subject = "Message acknowledement";
-      var exerciseName = cm.getAsString(Key.EXERCISE_NAME);
-      var exerciseDescription = cm.getAsString(Key.EXERCISE_DESCRIPTION);
-      if (exerciseName != null && exerciseDescription != null) {
-        subject = subject + " for " + exerciseName + ", " + exerciseDescription;
-      }
-      for (var ackEntry : acknowledgments) {
-        var text = ackTextMap.get(ackEntry.from);
-        var outboundMessage = new OutboundMessage(outboundMessageSender, ackEntry.from, subject, text, null);
-        outboundAcknowledgementList.add(outboundMessage);
-      }
 
-      // we no longer send acknowledgement messages here, we do it from PracticeProcessor
+    var outboundAcknowledgementList = new ArrayList<OutboundMessage>();
+    var subject = "Message acknowledement";
+    var exerciseName = cm.getAsString(Key.EXERCISE_NAME);
+    var exerciseDescription = cm.getAsString(Key.EXERCISE_DESCRIPTION);
+    if (exerciseName != null && exerciseDescription != null) {
+      subject = subject + " for " + exerciseName + ", " + exerciseDescription;
     }
+    var outboundMessageSender = cm.getAsString(Key.OUTBOUND_MESSAGE_SENDER);
+    for (var ackEntry : acknowledgments) {
+      var text = ackTextMap.get(ackEntry.from);
+      var outboundMessage = new OutboundMessage(outboundMessageSender, ackEntry.from, subject, text, null);
+      outboundAcknowledgementList.add(outboundMessage);
+    }
+
+    // we no longer send acknowledgement messages here, we do it from BasePracticeProcessor
   }
 
   private boolean isSelected(AckEntry e) {
@@ -253,7 +256,7 @@ public class AcknowledgementProcessor extends AbstractBaseProcessor {
     public void update(ExportedMessage m) {
       // de-duplicate identical messages, support multiple messages of same type
       var ackKey = new AckKey(m.from, m.messageId, m.getMessageType());
-      var isExpected = expectedMessageTypes.contains(m.getMessageType());
+      var isExpected = expectedMessageType == m.getMessageType();
       if (isExpected) {
         expectedMessageMap.put(ackKey, m);
       } else {

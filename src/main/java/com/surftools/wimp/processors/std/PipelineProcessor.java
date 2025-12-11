@@ -96,8 +96,13 @@ public class PipelineProcessor extends AbstractBaseProcessor {
         .of( //
             "com.surftools.wimp.processors.std.", //
             "com.surftools.wimp.practice.processors.", //
+            "com.surftools.wimp.practice.processors.exercise.", //
             "");
-    final var SUFFIXES = List.of("Processor", "");
+    final var SUFFIXES = List
+        .of(//
+            "Processor", //
+            "PracticeProcessor", //
+            "");
 
     IProcessor processor = null;
     for (var prefix : PREFIXES) {

@@ -142,7 +142,7 @@ public class WriteProcessor extends AbstractBaseProcessor {
         typedMessages.add(new TypedMessage(message, newLocations.get(i)));
       }
     }
-    writeTable("typedMessages.csv", typedMessages);
+    writeTable(typedMessages, Path.of(outputPathName, "typedMessages.csv"));
   }
 
   /**
@@ -171,8 +171,11 @@ public class WriteProcessor extends AbstractBaseProcessor {
     writeTable(new ArrayList<IWritableTable>(messages), outputPath);
   }
 
-  public static void writeTable(List<IWritableTable> records, Path path) {
+  public static void writeTable(List<IWritableTable> records, String fileName) {
+    writeTable(records, Path.of(outputPathName, fileName));
+  }
 
+  public static void writeTable(List<IWritableTable> records, Path path) {
     try {
       File outputDirectory = new File(path.toFile().getParent());
       if (!outputDirectory.exists()) {

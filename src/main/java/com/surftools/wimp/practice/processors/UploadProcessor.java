@@ -88,7 +88,7 @@ public class UploadProcessor extends AbstractBaseProcessor {
     var ftpLocalDir = ftpLocalPath.toFile();
     if (!ftpLocalDir.exists()) {
       logger.error("FTP local dir: " + ftpLocalPathName + " doesn not exist");
-      System.exit(1);
+      return;
     }
     logger.info("ftpLocalPath: " + ftpLocalPath);
 
@@ -123,8 +123,9 @@ public class UploadProcessor extends AbstractBaseProcessor {
         Files.copy(sourcePath, targetPath, StandardCopyOption.REPLACE_EXISTING);
         logger.info("copied " + baseName + " to " + targetPath);
       } catch (Exception e) {
-        logger.error("Exception copying " + baseName + " to ftp content dir: " + contentPath.toString() + ", "
-            + e.getLocalizedMessage());
+        logger
+            .error("Exception copying " + baseName + " to ftp content dir: " + contentPath.toString() + ", "
+                + e.getLocalizedMessage());
       }
     } // end loop over files
 

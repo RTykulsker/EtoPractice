@@ -283,8 +283,8 @@ public class DeduplicationProcessor extends AbstractBaseProcessor {
 
   @Override
   public void postProcess() {
-    WriteProcessor.writeTable("DuplicateMesages.csv", dupEntries);
-    WriteProcessor.writeTable("SupercededMesages.csv", supEntries);
+    WriteProcessor.writeTable(new ArrayList<IWritableTable>(dupEntries), "DuplicateMesages.csv");
+    WriteProcessor.writeTable(new ArrayList<IWritableTable>( supEntries), "SupercededMesages.csv");
   }
 
 }

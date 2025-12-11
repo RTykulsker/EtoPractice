@@ -36,6 +36,7 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -72,22 +73,22 @@ import com.surftools.wimp.utils.config.IConfigurationManager;
 import com.surftools.wimp.utils.config.impl.PropertyFileConfigurationManager;
 
 /**
- * Program to generate many weeks work "data" for ETO weekly "practice"
- * semi-automatic exercises
+ * Program to generate many weeks work "data" for ETO weekly "practice" semi-automatic exercises
  *
- * NOTE WELL: since this program will be run about once per year, there's no
- * need for data-driven configuration
+ * NOTE WELL: since this program will be run about once per year, there's no need for data-driven configuration
  */
 public class PracticeGeneratorTool {
 
-  public final static Map<Integer, MessageType> MESSAGE_TYPE_MAP = Map.of(//
-      1, MessageType.ICS_213, //
-      2, MessageType.ICS_213_RR, //
-      3, MessageType.HICS_259, //
-      4, MessageType.ICS_205, //
-      5, MessageType.FIELD_SITUATION);
+  public final static Map<Integer, MessageType> MESSAGE_TYPE_MAP = Map
+      .of(//
+          1, MessageType.ICS_213, //
+          2, MessageType.ICS_213_RR, //
+          3, MessageType.HICS_259, //
+          4, MessageType.ICS_205, //
+          5, MessageType.FIELD_SITUATION);
 
   public final static Set<Integer> VALID_ORDINALS = MESSAGE_TYPE_MAP.keySet();
+  public final static Set<MessageType> VALID_MESSAGE_TYPES = new HashSet<MessageType>(MESSAGE_TYPE_MAP.values());
 
   public static String practiceInstructionURL = "https://emcomm-training.org/Winlink_Thursdays.html";
 
@@ -144,8 +145,8 @@ public class PracticeGeneratorTool {
     nYears = Integer.valueOf(nYearsString);
     logger.info("nYears: " + nYears);
 
-    practiceInstructionURL = cm.getAsString(Key.PRACTICE_GENERATOR_INSTRUCTION_URL,
-        "https://emcomm-training.org/Weekly_Practice.html");
+    practiceInstructionURL = cm
+        .getAsString(Key.PRACTICE_GENERATOR_INSTRUCTION_URL, "https://emcomm-training.org/Winlink_Thursdays.html");
     logger.info("practiceInstructionURL: " + practiceInstructionURL);
 
     // generate nYears worth, from 2025; this is for idempotency

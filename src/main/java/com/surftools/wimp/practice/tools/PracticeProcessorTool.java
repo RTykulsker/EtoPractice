@@ -103,8 +103,9 @@ public class PracticeProcessorTool {
       }
 
       var messageType = PracticeGeneratorTool.MESSAGE_TYPE_MAP.get(ord);
-      logger.info("Exercise Date: " + exerciseDate.toString() + ", " + PracticeUtils.getOrdinalLabel(ord)
-          + " Thursday; exercise message type: " + messageType.toString());
+      logger
+          .info("Exercise Date: " + exerciseDate.toString() + ", " + PracticeUtils.getOrdinalLabel(ord)
+              + " Thursday; exercise message type: " + messageType.toString());
 
       var exportedMessagesPathName = cm.getAsString(Key.PRACTICE_PATH_EXPORTED_MESSAGES_HOME);
       logger.info("exportedMessages home" + exportedMessagesPathName);
@@ -113,8 +114,8 @@ public class PracticeProcessorTool {
       var referencePathName = cm.getAsString(Key.PRACTICE_PATH_REFERENCE);
       logger.info("reference home: " + referencePathName);
       var exerciseYearString = String.valueOf(exerciseDate.getYear());
-      var referencePath = Path.of(referencePathName, exerciseYearString, exerciseDateString,
-          exerciseDateString + "-reference.json");
+      var referencePath = Path
+          .of(referencePathName, exerciseYearString, exerciseDateString, exerciseDateString + "-reference.json");
       var jsonString = Files.readString(referencePath);
       var deserializer = new PracticeJsonMessageDeserializer();
       var referenceMessage = deserializer.deserialize(jsonString, messageType);
@@ -131,16 +132,18 @@ public class PracticeProcessorTool {
       final var dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
       var nextExerciseDate = exerciseDate.plusDays((ord == 2 && !enableLegacy) ? 14 : 7);
       var nextExerciseDateString = dtf.format(nextExerciseDate);
-      var instructionPath = Path.of(referencePathName, exerciseYearString, nextExerciseDateString,
-          nextExerciseDateString + "-instructions.txt");
+      var instructionPath = Path
+          .of(referencePathName, exerciseYearString, nextExerciseDateString,
+              nextExerciseDateString + "-instructions.txt");
       var instructionText = Files.readString(instructionPath);
       var sb = new StringBuilder();
       sb.append("\n\n");
       if (ord == 2 && !enableLegacy) {
         sb.append("INSTRUCTIONS for next week:" + "\n");
         sb.append("Next Thursday is a \"Third Thursday Training Exercise\"," + "\n");
-        sb.append(
-            "so look for instructions on our web site at https://emcomm-training.org/Winlink_Thursdays.html" + "\n");
+        sb
+            .append("so look for instructions on our web site at https://emcomm-training.org/Winlink_Thursdays.html"
+                + "\n");
         sb.append("However, here are the " + instructionText + "\n");
       } else {
         sb.append("INSTRUCTIONS for " + instructionText + "\n");
@@ -150,8 +153,9 @@ public class PracticeProcessorTool {
       // create the rest of our configuration on the fly
       cm.putString(Key.EXERCISE_DATE, exerciseDateString);
       cm.putString(Key.EXERCISE_NAME, "ETO Weekly Practice for " + exerciseDateString);
-      cm.putString(Key.PATH,
-          exportedMessagesPathName + File.separator + exerciseYearString + File.separator + exerciseDateString);
+      cm
+          .putString(Key.PATH,
+              exportedMessagesPathName + File.separator + exerciseYearString + File.separator + exerciseDateString);
       cm.putBoolean(Key.OUTPUT_PATH_CLEAR_ON_START, true);
       cm.putString(Key.EXPECTED_MESSAGE_TYPES, messageType.toString());
 
@@ -161,7 +165,7 @@ public class PracticeProcessorTool {
       cm.putString(Key.EXERCISE_WINDOW_CLOSE, dtf.format(windowCloseDate) + " 08:00");
 
       cm.putString(Key.PIPELINE_STDIN, "Read,Classifier,Acknowledgement,Deduplication");
-      cm.putString(Key.PIPELINE_MAIN, "Practice"); // exercise-specific processors go here!
+      cm.putString(Key.PIPELINE_MAIN, "Ics213,Ics213RR,Ics205,Hics259,FieldSituation"); // exercise processors // go
       cm.putString(Key.PIPELINE_STDOUT, "Write,MissedExercise,HistoryMap,Cleanup,Upload,EmailNotification");
 
       var edPrefix = "com.surftools.wimp.practice.misc.Practice";
