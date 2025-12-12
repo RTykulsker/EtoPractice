@@ -7,4 +7,5 @@ TODO
 src/test/resources/
 .~lock*
 /bin/
+logs/
 push.bat

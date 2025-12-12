@@ -6,9 +6,11 @@
     </encoder>
   </appender>
   
-  <appender name="SERVER_LOGGER" class="ch.qos.logback.core.ConsoleAppender">
+  <appender name="FILE" class="ch.qos.logback.core.FileAppender">
+ 	<file>logs/stdout.txt</file>
+ 	<append>false</append>
     <encoder>
-        <pattern>%msg%n</pattern>
+		<pattern>%d{HH:mm:ss.SSS} %-5level %class{0}.%M - %msg%n</pattern>
     </encoder>
   </appender>
 
@@ -16,6 +18,7 @@
 
   <root level="WARN">
     <appender-ref ref="STDOUT" />
+    <appender-ref ref="FILE" />
   </root>
   
 </configuration>
