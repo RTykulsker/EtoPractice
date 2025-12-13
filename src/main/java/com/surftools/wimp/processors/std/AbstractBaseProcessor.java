@@ -30,6 +30,7 @@ package com.surftools.wimp.processors.std;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
 import org.slf4j.Logger;
@@ -56,6 +57,10 @@ public abstract class AbstractBaseProcessor implements IProcessor {
   protected static String pathName;
   protected static String outputPathName;
   protected static Path outputPath;
+  protected static Path path;
+
+  protected static String dateString;
+  protected static LocalDate date;
 
   protected static boolean isInitialized = false;
 
@@ -72,17 +77,13 @@ public abstract class AbstractBaseProcessor implements IProcessor {
     }
   }
 
-  protected static void uninitialize() {
-    isInitialized = false;
-  }
-
   protected void doInitialization(IConfigurationManager _cm, IMessageManager _mm) {
     cm = _cm;
     mm = _mm;
 
     pathName = cm.getAsString(Key.PATH);
     // fail fast: our working directory, where our input files are
-    Path path = Paths.get(pathName);
+    path = Paths.get(pathName);
     if (!Files.exists(path)) {
       logger.error("specified path: " + pathName + " does not exist");
       System.exit(1);
@@ -105,6 +106,8 @@ public abstract class AbstractBaseProcessor implements IProcessor {
     }
     FileUtils.makeDirIfNeeded(outputPath.toString());
 
+    dateString = cm.getAsString(Key.EXERCISE_DATE);
+    date = LocalDate.parse(dateString);
   }
 
   @Override

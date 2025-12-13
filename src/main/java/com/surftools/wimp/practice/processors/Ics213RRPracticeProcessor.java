@@ -47,7 +47,7 @@ public class Ics213RRPracticeProcessor extends BasePracticeProcessor {
   public void initialize(IConfigurationManager cm, IMessageManager mm) {
     super.initialize(cm, mm, logger);
     processorMessageType = MessageType.ICS_213_RR;
-    ref = (Ics213RRMessage) referenceMessage;
+    ref = (exerciseMessageType == processorMessageType) ? (Ics213RRMessage) referenceMessage : null;
   }
 
   @Override
@@ -68,9 +68,8 @@ public class Ics213RRPracticeProcessor extends BasePracticeProcessor {
 
     var maxLineItems = Math.min(ref.lineItems.size(), m.lineItems.size());
     if (m.lineItems.size() != ref.lineItems.size()) {
-      logger
-          .warn("### from: " + m.from + ",mId: " + m.messageId + ", m.items: " + m.lineItems.size() + ", ref.items: "
-              + ref.lineItems.size());
+      logger.warn("### from: " + m.from + ",mId: " + m.messageId + ", m.items: " + m.lineItems.size() + ", ref.items: "
+          + ref.lineItems.size());
     }
     for (var i = 0; i < maxLineItems; ++i) {
       var lineNumber = i + 1;

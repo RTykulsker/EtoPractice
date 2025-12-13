@@ -48,7 +48,7 @@ public class FieldSituationPracticeProcessor extends BasePracticeProcessor {
   public void initialize(IConfigurationManager cm, IMessageManager mm) {
     super.initialize(cm, mm, logger);
     processorMessageType = MessageType.FIELD_SITUATION;
-    ref = (FieldSituationMessage) referenceMessage;
+    ref = (exerciseMessageType == processorMessageType) ? (FieldSituationMessage) referenceMessage : null;
   }
 
   @Override
@@ -174,9 +174,8 @@ public class FieldSituationPracticeProcessor extends BasePracticeProcessor {
 
     count(sts.test("NOAA Weather audio degraded be #EV", ref.noaaAudioDegraded, m.noaaAudioDegraded));
     if (ref.noaaAudioDegraded.equals("YES")) {
-      count(sts
-          .test("NOAA Weather Radio degraded station should be #EV", ref.noaaAudioDegradedComments,
-              m.noaaAudioDegradedComments));
+      count(sts.test("NOAA Weather Radio degraded station should be #EV", ref.noaaAudioDegradedComments,
+          m.noaaAudioDegradedComments));
     } else {
       count(
           sts.testIfEmpty("NOAA Weather Radio degraded station provider should be empty", m.noaaAudioDegradedComments));

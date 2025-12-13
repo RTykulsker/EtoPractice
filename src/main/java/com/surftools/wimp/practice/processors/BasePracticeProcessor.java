@@ -31,9 +31,7 @@ import static java.time.temporal.ChronoUnit.DAYS;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.DayOfWeek;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -51,14 +49,12 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.surftools.utils.FileUtils;
 import com.surftools.utils.counter.Counter;
 import com.surftools.utils.counter.ICounter;
 import com.surftools.utils.location.LatLongPair;
 import com.surftools.utils.location.LocationUtils;
 import com.surftools.wimp.configuration.Key;
 import com.surftools.wimp.core.IMessageManager;
-import com.surftools.wimp.core.IProcessor;
 import com.surftools.wimp.core.IWritableTable;
 import com.surftools.wimp.core.MessageType;
 import com.surftools.wimp.feedback.FeedbackMessage;
@@ -78,6 +74,7 @@ import com.surftools.wimp.practice.generator.PracticeUtils;
 import com.surftools.wimp.practice.misc.PracticeSummary;
 import com.surftools.wimp.practice.tools.PracticeGeneratorTool;
 import com.surftools.wimp.practice.tools.PracticeProcessorTool;
+import com.surftools.wimp.processors.std.AbstractBaseProcessor;
 import com.surftools.wimp.processors.std.AcknowledgementProcessor;
 import com.surftools.wimp.processors.std.WriteProcessor;
 import com.surftools.wimp.service.chart.ChartServiceFactory;
@@ -93,20 +90,11 @@ import com.surftools.wimp.utils.config.IConfigurationManager;
 /**
  * place as much common processing here
  */
-public abstract class BasePracticeProcessor implements IProcessor {
+public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
   protected Logger logger = LoggerFactory.getLogger(BasePracticeProcessor.class);
-  protected IConfigurationManager cm;
-  protected IMessageManager mm;
 
-  // fail-fast stuff first
-
-  // we will be called by each PracticeProcessor, we only want and need to initialize once
-  static boolean isInitialized;
   protected Set<MessageType> messageTypesRequiringSecondaryAddress = new HashSet<>();
   protected Set<String> secondaryDestinations = new LinkedHashSet<>();
-
-  protected String dateString;
-  protected LocalDate date;
 
   protected String sender;
 
@@ -114,11 +102,6 @@ public abstract class BasePracticeProcessor implements IProcessor {
   protected LocalDateTime windowCloseDT = null;
 
   protected SimpleTestService sts = new SimpleTestService();
-
-  protected Map<String, Counter> summaryCounterMap = new LinkedHashMap<String, Counter>();
-
-  protected int ppCount = 0;
-  protected int ppMessageCorrectCount = 0;
 
   protected LatLongPair feedbackLocation = null;
   protected Map<String, IWritableTable> mIdFeedbackMap = new HashMap<String, IWritableTable>();
@@ -130,10 +113,7 @@ public abstract class BasePracticeProcessor implements IProcessor {
 
   protected MessageType exerciseMessageType; // the messageType for the date/exercise
   protected MessageType processorMessageType; // the messageType associated with a Processor
-
-  protected static String pathName;
-  protected static String outputPathName;
-  protected static Path outputPath;
+  protected ExportedMessage referenceMessage;
 
   protected static final String DT_FORMAT_STRING = "yyyy-MM-dd HH:mm";
   public static final DateTimeFormatter DTF = DateTimeFormatter.ofPattern(DT_FORMAT_STRING);
@@ -141,20 +121,10 @@ public abstract class BasePracticeProcessor implements IProcessor {
   protected static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("MM/dd/yyyy");
   protected static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
 
-  protected ExportedMessage message;
-
-  public int ppMessageCount = 0;
-  public int ppParticipantCount = 0;
-  public int ppParticipantCorrectCount = 0;
-
-  public Map<String, Counter> counterMap = new LinkedHashMap<String, Counter>();
-
   protected static List<OutboundMessage> outboundMessageList;
   protected static String outboundMessageSender;
   protected static String outboundMessageSubject;
   protected static boolean doOutboundMessaging;
-
-  protected ExportedMessage referenceMessage;
 
   protected List<PracticeSummary> practiceSummaries = new ArrayList<>();
 
@@ -164,32 +134,33 @@ public abstract class BasePracticeProcessor implements IProcessor {
 
   protected final List<String> clearinghouseList = new ArrayList<String>();
 
-  public void initialize(IConfigurationManager cm, IMessageManager mm, Logger _logger) {
-    if (!isInitialized) {
-      doInitialize(cm, mm, logger);
-      isInitialized = true;
-    }
-  }
+  protected ExportedMessage message;
 
+  public int ppMessageCount = 0;
+  public int ppParticipantCount = 0;
+  public int ppParticipantCorrectCount = 0;
+  protected Map<String, Counter> summaryCounterMap = new LinkedHashMap<String, Counter>();
+
+  protected int ppCount = 0;
+  protected int ppMessageCorrectCount = 0;
+
+  public Map<String, Counter> counterMap = new LinkedHashMap<String, Counter>();
+
+  @Override
   @SuppressWarnings("unchecked")
-  private void doInitialize(IConfigurationManager cm, IMessageManager mm, Logger _logger) {
-    this.cm = cm;
-    this.mm = mm;
-    logger = _logger;
+  public void initialize(IConfigurationManager cm, IMessageManager mm, Logger logger) {
+    super.initialize(cm, mm, logger);
 
     // fail-fast stuff first;
-    var messageTypeString = cm.getAsString(Key.EXPECTED_MESSAGE_TYPES);
-    exerciseMessageType = MessageType.fromString(messageTypeString);
+    var exerciseMessageTypeString = cm.getAsString(Key.EXPECTED_MESSAGE_TYPES);
+    exerciseMessageType = MessageType.fromString(exerciseMessageTypeString);
     if (exerciseMessageType == null) {
-      throw new IllegalArgumentException("unknown messageType: " + messageTypeString);
+      throw new IllegalArgumentException("unknown messageType: " + exerciseMessageTypeString);
     }
 
     if (!PracticeGeneratorTool.VALID_MESSAGE_TYPES.contains(exerciseMessageType)) {
-      throw new IllegalArgumentException("unsupported messageType: " + messageTypeString);
+      throw new IllegalArgumentException("unsupported messageType: " + exerciseMessageTypeString);
     }
-
-    dateString = cm.getAsString(Key.EXERCISE_DATE);
-    date = LocalDate.parse(dateString);
 
     var ord = PracticeUtils.getOrdinalDayOfWeek(date);
     var dow = date.getDayOfWeek();
@@ -207,29 +178,6 @@ public abstract class BasePracticeProcessor implements IProcessor {
 
     windowOpenDT = LocalDateTime.from(DTF.parse(cm.getAsString(Key.EXERCISE_WINDOW_OPEN)));
     windowCloseDT = LocalDateTime.from(DTF.parse(cm.getAsString(Key.EXERCISE_WINDOW_CLOSE)));
-
-    pathName = cm.getAsString(Key.PATH);
-    // fail fast: our working directory, where our input files are
-    Path path = Paths.get(pathName);
-    if (!Files.exists(path)) {
-      throw new IllegalArgumentException("specified path: " + pathName + " does not exist");
-    }
-    logger.info("Starting with input path: " + path);
-
-    // allow overriding of outputPathName!
-    outputPathName = cm.getAsString(Key.OUTPUT_PATH);
-    if (outputPathName == null) {
-      outputPath = Path.of(path.toAbsolutePath().toString(), "output");
-      outputPathName = outputPath.toString();
-      logger.info("outputPath: " + outputPath);
-    } else {
-      outputPath = Path.of(outputPathName);
-    }
-
-    if (cm.getAsBoolean(Key.OUTPUT_PATH_CLEAR_ON_START, true)) {
-      FileUtils.deleteDirectory(outputPath);
-    }
-    FileUtils.makeDirIfNeeded(outputPath.toString());
 
     referenceMessage = (ExportedMessage) mm.getContextObject(PracticeProcessorTool.REFERENCE_MESSAGE_KEY);
 
@@ -259,12 +207,11 @@ public abstract class BasePracticeProcessor implements IProcessor {
           var extraContent = String.join("\n", lines.stream().filter(s -> !s.trim().startsWith("#")).toList()).trim();
           if (extraContent != null && extraContent.length() > 0) {
             outboundMessageExtraContent = extraContent;
-            logger
-                .info("file: " + extraContentPathName + " provides the following extra content:\n"
-                    + outboundMessageExtraContent);
+            logger.info("file: " + extraContentPathName + " provides the following extra content:\n"
+                + outboundMessageExtraContent);
           }
         } catch (Exception e) {
-          logger.error("Could not get extra content for outbound messages. Using default");
+          logger.warn("Could not get extra content for outbound messages. Using default");
         }
       }
     }
@@ -443,9 +390,8 @@ public abstract class BasePracticeProcessor implements IProcessor {
     logger.info(sb.toString());
 
     if (badLocationMessageIds.size() > 0) {
-      logger
-          .info("adjusting lat/long for " + badLocationMessageIds.size() + " messages: "
-              + String.join(",", badLocationMessageIds));
+      logger.info("adjusting lat/long for " + badLocationMessageIds.size() + " messages: "
+          + String.join(",", badLocationMessageIds));
       var newLocations = LocationUtils.jitter(badLocationMessageIds.size(), LatLongPair.ZERO_ZERO, 10_000);
       for (int i = 0; i < badLocationMessageIds.size(); ++i) {
         var messageId = badLocationMessageIds.get(i);
@@ -457,7 +403,8 @@ public abstract class BasePracticeProcessor implements IProcessor {
       }
     }
 
-    // this is how we get feedback to folks who only send unexpected messages, back-port?
+    // this is how we get feedback to folks who only send unexpected messages,
+    // back-port?
     var enableFeedbackForOnlyUnexpected = true;
     if (enableFeedbackForOnlyUnexpected) {
       final var DASHES = "----------------------------------------------------------------------------------------------";

@@ -48,7 +48,7 @@ public class Ics205PracticeProcessor extends BasePracticeProcessor {
   public void initialize(IConfigurationManager cm, IMessageManager mm) {
     super.initialize(cm, mm, logger);
     processorMessageType = MessageType.ICS_205;
-    ref = (Ics205Message) referenceMessage;
+    ref = (exerciseMessageType == processorMessageType) ? (Ics205Message) referenceMessage : null;
   }
 
   @Override
@@ -75,9 +75,8 @@ public class Ics205PracticeProcessor extends BasePracticeProcessor {
 
     var maxRadioEntries = Math.min(ref.radioEntries.size(), m.radioEntries.size());
     if (m.radioEntries.size() != ref.radioEntries.size()) {
-      logger
-          .warn("### from: " + m.from + ",mId: " + m.messageId + ", m.radioEntries: " + m.radioEntries.size()
-              + ", ref.radioEntries: " + ref.radioEntries.size());
+      logger.warn("### from: " + m.from + ",mId: " + m.messageId + ", m.radioEntries: " + m.radioEntries.size()
+          + ", ref.radioEntries: " + ref.radioEntries.size());
     }
     for (var i = 0; i < maxRadioEntries; ++i) {
       var lineNumber = i + 1;
