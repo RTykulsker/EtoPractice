@@ -48,7 +48,7 @@ public class FieldSituationPracticeProcessor extends BasePracticeProcessor {
   public void initialize(IConfigurationManager cm, IMessageManager mm) {
     super.initialize(cm, mm, logger);
     processorMessageType = MessageType.FIELD_SITUATION;
-    ref = (exerciseMessageType == processorMessageType) ? (FieldSituationMessage) referenceMessage : null;
+    ref = (ref instanceof FieldSituationMessage) ? (FieldSituationMessage) referenceMessage : null;
   }
 
   @Override

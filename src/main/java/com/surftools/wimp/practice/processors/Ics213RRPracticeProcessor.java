@@ -47,7 +47,7 @@ public class Ics213RRPracticeProcessor extends BasePracticeProcessor {
   public void initialize(IConfigurationManager cm, IMessageManager mm) {
     super.initialize(cm, mm, logger);
     processorMessageType = MessageType.ICS_213_RR;
-    ref = (exerciseMessageType == processorMessageType) ? (Ics213RRMessage) referenceMessage : null;
+    ref = (referenceMessage instanceof Ics213RRMessage) ? (Ics213RRMessage) referenceMessage : null;
   }
 
   @Override

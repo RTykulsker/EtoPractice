@@ -45,7 +45,7 @@ public class Hics259PracticeProcessor extends BasePracticeProcessor {
   public void initialize(IConfigurationManager cm, IMessageManager mm) {
     super.initialize(cm, mm, logger);
     processorMessageType = MessageType.HICS_259;
-    ref = (exerciseMessageType == processorMessageType) ? (Hics259Message) referenceMessage : null;
+    ref = (referenceMessage instanceof Hics259Message) ? (Hics259Message) referenceMessage : null;
   }
 
   @Override
