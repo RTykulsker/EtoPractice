@@ -42,26 +42,30 @@ import com.surftools.utils.counter.ICounter;
 import com.surftools.wimp.service.IService;
 
 /**
- * Support testing and accumulating statistics on whether or not a value matches an expected value.
+ * Support testing and accumulating statistics on whether or not a value matches
+ * an expected value.
  *
- * Most common use case should be trivial: test("Greeting should be #EV", "hello, world", value) or test("Message should
- * be on or after #EV", formatted(expectedDT), value.compareTo(expectedDT) >= 0);
+ * Most common use case should be trivial: test("Greeting should be #EV",
+ * "hello, world", value) or test("Message should be on or after #EV",
+ * formatted(expectedDT), value.compareTo(expectedDT) >= 0);
  *
- * Previous versions used separate add(...) and test(...) methods, tied together with a "key". Now let's use the label
- * as the key!
+ * Previous versions used separate add(...) and test(...) methods, tied together
+ * with a "key". Now let's use the label as the key!
  *
- * Type: Strings, DateTimes, Doubles, etc. First version had explicit type as an enum and used in add(), second version
- * inferred type from testXXX() names. Let's go with testXXX, as it may be slightly shorter.
+ * Type: Strings, DateTimes, Doubles, etc. First version had explicit type as an
+ * enum and used in add(), second version inferred type from testXXX() names.
+ * Let's go with testXXX, as it may be slightly shorter.
  *
- * String comparison: Text is entered by humans. Humans make mistakes. I found using case-independent, alphanumeric only
- * comparison to be the most friendly.
+ * String comparison: Text is entered by humans. Humans make mistakes. I found
+ * using case-independent, alphanumeric only comparison to be the most friendly.
  *
- * YAGNI: You Ain't Gonna Need It! The initial version (FormFieldManager), was built around the notion of a test being
- * worth "points". The second version (FieldTestService), supported points, but was never used. So, I'm not going to
- * explicitly support points for now, but I won't preclude.
+ * YAGNI: You Ain't Gonna Need It! The initial version (FormFieldManager), was
+ * built around the notion of a test being worth "points". The second version
+ * (FieldTestService), supported points, but was never used. So, I'm not going
+ * to explicitly support points for now, but I won't preclude.
  *
- * fail()/pass(): I found this to be EXTREMELY dangerous. It's easy to code the fail() path and forget the pass() path,
- * thus screwing up the statistics.
+ * fail()/pass(): I found this to be EXTREMELY dangerous. It's easy to code the
+ * fail() path and forget the pass() path, thus screwing up the statistics.
  *
  *
  */
@@ -280,7 +284,7 @@ public class SimpleTestService implements IService {
     }
 
     var predicate = list.contains(value);
-    return internalTest(entry, predicate, wrapEmpty(value), altExplanation);
+    return internalTest(entry, predicate, String.join(",", list), altExplanation);
   }
 
   public TestResult testRegex(String label, String regexString, String value) {
@@ -454,7 +458,8 @@ public class SimpleTestService implements IService {
   }
 
   /**
-   * test if value could be a LocalDate, LocalTime or LocalDateTime, according to formatter
+   * test if value could be a LocalDate, LocalTime or LocalDateTime, according to
+   * formatter
    *
    * @param label
    * @param value
@@ -478,7 +483,8 @@ public class SimpleTestService implements IService {
   }
 
   /**
-   * test if value could be a LocalDate, LocalTime or LocalDateTime, according to formatter
+   * test if value could be a LocalDate, LocalTime or LocalDateTime, according to
+   * formatter
    *
    * @param label
    * @param value
@@ -697,9 +703,8 @@ public class SimpleTestService implements IService {
     var failCount = entry.totalCount - entry.passCount;
     var passPercent = formatPercent(entry.passCount, entry.totalCount);
     var failPercent = formatPercent(failCount, entry.totalCount);
-    sb
-        .append(", correct: " + entry.passCount + "(" + passPercent + "), incorrect: " + failCount + "(" + failPercent
-            + ")");
+    sb.append(
+        ", correct: " + entry.passCount + "(" + passPercent + "), incorrect: " + failCount + "(" + failPercent + ")");
     sb.append("\n");
     return sb.toString();
   }
@@ -787,7 +792,8 @@ public class SimpleTestService implements IService {
     var list = new ArrayList<String>();
     s = toAlphaNumericString(s);
 
-    // Some people, when confronted with a problem, think "I know, I'll use regular expressions."
+    // Some people, when confronted with a problem, think "I know, I'll use regular
+    // expressions."
     // Now they have two problems.
     var word = "";
     for (var i = 0; i < s.length(); ++i) {

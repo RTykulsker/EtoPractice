@@ -48,7 +48,8 @@ import com.surftools.wimp.service.outboundMessage.OutboundMessage;
 import com.surftools.wimp.utils.config.IConfigurationManager;
 
 /**
- * Processor to send Acknowledgement messages via Winlink and map to every message sender
+ * Processor to send Acknowledgement messages via Winlink and map to every
+ * message sender
  *
  *
  * @author bobt
@@ -72,7 +73,7 @@ public class AcknowledgementProcessor extends AbstractBaseProcessor {
 
   @Override
   public void initialize(IConfigurationManager cm, IMessageManager mm) {
-    super.initialize(cm, mm, logger);
+    super.initialize(cm, mm);
 
     var ackSpecString = cm.getAsString(Key.ACKNOWLEDGEMENT_SPECIFICATION, "all");
     requiredSpecification = AckSpecification.fromString(ackSpecString);
@@ -145,9 +146,8 @@ public class AcknowledgementProcessor extends AbstractBaseProcessor {
   @Override
   public void postProcess() {
     if (badLocationSenders.size() > 0) {
-      logger
-          .info("adjusting lat/long for " + badLocationSenders.size() + " messages from: "
-              + String.join(",", badLocationSenders));
+      logger.info("adjusting lat/long for " + badLocationSenders.size() + " messages from: "
+          + String.join(",", badLocationSenders));
       var newLocations = LocationUtils.jitter(badLocationSenders.size(), LatLongPair.ZERO_ZERO, 10_000);
       for (int i = 0; i < badLocationSenders.size(); ++i) {
         var from = badLocationSenders.get(i);
@@ -181,7 +181,8 @@ public class AcknowledgementProcessor extends AbstractBaseProcessor {
       outboundAcknowledgementList.add(outboundMessage);
     }
 
-    // we no longer send acknowledgement messages here, we do it from BasePracticeProcessor
+    // we no longer send acknowledgement messages here, we do it from
+    // BasePracticeProcessor
   }
 
   private boolean isSelected(AckEntry e) {
@@ -297,9 +298,8 @@ public class AcknowledgementProcessor extends AbstractBaseProcessor {
     }
 
     private String format(boolean useExpected, int formatStyle) {
-      final Map<Integer, String> formatMap = Map
-          .of(1, "%s,%s,%s", 2, "%s %s %s", //
-              3, "Date: %s\nMessageId: %s\nType: %s\n", 4, "Date: %s, MessageId: %s, Type: %s");
+      final Map<Integer, String> formatMap = Map.of(1, "%s,%s,%s", 2, "%s %s %s", //
+          3, "Date: %s\nMessageId: %s\nType: %s\n", 4, "Date: %s, MessageId: %s, Type: %s");
 
       var formatString = formatMap.get(formatStyle);
       var map = (useExpected) ? expectedMessageMap : unexpectedMessageMap;
@@ -307,8 +307,8 @@ public class AcknowledgementProcessor extends AbstractBaseProcessor {
       Collections.sort(values); // by sort time!
       var resultList = new ArrayList<String>();
       for (var m : values) {
-        var aResult = String
-            .format(formatString, DTF.format(m.msgDateTime), m.messageId, m.getMessageType().toString());
+        var aResult = String.format(formatString, DTF.format(m.msgDateTime), m.messageId,
+            m.getMessageType().toString());
         resultList.add(aResult);
       }
       var results = String.join("\n", resultList);

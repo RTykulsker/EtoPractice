@@ -42,7 +42,6 @@ import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
-import org.slf4j.Logger;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -75,18 +74,13 @@ public abstract class BaseReadProcessor extends AbstractBaseProcessor {
   static record LocationResult(LatLongPair location, String source) {
   };
 
-  @Override
-  public void initialize(IConfigurationManager cm, IMessageManager mm) {
-    baseInitialize(cm, mm);
-  }
-
   public void baseInitialize(IConfigurationManager cm, IMessageManager mm) {
     isReadFilteringEnabled = cm.getAsBoolean(Key.READ_FILTER_ENABLED, false);
   }
 
   @Override
-  public void initialize(IConfigurationManager cm, IMessageManager mm, Logger _logger) {
-    super.initialize(cm, mm, _logger);
+  public void initialize(IConfigurationManager cm, IMessageManager mm) {
+    super.initialize(cm, mm);
     baseInitialize(cm, mm);
   }
 
@@ -100,7 +94,8 @@ public abstract class BaseReadProcessor extends AbstractBaseProcessor {
     List<ExportedMessage> messages = new ArrayList<>();
 
     /**
-     * I want to have the message lines in very rare circumstances. Here's the best place to get those lines
+     * I want to have the message lines in very rare circumstances. Here's the best
+     * place to get those lines
      */
     var singleMessageLines = new ArrayList<String>(); // lines for a single message
     var messageLines = new ArrayList<List<String>>(); // one list entry per message in file
@@ -120,7 +115,8 @@ public abstract class BaseReadProcessor extends AbstractBaseProcessor {
     }
 
     for (var lines : messageLines) {
-      // var inputStream = new ByteArrayInputStream(String.join("\n", lines).getBytes());
+      // var inputStream = new ByteArrayInputStream(String.join("\n",
+      // lines).getBytes());
       var inputStream = fixInputString(String.join("\n", lines));
       var iNode = 0;
       var nNodes = 0;
@@ -144,9 +140,8 @@ public abstract class BaseReadProcessor extends AbstractBaseProcessor {
           } // end if XML Message Node
         } // end for over messages
       } catch (Exception e) {
-        logger
-            .error("Exception processing imput stream, message " + iNode + " of " + nNodes
-                + " (maybe not exported Winlink Messages XML file) : " + e.getLocalizedMessage());
+        logger.error("Exception processing imput stream, message " + iNode + " of " + nNodes
+            + " (maybe not exported Winlink Messages XML file) : " + e.getLocalizedMessage());
       }
     }
 
@@ -231,7 +226,8 @@ public abstract class BaseReadProcessor extends AbstractBaseProcessor {
   }
 
   /**
-   * location may be missing, present as "40.187500N, 92.541667W", or even "40.187500N, 92.541667W (GRID SQUARE)"
+   * location may be missing, present as "40.187500N, 92.541667W", or even
+   * "40.187500N, 92.541667W (GRID SQUARE)"
    *
    * @param element
    * @return

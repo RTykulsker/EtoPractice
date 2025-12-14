@@ -39,7 +39,8 @@ import com.surftools.wimp.message.ExportedMessage;
 import com.surftools.wimp.utils.config.IConfigurationManager;
 
 /**
- * Reads an "exported message" file, produced by Winlink, creates @{ExportedMessage} records
+ * Reads an "exported message" file, produced by Winlink,
+ * creates @{ExportedMessage} records
  *
  * @author bobt
  *
@@ -49,7 +50,7 @@ public class WebReadProcessor extends BaseReadProcessor {
 
   @Override
   public void initialize(IConfigurationManager cm, IMessageManager mm) {
-    super.initialize(cm, mm, logger);
+    super.initialize(cm, mm);
   }
 
   @Override
@@ -64,7 +65,8 @@ public class WebReadProcessor extends BaseReadProcessor {
   }
 
   /**
-   * reads a single exported message file (uploaded from web), returns a list of ExportedMessage records
+   * reads a single exported message file (uploaded from web), returns a list of
+   * ExportedMessage records
    *
    * @return
    */

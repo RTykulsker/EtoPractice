@@ -52,7 +52,7 @@ public class FilterProcessor extends AbstractBaseProcessor {
 
   @Override
   public void initialize(IConfigurationManager cm, IMessageManager mm) {
-    super.initialize(cm, mm, logger);
+    super.initialize(cm, mm);
 
     var includeSenderString = cm.getAsString(Key.FILTER_INCLUDE_SENDERS);
     if (includeSenderString != null) {
@@ -125,9 +125,8 @@ public class FilterProcessor extends AbstractBaseProcessor {
     }
     mm.removeMesseagesForSenders(removeList);
 
-    logger
-        .warn("\n### included: " + includedSenderCount + " senders\n\n### excluded: " + excludedSenderCount
-            + " senders\n");
+    logger.warn(
+        "\n### included: " + includedSenderCount + " senders\n\n### excluded: " + excludedSenderCount + " senders\n");
   } // end process()
 
 }

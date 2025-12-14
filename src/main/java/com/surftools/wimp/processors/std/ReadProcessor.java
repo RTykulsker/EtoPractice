@@ -50,7 +50,8 @@ import com.surftools.wimp.message.ExportedMessage;
 import com.surftools.wimp.utils.config.IConfigurationManager;
 
 /**
- * Reads an "exported message" file, produced by Winlink, creates @{ExportedMessage} records
+ * Reads an "exported message" file, produced by Winlink,
+ * creates @{ExportedMessage} records
  *
  * @author bobt
  *
@@ -60,7 +61,7 @@ public class ReadProcessor extends BaseReadProcessor {
 
   @Override
   public void initialize(IConfigurationManager cm, IMessageManager mm) {
-    super.initialize(cm, mm, logger);
+    super.initialize(cm, mm);
   }
 
   @Override
@@ -86,7 +87,8 @@ public class ReadProcessor extends BaseReadProcessor {
   }
 
   /**
-   * reads a single file (from a clearinghouse), returns a list of ExportedMessage records
+   * reads a single file (from a clearinghouse), returns a list of ExportedMessage
+   * records
    *
    * @param filePath
    * @return
@@ -130,12 +132,12 @@ public class ReadProcessor extends BaseReadProcessor {
       Reader reader = new StringReader(inputString);
       CSVParser parser = new CSVParserBuilder() //
           .withSeparator(separator) //
-            .withIgnoreQuotations(ignoreQuotes) //
-            .build();
+          .withIgnoreQuotations(ignoreQuotes) //
+          .build();
       CSVReader csvReader = new CSVReaderBuilder(reader) //
           .withSkipLines(skipLines)//
-            .withCSVParser(parser)//
-            .build();
+          .withCSVParser(parser)//
+          .build();
       rowCount = 1;
       String[] fields = null;
       while ((fields = csvReader.readNext()) != null) {
@@ -180,12 +182,12 @@ public class ReadProcessor extends BaseReadProcessor {
       Reader reader = new FileReader(inputPath.toString());
       CSVParser parser = new CSVParserBuilder() //
           .withSeparator(separator) //
-            .withIgnoreQuotations(ignoreQuotes) //
-            .build();
+          .withIgnoreQuotations(ignoreQuotes) //
+          .build();
       CSVReader csvReader = new CSVReaderBuilder(reader) //
           .withSkipLines(skipLines)//
-            .withCSVParser(parser)//
-            .build();
+          .withCSVParser(parser)//
+          .build();
       rowCount = 1;
       String[] fields = null;
       while ((fields = csvReader.readNext()) != null) {

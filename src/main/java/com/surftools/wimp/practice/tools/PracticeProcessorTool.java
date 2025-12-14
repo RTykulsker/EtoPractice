@@ -51,6 +51,10 @@ import com.surftools.wimp.processors.std.PipelineProcessor;
 import com.surftools.wimp.utils.config.IConfigurationManager;
 import com.surftools.wimp.utils.config.impl.PropertyFileConfigurationManager;
 
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
+import ch.qos.logback.core.FileAppender;
+
 public class PracticeProcessorTool {
   public static final String REFERENCE_MESSAGE_KEY = "referenceMessage";
   public static final String INSTRUCTIONS_KEY = "instructions";
@@ -83,11 +87,12 @@ public class PracticeProcessorTool {
   }
 
   public void run() {
-    logger.info("begin run");
     try {
       var cm = new PropertyFileConfigurationManager(configurationFileName, Key.values());
-
       exerciseDateString = parse(exerciseDateString, cm);
+      addDatedLogger();
+
+      logger.info("begin run");
       var exerciseDate = LocalDate.parse(exerciseDateString);
       if (exerciseDate.getDayOfWeek() != DayOfWeek.THURSDAY) {
         throw new RuntimeException("Exercise Date: " + exerciseDateString + " must be a THURSDAY");
@@ -103,9 +108,8 @@ public class PracticeProcessorTool {
       }
 
       var messageType = PracticeGeneratorTool.MESSAGE_TYPE_MAP.get(ord);
-      logger
-          .info("Exercise Date: " + exerciseDate.toString() + ", " + PracticeUtils.getOrdinalLabel(ord)
-              + " Thursday; exercise message type: " + messageType.toString());
+      logger.info("Exercise Date: " + exerciseDate.toString() + ", " + PracticeUtils.getOrdinalLabel(ord)
+          + " Thursday; exercise message type: " + messageType.toString());
 
       var exportedMessagesPathName = cm.getAsString(Key.PRACTICE_PATH_EXPORTED_MESSAGES_HOME);
       logger.info("exportedMessages home" + exportedMessagesPathName);
@@ -114,8 +118,8 @@ public class PracticeProcessorTool {
       var referencePathName = cm.getAsString(Key.PRACTICE_PATH_REFERENCE);
       logger.info("reference home: " + referencePathName);
       var exerciseYearString = String.valueOf(exerciseDate.getYear());
-      var referencePath = Path
-          .of(referencePathName, exerciseYearString, exerciseDateString, exerciseDateString + "-reference.json");
+      var referencePath = Path.of(referencePathName, exerciseYearString, exerciseDateString,
+          exerciseDateString + "-reference.json");
       var jsonString = Files.readString(referencePath);
       var deserializer = new PracticeJsonMessageDeserializer();
       var referenceMessage = deserializer.deserialize(jsonString, messageType);
@@ -131,19 +135,18 @@ public class PracticeProcessorTool {
 
       final var dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
       var nextExerciseDate = exerciseDate.plusDays((ord == 2 && !enableLegacy) ? 14 : 7);
+      var nextExerciseYear = nextExerciseDate.getYear();
       var nextExerciseDateString = dtf.format(nextExerciseDate);
-      var instructionPath = Path
-          .of(referencePathName, exerciseYearString, nextExerciseDateString,
-              nextExerciseDateString + "-instructions.txt");
+      var instructionPath = Path.of(referencePathName, String.valueOf(nextExerciseYear), nextExerciseDateString,
+          nextExerciseDateString + "-instructions.txt");
       var instructionText = Files.readString(instructionPath);
       var sb = new StringBuilder();
       sb.append("\n\n");
       if (ord == 2 && !enableLegacy) {
         sb.append("INSTRUCTIONS for next week:" + "\n");
         sb.append("Next Thursday is a \"Third Thursday Training Exercise\"," + "\n");
-        sb
-            .append("so look for instructions on our web site at https://emcomm-training.org/Winlink_Thursdays.html"
-                + "\n");
+        sb.append(
+            "so look for instructions on our web site at https://emcomm-training.org/Winlink_Thursdays.html" + "\n");
         sb.append("However, here are the " + instructionText + "\n");
       } else {
         sb.append("INSTRUCTIONS for " + instructionText + "\n");
@@ -153,9 +156,8 @@ public class PracticeProcessorTool {
       // create the rest of our configuration on the fly
       cm.putString(Key.EXERCISE_DATE, exerciseDateString);
       cm.putString(Key.EXERCISE_NAME, "ETO Weekly Practice for " + exerciseDateString);
-      cm
-          .putString(Key.PATH,
-              exportedMessagesPathName + File.separator + exerciseYearString + File.separator + exerciseDateString);
+      cm.putString(Key.PATH,
+          exportedMessagesPathName + File.separator + exerciseYearString + File.separator + exerciseDateString);
       cm.putBoolean(Key.OUTPUT_PATH_CLEAR_ON_START, true);
       cm.putString(Key.EXPECTED_MESSAGE_TYPES, messageType.toString());
 
@@ -193,6 +195,33 @@ public class PracticeProcessorTool {
       e.printStackTrace();
     }
     logger.info("end run");
+  }
+
+  @SuppressWarnings({ "rawtypes", "unchecked" })
+  private void addDatedLogger() {
+    // Get the LoggerContext
+    LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
+
+    // Create a PatternLayoutEncoder
+    PatternLayoutEncoder encoder = new PatternLayoutEncoder();
+    encoder.setContext(loggerContext);
+    encoder.setPattern("%d{HH:mm:ss.SSS} %-5level %class{0}.%M - %msg%n");
+    encoder.start();
+
+    // Create a FileAppender
+    FileAppender fileAppender = new FileAppender();
+    fileAppender.setContext(loggerContext);
+    fileAppender.setAppend(false);
+
+    // Dynamically set the file name here
+    fileAppender.setFile("logs/" + exerciseDateString + "-log.txt");
+
+    fileAppender.setEncoder(encoder);
+    fileAppender.start();
+
+    // Cast to Logback's Logger to access addAppender()
+    var rootLogger = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
+    rootLogger.addAppender(fileAppender);
   }
 
   /**

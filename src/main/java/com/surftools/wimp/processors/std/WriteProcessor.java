@@ -109,7 +109,7 @@ public class WriteProcessor extends AbstractBaseProcessor {
 
   @Override
   public void initialize(IConfigurationManager cm, IMessageManager mm) {
-    super.initialize(cm, mm, logger);
+    super.initialize(cm, mm);
   }
 
   @Override

@@ -48,14 +48,16 @@ import com.surftools.wimp.utils.config.IConfigurationManager;
 /**
  * "dups and sups" or remove extra messages
  *
- * duplicates: "identical" messages. Can arise from exporting message multiple times to different files. In theory,
- * every field must be identical. In practice, only sender/from and messageId
+ * duplicates: "identical" messages. Can arise from exporting message multiple
+ * times to different files. In theory, every field must be identical. In
+ * practice, only sender/from and messageId
  *
- * superceded: "replaced" by better message. Typically we want only the last/most recent message of a given type for a
- * sender. But sometimes we want more than one, or we want only the first message(s).
+ * superceded: "replaced" by better message. Typically we want only the
+ * last/most recent message of a given type for a sender. But sometimes we want
+ * more than one, or we want only the first message(s).
  *
- * NOTE WELL: this processing is designed for documenting which messages get removed and why, processing efficiency is
- * not the goal here.
+ * NOTE WELL: this processing is designed for documenting which messages get
+ * removed and why, processing efficiency is not the goal here.
  *
  * @author bobt
  *
@@ -64,7 +66,8 @@ public class DeduplicationProcessor extends AbstractBaseProcessor {
   private final Logger logger = LoggerFactory.getLogger(DeduplicationProcessor.class);
   public static final DateTimeFormatter DTF = DateTimeFormatter.ofPattern("MM-dd HH:mm");
 
-  // rule format is number of items, most recent first, negative from beginning, 0 for all
+  // rule format is number of items, most recent first, negative from beginning, 0
+  // for all
   private static Map<MessageType, Integer> typeRuleMap;
 
   record DupEntry(ExportedMessage m, List<ExportedMessage> dups) implements IWritableTable {
@@ -108,16 +111,12 @@ public class DeduplicationProcessor extends AbstractBaseProcessor {
       var direction = rule > 0 ? "Descending" : "Ascending";
       var ruleLimit = String.valueOf(Math.abs(rule));
 
-      var retainedStringList = retainedList
-          .stream()
-            .map(s -> String.format("(%s,%s)", s.messageId, DTF.format(s.sortDateTime)))
-            .toList();
+      var retainedStringList = retainedList.stream()
+          .map(s -> String.format("(%s,%s)", s.messageId, DTF.format(s.sortDateTime))).toList();
       var retainedString = String.join(";", retainedStringList);
 
-      var supercededStringList = supercededList
-          .stream()
-            .map(s -> String.format("(%s,%s)", s.messageId, DTF.format(s.sortDateTime)))
-            .toList();
+      var supercededStringList = supercededList.stream()
+          .map(s -> String.format("(%s,%s)", s.messageId, DTF.format(s.sortDateTime))).toList();
       var supercededString = String.join(";", supercededStringList);
 
       return new String[] { m.from, m.getMessageType().toString(), ruleLimit, direction, retainedString,
@@ -131,7 +130,7 @@ public class DeduplicationProcessor extends AbstractBaseProcessor {
 
   @Override
   public void initialize(IConfigurationManager cm, IMessageManager mm) {
-    super.initialize(cm, mm, logger);
+    super.initialize(cm, mm);
 
     typeRuleMap = new HashMap<>();
 
@@ -167,11 +166,8 @@ public class DeduplicationProcessor extends AbstractBaseProcessor {
         throw new RuntimeException("Exception parsing " + typeRuleString + ", " + e.getLocalizedMessage());
       }
 
-      var ruleString = typeRuleMap
-          .keySet()
-            .stream()
-            .map(k -> String.format("(%s:%s)", k.toString(), typeRuleMap.get(k)))
-            .toList();
+      var ruleString = typeRuleMap.keySet().stream()
+          .map(k -> String.format("(%s:%s)", k.toString(), typeRuleMap.get(k))).toList();
       logger.info("typeRuleMap has " + typeRuleMap.size() + " explicit rules: " + String.join(";", ruleString));
     }
   }
@@ -201,10 +197,9 @@ public class DeduplicationProcessor extends AbstractBaseProcessor {
             dupList.add(m);
             dupListMap.put(dupKey, dupList);
             if (logger.isInfoEnabled()) {
-              logger
-                  .debug("Duplicate message from sender: " + m.from + ", mId: " + m.messageId + ", type: "
-                      + m.getMessageType().toString() + ", file: " + m.fileName + ", first file: "
-                      + uniqueMap.get(dupKey).fileName);
+              logger.debug("Duplicate message from sender: " + m.from + ", mId: " + m.messageId + ", type: "
+                  + m.getMessageType().toString() + ", file: " + m.fileName + ", first file: "
+                  + uniqueMap.get(dupKey).fileName);
             }
             continue; // do NOT continue to use this message!
           }
@@ -241,21 +236,16 @@ public class DeduplicationProcessor extends AbstractBaseProcessor {
               supercededList.add(m);
               if (logger.isInfoEnabled()) {
                 var direction = rule > 0 ? "Descending" : "Ascending";
-                var retainedStringList = retainedList
-                    .stream()
-                      .map(s -> String.format("(%s,%s)", s.messageId, DTF.format(s.sortDateTime)))
-                      .toList();
+                var retainedStringList = retainedList.stream()
+                    .map(s -> String.format("(%s,%s)", s.messageId, DTF.format(s.sortDateTime))).toList();
                 var retainedString = String.join(";", retainedStringList);
 
-                var supercededStringList = supercededList
-                    .stream()
-                      .map(s -> String.format("(%s,%s)", s.messageId, DTF.format(s.sortDateTime)))
-                      .toList();
+                var supercededStringList = supercededList.stream()
+                    .map(s -> String.format("(%s,%s)", s.messageId, DTF.format(s.sortDateTime))).toList();
                 var supercededString = String.join(";", supercededStringList);
-                logger
-                    .debug("Superceded message from sender: " + m.from + " type: " + m.getMessageType().toString()
-                        + ", maxRetain:" + ruleLimit + ", direction:" + direction + ", retained: " + retainedString
-                        + ", superceded" + supercededString);
+                logger.debug("Superceded message from sender: " + m.from + " type: " + m.getMessageType().toString()
+                    + ", maxRetain:" + ruleLimit + ", direction:" + direction + ", retained: " + retainedString
+                    + ", superceded" + supercededString);
               } // end block for logging
             } // else this message is superceded
             // outputList.add(m);
@@ -267,9 +257,8 @@ public class DeduplicationProcessor extends AbstractBaseProcessor {
         } // end loop over messages for type and sender
 
         if (inputList.size() != outputList.size()) {
-          logger
-              .info("sender: " + sender + ", type: " + messageType + ", deduped/superceded from: " + inputList.size()
-                  + " to " + outputList.size());
+          logger.info("sender: " + sender + ", type: " + messageType + ", deduped/superceded from: " + inputList.size()
+              + " to " + outputList.size());
           dedupeCount += (inputList.size() - outputList.size());
         }
         map.put(messageType, outputList);
@@ -283,7 +272,7 @@ public class DeduplicationProcessor extends AbstractBaseProcessor {
   @Override
   public void postProcess() {
     WriteProcessor.writeTable(new ArrayList<IWritableTable>(dupEntries), "DuplicateMesages.csv");
-    WriteProcessor.writeTable(new ArrayList<IWritableTable>( supEntries), "SupercededMesages.csv");
+    WriteProcessor.writeTable(new ArrayList<IWritableTable>(supEntries), "SupercededMesages.csv");
   }
 
 }

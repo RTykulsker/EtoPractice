@@ -46,8 +46,7 @@ public class Ics205PracticeProcessor extends BasePracticeProcessor {
 
   @Override
   public void initialize(IConfigurationManager cm, IMessageManager mm) {
-    super.initialize(cm, mm, logger);
-    processorMessageType = MessageType.ICS_205;
+    super.initialize(cm, mm, MessageType.ICS_205);
     ref = (referenceMessage instanceof Ics205Message) ? (Ics205Message) referenceMessage : null;
   }
 

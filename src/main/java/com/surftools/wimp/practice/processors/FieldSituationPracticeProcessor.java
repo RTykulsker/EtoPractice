@@ -30,9 +30,6 @@ package com.surftools.wimp.practice.processors;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.surftools.wimp.core.IMessageManager;
 import com.surftools.wimp.core.MessageType;
 import com.surftools.wimp.message.ExportedMessage;
@@ -41,13 +38,11 @@ import com.surftools.wimp.practice.misc.PracticeSummary;
 import com.surftools.wimp.utils.config.IConfigurationManager;
 
 public class FieldSituationPracticeProcessor extends BasePracticeProcessor {
-  private final Logger logger = LoggerFactory.getLogger(FieldSituationPracticeProcessor.class);
   private FieldSituationMessage ref;
 
   @Override
   public void initialize(IConfigurationManager cm, IMessageManager mm) {
-    super.initialize(cm, mm, logger);
-    processorMessageType = MessageType.FIELD_SITUATION;
+    super.initialize(cm, mm, MessageType.FIELD_SITUATION);
     ref = (ref instanceof FieldSituationMessage) ? (FieldSituationMessage) referenceMessage : null;
   }
 

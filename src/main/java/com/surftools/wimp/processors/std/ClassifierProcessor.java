@@ -59,7 +59,7 @@ public class ClassifierProcessor extends AbstractBaseProcessor {
 
   @Override
   public void initialize(IConfigurationManager cm, IMessageManager mm) {
-    super.initialize(cm, mm, logger);
+    super.initialize(cm, mm);
 
     for (var type : MessageType.values()) {
       if (IGNORED_TYPES.contains(type)) {
@@ -183,10 +183,8 @@ public class ClassifierProcessor extends AbstractBaseProcessor {
             var mapValue = "";
             valueMap.put(mapKey, mapValue);
           } else {
-            logger
-                .warn(String
-                    .format("###  wrong number of fields in FormData: %s for sender: %s, mId: %s", //
-                        line, m.from, m.messageId));
+            logger.warn(String.format("###  wrong number of fields in FormData: %s for sender: %s, mId: %s", //
+                line, m.from, m.messageId));
           }
         } // end loop over lines
 
@@ -194,10 +192,8 @@ public class ClassifierProcessor extends AbstractBaseProcessor {
           if (subjectMessageType == null) {
             var mapFileName = valueMap.get("MapFileName");
             if (mapFileName == null) {
-              logger
-                  .warn(String
-                      .format("###  couldn't find MapFileName in FormData: for sender: %s, mId: %s", //
-                          m.from, m.messageId));
+              logger.warn(String.format("###  couldn't find MapFileName in FormData: for sender: %s, mId: %s", //
+                  m.from, m.messageId));
               return null;
             }
             for (var messageType : MessageType.values()) {
@@ -209,7 +205,8 @@ public class ClassifierProcessor extends AbstractBaseProcessor {
               }
             }
           } else {
-            // FormData won't be containing a map file name, we must rely on messageType set by subject
+            // FormData won't be containing a map file name, we must rely on messageType set
+            // by subject
             var messageKey = new ExportedKey(m.from, m.messageId);
             formDataMap.put(messageKey, valueMap);
             mm.putContextObject("formDataMap", formDataMap);

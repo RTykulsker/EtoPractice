@@ -27,9 +27,6 @@ SOFTWARE.
 
 package com.surftools.wimp.practice.processors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.surftools.wimp.core.IMessageManager;
 import com.surftools.wimp.core.MessageType;
 import com.surftools.wimp.message.ExportedMessage;
@@ -38,13 +35,11 @@ import com.surftools.wimp.practice.misc.PracticeSummary;
 import com.surftools.wimp.utils.config.IConfigurationManager;
 
 public class Hics259PracticeProcessor extends BasePracticeProcessor {
-  private final Logger logger = LoggerFactory.getLogger(Hics259PracticeProcessor.class);
   private Hics259Message ref;
 
   @Override
   public void initialize(IConfigurationManager cm, IMessageManager mm) {
-    super.initialize(cm, mm, logger);
-    processorMessageType = MessageType.HICS_259;
+    super.initialize(cm, mm, MessageType.HICS_259);
     ref = (referenceMessage instanceof Hics259Message) ? (Hics259Message) referenceMessage : null;
   }
 

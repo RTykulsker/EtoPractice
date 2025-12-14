@@ -33,7 +33,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -115,12 +114,6 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
   protected MessageType processorMessageType; // the messageType associated with a Processor
   protected ExportedMessage referenceMessage;
 
-  protected static final String DT_FORMAT_STRING = "yyyy-MM-dd HH:mm";
-  public static final DateTimeFormatter DTF = DateTimeFormatter.ofPattern(DT_FORMAT_STRING);
-  protected static final DateTimeFormatter ALT_DTF = DateTimeFormatter.ofPattern(DT_FORMAT_STRING.replaceAll("-", "/"));
-  protected static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("MM/dd/yyyy");
-  protected static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
-
   protected static List<OutboundMessage> outboundMessageList;
   protected static String outboundMessageSender;
   protected static String outboundMessageSubject;
@@ -136,27 +129,27 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
 
   protected ExportedMessage message;
 
-  public int ppMessageCount = 0;
-  public int ppParticipantCount = 0;
-  public int ppParticipantCorrectCount = 0;
-  protected Map<String, Counter> summaryCounterMap = new LinkedHashMap<String, Counter>();
-
   protected int ppCount = 0;
+  protected int ppMessageCount = 0;
   protected int ppMessageCorrectCount = 0;
 
   public Map<String, Counter> counterMap = new LinkedHashMap<String, Counter>();
 
-  @Override
   @SuppressWarnings("unchecked")
-  public void initialize(IConfigurationManager cm, IMessageManager mm, Logger logger) {
-    super.initialize(cm, mm, logger);
+  public void initialize(IConfigurationManager cm, IMessageManager mm, MessageType _processorMessageType) {
 
-    // fail-fast stuff first;
+    processorMessageType = _processorMessageType;
+
+    // only initialize once; not five times
     var exerciseMessageTypeString = cm.getAsString(Key.EXPECTED_MESSAGE_TYPES);
     exerciseMessageType = MessageType.fromString(exerciseMessageTypeString);
-    if (exerciseMessageType == null) {
-      throw new IllegalArgumentException("unknown messageType: " + exerciseMessageTypeString);
+    if (exerciseMessageType != processorMessageType) {
+      logger.debug("processor messageType (" + processorMessageType.name() + ") != exercise messageType("
+          + exerciseMessageType.name() + "), skipping");
+      return;
     }
+
+    super.initialize(cm, mm);
 
     if (!PracticeGeneratorTool.VALID_MESSAGE_TYPES.contains(exerciseMessageType)) {
       throw new IllegalArgumentException("unsupported messageType: " + exerciseMessageTypeString);
@@ -440,12 +433,6 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
       var service = new OutboundMessageService(cm, mm, outboundMessageExtraContent, "allFeedback.txt");
       outboundMessageList = service.sendAll(outboundMessageList);
       WriteProcessor.writeTable(new ArrayList<IWritableTable>(outboundMessageList), "outBoundMessages.csv");
-    }
-
-    for (var key : counterMap.keySet()) {
-      var summaryKey = exerciseMessageType.name() + "_" + key;
-      var value = counterMap.get(key);
-      summaryCounterMap.put(summaryKey, value);
     }
 
     var chartService = ChartServiceFactory.getChartService(cm);

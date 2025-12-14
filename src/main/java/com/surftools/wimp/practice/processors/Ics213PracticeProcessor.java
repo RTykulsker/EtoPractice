@@ -29,9 +29,6 @@ package com.surftools.wimp.practice.processors;
 
 import java.time.LocalDateTime;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.surftools.wimp.core.IMessageManager;
 import com.surftools.wimp.core.MessageType;
 import com.surftools.wimp.message.ExportedMessage;
@@ -40,13 +37,12 @@ import com.surftools.wimp.practice.misc.PracticeSummary;
 import com.surftools.wimp.utils.config.IConfigurationManager;
 
 public class Ics213PracticeProcessor extends BasePracticeProcessor {
-  private final Logger logger = LoggerFactory.getLogger(Ics213PracticeProcessor.class);
+
   private Ics213Message ref;
 
   @Override
   public void initialize(IConfigurationManager cm, IMessageManager mm) {
-    super.initialize(cm, mm, logger);
-    processorMessageType = MessageType.ICS_213;
+    super.initialize(cm, mm, MessageType.ICS_213);
     ref = (ref instanceof Ics213Message) ? (Ics213Message) referenceMessage : null;
   }
 

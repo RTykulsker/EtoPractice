@@ -62,7 +62,7 @@ public class PipelineProcessor extends AbstractBaseProcessor {
     if (_mm == null) {
       _mm = new MessageManager();
     }
-    super.initialize(cm, _mm, logger);
+    super.initialize(cm, _mm);
 
     var stdin = cm.getAsString(Key.PIPELINE_STDIN, "Read,Classifier,Acknowledgement,Deduplication,Filter");
     var main = cm.getAsString(Key.PIPELINE_MAIN, ""); // exercise-specific processors go here!
@@ -91,17 +91,15 @@ public class PipelineProcessor extends AbstractBaseProcessor {
 
   private IProcessor findProcessor(String processorName) {
     // this seems a good balance between streams and code-golfing
-    final var PREFIXES = List
-        .of( //
-            "com.surftools.wimp.processors.std.", //
-            "com.surftools.wimp.practice.processors.", //
-            "com.surftools.wimp.practice.processors.exercise.", //
-            "");
-    final var SUFFIXES = List
-        .of(//
-            "Processor", //
-            "PracticeProcessor", //
-            "");
+    final var PREFIXES = List.of( //
+        "com.surftools.wimp.processors.std.", //
+        "com.surftools.wimp.practice.processors.", //
+        "com.surftools.wimp.practice.processors.exercise.", //
+        "");
+    final var SUFFIXES = List.of(//
+        "Processor", //
+        "PracticeProcessor", //
+        "");
 
     IProcessor processor = null;
     for (var prefix : PREFIXES) {

@@ -43,7 +43,7 @@ import com.surftools.wimp.core.IProcessor;
 import com.surftools.wimp.utils.config.IConfigurationManager;
 
 public abstract class AbstractBaseProcessor implements IProcessor {
-  protected static Logger logger;
+  protected Logger logger = LoggerFactory.getLogger(AbstractBaseProcessor.class);
 
   protected static final String DT_FORMAT_STRING = "yyyy-MM-dd HH:mm";
   public static final DateTimeFormatter DTF = DateTimeFormatter.ofPattern(DT_FORMAT_STRING);
@@ -55,9 +55,9 @@ public abstract class AbstractBaseProcessor implements IProcessor {
   protected static IMessageManager mm;
 
   protected static String pathName;
+  protected static Path path;
   protected static String outputPathName;
   protected static Path outputPath;
-  protected static Path path;
 
   protected static String dateString;
   protected static LocalDate date;
@@ -66,11 +66,6 @@ public abstract class AbstractBaseProcessor implements IProcessor {
 
   @Override
   public void initialize(IConfigurationManager cm, IMessageManager mm) {
-    initialize(cm, mm, LoggerFactory.getLogger(AbstractBaseProcessor.class));
-  }
-
-  public void initialize(IConfigurationManager cm, IMessageManager mm, Logger _logger) {
-    logger = _logger;
     if (!isInitialized) {
       doInitialization(cm, mm);
       isInitialized = true;
