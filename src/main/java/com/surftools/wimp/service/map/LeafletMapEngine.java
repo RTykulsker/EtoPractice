@@ -51,12 +51,25 @@ public class LeafletMapEngine implements IMapService {
     this.mm = mm;
   }
 
+  public static String escapeForJavaScript(String input) {
+    if (input == null) {
+      return null;
+    }
+    // First escape backslashes to avoid double escaping
+    String escaped = input.replace("\\", "\\\\");
+    // Then escape apostrophes (0x27)
+    escaped = escaped.replace("'", "\\'");
+    // Optionally escape newlines if embedding directly
+    escaped = escaped.replace("\n", "\\n").replace("\r", "\\r");
+    return escaped;
+  }
+
   @Override
   public void makeMap(Path outputPath, MapHeader mapHeader, List<MapEntry> entries) {
     var sb = new StringBuilder();
 
-    final Set<String> validColors = Set.of("blue", "gold", "red", "green", "orange", "yellow", "violet", "grey",
-        "black");
+    final Set<String> validColors = Set
+        .of("blue", "gold", "red", "green", "orange", "yellow", "violet", "grey", "black");
     var labelIndex = 0;
     for (var entry : entries) {
       var color = entry.iconColor() == null ? "blue" : entry.iconColor();
@@ -70,6 +83,7 @@ public class LeafletMapEngine implements IMapService {
       point = point.replace("#LONGITUDE#", entry.location().getLongitude());
       point = point.replace("#COLOR#", color);
       var message = entry.message().replaceAll("\n", "<br/>");
+      message = escapeForJavaScript(message);
       point = point.replace("#CONTENT#", message);
       sb.append(point + "\n");
     }
