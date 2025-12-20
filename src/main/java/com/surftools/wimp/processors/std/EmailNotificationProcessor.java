@@ -68,7 +68,7 @@ public class EmailNotificationProcessor extends AbstractBaseProcessor {
 
   @Override
   public void initialize(IConfigurationManager cm, IMessageManager mm) {
-    var enabled = cm.getAsBoolean(Key.PRACTICE_ENABLE_FINALIZE);
+    var enabled = cm.getAsBoolean(Key.ENABLE_FINALIZE);
     if (!enabled) {
       logger.info("NO email notifications, because not enabled via command line");
       isInitialized = false;

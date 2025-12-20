@@ -43,7 +43,7 @@ public class Ics213PracticeProcessor extends BasePracticeProcessor {
   @Override
   public void initialize(IConfigurationManager cm, IMessageManager mm) {
     super.initialize(cm, mm, MessageType.ICS_213);
-    ref = (ref instanceof Ics213Message) ? (Ics213Message) referenceMessage : null;
+    ref = (referenceMessage instanceof Ics213Message) ? (Ics213Message) referenceMessage : null;
   }
 
   @Override

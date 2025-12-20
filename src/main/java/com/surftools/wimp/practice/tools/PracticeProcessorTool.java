@@ -27,7 +27,6 @@ SOFTWARE.
 
 package com.surftools.wimp.practice.tools;
 
-import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.DayOfWeek;
@@ -108,45 +107,49 @@ public class PracticeProcessorTool {
       }
 
       var messageType = PracticeGeneratorTool.MESSAGE_TYPE_MAP.get(ord);
-      logger.info("Exercise Date: " + exerciseDate.toString() + ", " + PracticeUtils.getOrdinalLabel(ord)
-          + " Thursday; exercise message type: " + messageType.toString());
+      logger
+          .info("Exercise Date: " + exerciseDate.toString() + ", " + PracticeUtils.getOrdinalLabel(ord)
+              + " Thursday; exercise message type: " + messageType.toString());
 
-      var exportedMessagesPathName = cm.getAsString(Key.PRACTICE_PATH_EXPORTED_MESSAGES_HOME);
-      logger.info("exportedMessages home" + exportedMessagesPathName);
+      var exercisesPathName = cm.getAsString(Key.PATH_EXERCISES);
+      logger.info("exercises home" + exercisesPathName);
 
       // fail fast on reading reference
-      var referencePathName = cm.getAsString(Key.PRACTICE_PATH_REFERENCE);
+      var referencePathName = cm.getAsString(Key.PATH_REFERENCE);
       logger.info("reference home: " + referencePathName);
       var exerciseYearString = String.valueOf(exerciseDate.getYear());
-      var referencePath = Path.of(referencePathName, exerciseYearString, exerciseDateString,
-          exerciseDateString + "-reference.json");
+      var referencePath = Path
+          .of(referencePathName, exerciseYearString, exerciseDateString, exerciseDateString + "-reference.json");
       var jsonString = Files.readString(referencePath);
       var deserializer = new PracticeJsonMessageDeserializer();
       var referenceMessage = deserializer.deserialize(jsonString, messageType);
 
       // make exercises folder if needed
-      FileUtils.createDirectory(Path.of(exportedMessagesPathName, exerciseYearString, exerciseDateString));
+      FileUtils.createDirectory(Path.of(exercisesPathName, exerciseYearString, exerciseDateString));
+      FileUtils.createDirectory(Path.of(exercisesPathName, exerciseYearString, exerciseDateString, "input"));
 
-      var winlinkCallsign = cm.getAsString(Key.PRACTICE_WINLINK_CALLSIGN);
+      var winlinkCallsign = cm.getAsString(Key.WINLINK_CALLSIGN);
       logger.info("Winlink callsign: " + winlinkCallsign);
 
-      var enableLegacy = cm.getAsBoolean(Key.PRACTICE_ENABLE_LEGACY, Boolean.FALSE);
+      var enableLegacy = cm.getAsBoolean(Key.ENABLE_LEGACY, Boolean.FALSE);
       logger.info("enable Legacy (3rd week practice instructions send on 2nd week): " + enableLegacy);
 
       final var dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
       var nextExerciseDate = exerciseDate.plusDays((ord == 2 && !enableLegacy) ? 14 : 7);
       var nextExerciseYear = nextExerciseDate.getYear();
       var nextExerciseDateString = dtf.format(nextExerciseDate);
-      var instructionPath = Path.of(referencePathName, String.valueOf(nextExerciseYear), nextExerciseDateString,
-          nextExerciseDateString + "-instructions.txt");
+      var instructionPath = Path
+          .of(referencePathName, String.valueOf(nextExerciseYear), nextExerciseDateString,
+              nextExerciseDateString + "-instructions.txt");
       var instructionText = Files.readString(instructionPath);
       var sb = new StringBuilder();
       sb.append("\n\n");
       if (ord == 2 && !enableLegacy) {
         sb.append("INSTRUCTIONS for next week:" + "\n");
         sb.append("Next Thursday is a \"Third Thursday Training Exercise\"," + "\n");
-        sb.append(
-            "so look for instructions on our web site at https://emcomm-training.org/Winlink_Thursdays.html" + "\n");
+        sb
+            .append("so look for instructions on our web site at https://emcomm-training.org/Winlink_Thursdays.html"
+                + "\n");
         sb.append("However, here are the " + instructionText + "\n");
       } else {
         sb.append("INSTRUCTIONS for " + instructionText + "\n");
@@ -156,9 +159,7 @@ public class PracticeProcessorTool {
       // create the rest of our configuration on the fly
       cm.putString(Key.EXERCISE_DATE, exerciseDateString);
       cm.putString(Key.EXERCISE_NAME, "ETO Weekly Practice for " + exerciseDateString);
-      cm.putString(Key.PATH,
-          exportedMessagesPathName + File.separator + exerciseYearString + File.separator + exerciseDateString);
-      cm.putBoolean(Key.OUTPUT_PATH_CLEAR_ON_START, true);
+
       cm.putString(Key.EXPECTED_MESSAGE_TYPES, messageType.toString());
 
       var windowOpenDate = exerciseDate.minusDays(5);
@@ -167,19 +168,19 @@ public class PracticeProcessorTool {
       cm.putString(Key.EXERCISE_WINDOW_CLOSE, dtf.format(windowCloseDate) + " 08:00");
 
       cm.putString(Key.PIPELINE_STDIN, "Read,Classifier,Acknowledgement,Deduplication");
-      cm.putString(Key.PIPELINE_MAIN, "Ics213,Ics213RR,Ics205,Hics259,FieldSituation"); // exercise processors // go
-      cm.putString(Key.PIPELINE_STDOUT, "Write,MissedExercise,HistoryMap,Cleanup,Upload,EmailNotification");
+      cm.putString(Key.PIPELINE_MAIN, "Ics213,Ics213RR,Ics205,Hics259,FieldSituation");
+      // cm.putString(Key.PIPELINE_STDOUT, "Write,MissedExercise,HistoryMap,Cleanup,Upload,EmailNotification");
+      cm.putString(Key.PIPELINE_STDOUT, "Write,MissedExercise,HistoryMap,Cleanup,EmailNotification");
 
       var edPrefix = "com.surftools.wimp.practice.misc.Practice";
-      cm.putString(Key.PRACTICE_ALL_FEEDBACK_TEXT_EDITOR, edPrefix + "AllFeedbackTextEditor");
-      cm.putString(Key.PRACTICE_BODY_TEXT_EDITOR, edPrefix + "BodyTextEditor");
+      cm.putString(Key.ALL_FEEDBACK_TEXT_EDITOR, edPrefix + "AllFeedbackTextEditor");
+      cm.putString(Key.BODY_TEXT_EDITOR, edPrefix + "BodyTextEditor");
 
       cm.putString(Key.OUTBOUND_MESSAGE_SOURCE, winlinkCallsign);
       cm.putString(Key.OUTBOUND_MESSAGE_SENDER, "ETO-PRACTICE");
       cm.putString(Key.OUTBOUND_MESSAGE_SUBJECT, "ETO Practice Exercise Feedback");
-      cm.putString(Key.OUTBOUND_MESSAGE_ENGINE_TYPE, "WINLINK_EXPRESS");
 
-      cm.putBoolean(Key.PRACTICE_ENABLE_FINALIZE, enableFinalize);
+      cm.putBoolean(Key.ENABLE_FINALIZE, enableFinalize);
 
       var mm = new MessageManager();
       mm.putContextObject(REFERENCE_MESSAGE_KEY, referenceMessage);
@@ -242,7 +243,7 @@ public class PracticeProcessorTool {
       return s;
     }
 
-    var legacyEnabled = cm.getAsBoolean(Key.PRACTICE_ENABLE_LEGACY, Boolean.FALSE);
+    var legacyEnabled = cm.getAsBoolean(Key.ENABLE_LEGACY, Boolean.FALSE);
 
     var date = LocalDate.now();
     switch (s) {

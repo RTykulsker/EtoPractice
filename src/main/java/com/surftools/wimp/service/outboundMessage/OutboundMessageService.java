@@ -35,7 +35,6 @@ import java.util.TreeMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.surftools.wimp.configuration.Key;
 import com.surftools.wimp.core.IMessageManager;
 import com.surftools.wimp.service.IService;
 import com.surftools.wimp.utils.config.IConfigurationManager;
@@ -62,28 +61,7 @@ public class OutboundMessageService implements IService {
   }
 
   public OutboundMessageService(IConfigurationManager cm, IMessageManager mm, String extraContent, String fileName) {
-    var engineTypeName = cm.getAsString(Key.OUTBOUND_MESSAGE_ENGINE_TYPE, EngineType.PAT.name());
-    var engineType = EngineType.valueOf(engineTypeName);
-    if (engineType == null) {
-      throw new RuntimeException("Could not find engineType for: " + engineTypeName);
-    }
-
-    switch (engineType) {
-    case PAT:
-      engine = new PatOutboundMessageEngine(cm, extraContent, fileName);
-      break;
-
-    case WINLINK_EXPRESS:
-      engine = new WinlinkExpressOutboundMessageEngine(cm, extraContent, fileName);
-      break;
-
-    case WEB:
-      engine = new WebOutboundMessageEngine(cm, mm);
-      break;
-
-    default:
-      throw new RuntimeException("Could not find engine for " + engineType.name());
-    }
+    engine = new WinlinkExpressOutboundMessageEngine(cm, extraContent, fileName);
   }
 
   public List<OutboundMessage> sendAll(List<OutboundMessage> inputMessageList) {

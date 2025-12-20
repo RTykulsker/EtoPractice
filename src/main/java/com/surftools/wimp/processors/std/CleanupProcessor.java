@@ -30,7 +30,6 @@ package com.surftools.wimp.processors.std;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -50,7 +49,7 @@ public class CleanupProcessor extends AbstractBaseProcessor {
   @Override
   public void initialize(IConfigurationManager cm, IMessageManager mm) {
     dateString = cm.getAsString(Key.EXERCISE_DATE);
-    isFinalizing = cm.getAsBoolean(Key.PRACTICE_ENABLE_FINALIZE);
+    isFinalizing = cm.getAsBoolean(Key.ENABLE_FINALIZE);
   }
 
   @Override
@@ -59,61 +58,49 @@ public class CleanupProcessor extends AbstractBaseProcessor {
 
   @Override
   public void postProcess() {
-    // move unused files
-    var unusedDirPath = Path.of(outputPath.toString(), "unused");
-    var unusedDirName = unusedDirPath.toString();
-    FileUtils.deleteDirectory(unusedDirPath);
-    FileUtils.makeDirIfNeeded(unusedDirPath.toString());
 
+    // move files out of output and into published
     var outputDir = new File(outputPath.toString());
     var outputFiles = outputDir.listFiles();
-
-    for (var outputFile : outputFiles) {
-      if (!outputFile.isFile()) {
+    for (var file : outputFiles) {
+      if (!file.isFile()) {
         continue;
       }
 
-      var name = outputFile.getName();
-      if (name.equals("practice-summary.csv")) {
+      var fileName = file.getName();
+      if (fileName.equals("practice-summary.csv")) {
         try {
-          Files.move(outputFile.toPath(), Path.of(outputPathName, dateString + "-standard-summary.csv"),
-              StandardCopyOption.ATOMIC_MOVE);
-          logger.info("renamed practice-summary.csv" + name + " to: " + dateString + "-summary.csv");
+          Files.move(file.toPath(), Path.of(publishedPathName, dateString + "-standard-summary.csv"));
+          logger.info("renamed practice-summary.csv" + fileName + " to: " + dateString + "-standard-summary.csv");
         } catch (Exception e) {
-          logger.error("Exception renaming file: " + outputFile.toString(), e.getMessage());
-        }
-      } else if (name.endsWith(".csv")) {
-        try {
-          Files.move(outputFile.toPath(), Path.of(unusedDirName, name), StandardCopyOption.ATOMIC_MOVE);
-          logger.info("moved output/" + name + " to usused/");
-        } catch (Exception e) {
-          logger.error("Exception moving file: " + outputFile.toString(), e.getMessage());
+          logger.error("Exception renaming file: " + file.toString(), e.getMessage());
         }
       }
     } // end loop over files
 
-    // copy allFeedback.txt to usused
-    var allFeedbackSource = Path.of(pathName.toString(), "allFeedback.txt");
-    var allFeedbackDestination = Path.of(unusedDirName, "allFeedback.txt");
+    // copy input/allFeedback.txt to output
+    var allFeedbackSource = Path.of(inputPathName, "allFeedback.txt");
+    var allFeedbackDestination = Path.of(outputPathName, "allFeedback.txt");
     try {
-      Files.copy(allFeedbackSource, allFeedbackDestination, StandardCopyOption.REPLACE_EXISTING);
+      Files.copy(allFeedbackSource, allFeedbackDestination);
       logger.info("copied allFeedback.txt to unused/");
     } catch (Exception e) {
       logger.error("Exception copying file: " + allFeedbackSource.toString(), e.getMessage());
     }
 
-    // rename chart, map and Winlink import files
-    outputFiles = outputDir.listFiles();
-    for (var outputFile : outputFiles) {
-      if (!outputFile.isFile()) {
+    // rename published files chart, map and Winlink import files
+    var publishedDir = new File(publishedPath.toString());
+    var publishedFiles = publishedDir.listFiles();
+    for (var publishedFile : publishedFiles) {
+      if (!publishedFile.isFile()) {
         continue;
       }
 
-      var name = outputFile.getName();
+      var name = publishedFile.getName();
       if (name.endsWith("chart.html")) {
         try {
-          var newFile = Path.of(outputPathName, dateString + "-chart.html").toFile();
-          outputFile.renameTo(newFile);
+          var newFile = Path.of(publishedPathName, dateString + "-chart.html").toFile();
+          publishedFile.renameTo(newFile);
           logger.info("renamed chart file to: " + newFile.getName());
         } catch (Exception e) {
           logger.error("Exception renaming file: " + name, e.getMessage());
@@ -122,28 +109,9 @@ public class CleanupProcessor extends AbstractBaseProcessor {
 
       if (name.startsWith("leaflet-ETO Weekly Practice for ")) {
         try {
-          var newFile = Path.of(outputPathName, dateString + "-map.html").toFile();
-          outputFile.renameTo(newFile);
+          var newFile = Path.of(publishedPathName, dateString + "-map.html").toFile();
+          publishedFile.renameTo(newFile);
           logger.info("renamed map file to: " + newFile.getName());
-        } catch (Exception e) {
-          logger.error("Exception renaming file: " + name, e.getMessage());
-        }
-      } else if (name.startsWith("leaflet")) {
-        try {
-          var newName = name.replace("leaflet", dateString + "-map");
-          var newFile = Path.of(unusedDirName, newName).toFile();
-          outputFile.renameTo(newFile);
-          logger.info("renamed map file to: " + newFile.getName());
-        } catch (Exception e) {
-          logger.error("Exception renaming file: " + name, e.getMessage());
-        }
-      }
-
-      if (name.startsWith("all-winlink")) {
-        try {
-          var newFile = Path.of(outputPathName, "Winlink_ImportMessages-" + dateString + ".xml").toFile();
-          outputFile.renameTo(newFile);
-          logger.info("renamed Winlink import file to: " + newFile.getName());
         } catch (Exception e) {
           logger.error("Exception renaming file: " + name, e.getMessage());
         }
@@ -168,8 +136,6 @@ public class CleanupProcessor extends AbstractBaseProcessor {
             var testLine = line.toLowerCase().trim();
             if (!inMessages && testLine.equals("<message_list>")) {
               inMessages = true;
-              Files.move(outputFile.toPath(), Path.of(unusedDirName, name), StandardCopyOption.ATOMIC_MOVE);
-              logger.info("moved Winlink import file: " + name + "  to unused");
               continue;
             }
             if (inMessages && testLine.equals("</message_list>")) {
@@ -181,6 +147,7 @@ public class CleanupProcessor extends AbstractBaseProcessor {
           } // end loop over lines
         } // end if .xml file
       } // end merge outbound message merge loop over files
+
       if (messageLines.length() > 0) {
         final String header = """
             <?xml version="1.0"?>
@@ -199,7 +166,7 @@ public class CleanupProcessor extends AbstractBaseProcessor {
 
         messageLines.insert(0, header);
         messageLines.append(footer);
-        var path = Path.of(outputPathName, dateString + "-Winlink-Import-All-Messages.xml");
+        var path = Path.of(publishedPathName, dateString + "-Winlink-Import-All-Messages.xml");
 
         Files.writeString(path, messageLines.toString());
         logger.info("created merged Winlink import file: " + path.toFile().getName());
@@ -213,9 +180,12 @@ public class CleanupProcessor extends AbstractBaseProcessor {
       LocalDateTime now = LocalDateTime.now();
       var timestamp = now.format(formatter);
 
-      var finalPath = Path.of(outputPath + "-FINAL-" + timestamp);
-      FileUtils.copyDirectory(outputPath, finalPath);
-      logger.info("copied output dir to: " + finalPath.toString());
+      var tempPath = Path.of(exercisesPathName, "FINAL-" + timestamp);
+      FileUtils.copyDirectory(exercisePath, tempPath);
+      var tempDir = tempPath.toFile();
+      var finalDir = Path.of(exercisePathName, "FINAL-" + timestamp).toFile();
+      tempDir.renameTo(finalDir);
+      logger.info("copied exercise dir to: " + finalDir.toString());
     }
 
   } // end postProcess

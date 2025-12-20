@@ -132,21 +132,21 @@ public class PracticeGeneratorTool {
     var cm = new PropertyFileConfigurationManager(configurationFileName, Key.values());
     logger.info("Using configuration file: " + configurationFileName);
 
-    referenceDirName = cm.getAsString(Key.PRACTICE_PATH_REFERENCE);
+    referenceDirName = cm.getAsString(Key.PATH_REFERENCE);
     FileUtils.deleteDirectory(Path.of(referenceDirName));
     FileUtils.createDirectory(Path.of(referenceDirName));
     logger.info("reference path: " + referenceDirName);
 
-    var rngSeedString = cm.getAsString(Key.PRACTICE_GENERATOR_RNG_SEED, "2025");
+    var rngSeedString = cm.getAsString(Key.GENERATOR_RNG_SEED, "2025");
     rngSeed = Long.valueOf(rngSeedString);
     logger.info("rngSeed: " + rngSeed);
 
-    var nYearsString = cm.getAsString(Key.PRACTICE_GENERATOR_N_YEARS, "5");
+    var nYearsString = cm.getAsString(Key.GENERATOR_N_YEARS, "5");
     nYears = Integer.valueOf(nYearsString);
     logger.info("nYears: " + nYears);
 
     practiceInstructionURL = cm
-        .getAsString(Key.PRACTICE_GENERATOR_INSTRUCTION_URL, "https://emcomm-training.org/Winlink_Thursdays.html");
+        .getAsString(Key.GENERATOR_INSTRUCTION_URL, "https://emcomm-training.org/Winlink_Thursdays.html");
     logger.info("practiceInstructionURL: " + practiceInstructionURL);
 
     // generate nYears worth, from 2025; this is for idempotency

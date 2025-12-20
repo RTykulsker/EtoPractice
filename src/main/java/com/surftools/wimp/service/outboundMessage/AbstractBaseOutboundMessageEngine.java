@@ -42,6 +42,7 @@ import org.slf4j.LoggerFactory;
 import com.surftools.utils.textEditor.ITextEditor;
 import com.surftools.utils.textEditor.TextEditorManager;
 import com.surftools.wimp.configuration.Key;
+import com.surftools.wimp.processors.std.AbstractBaseProcessor;
 import com.surftools.wimp.utils.config.IConfigurationManager;
 
 public abstract class AbstractBaseOutboundMessageEngine implements IOutboundMessageEngine {
@@ -83,8 +84,8 @@ public abstract class AbstractBaseOutboundMessageEngine implements IOutboundMess
     this.fileName = fileName;
 
     var tem = new TextEditorManager();
-    allFeedbackTextEditor = tem.getTextEditor(cm.getAsString(Key.PRACTICE_ALL_FEEDBACK_TEXT_EDITOR));
-    bodyTextEditor = tem.getTextEditor(cm.getAsString(Key.PRACTICE_BODY_TEXT_EDITOR));
+    allFeedbackTextEditor = tem.getTextEditor(cm.getAsString(Key.ALL_FEEDBACK_TEXT_EDITOR));
+    bodyTextEditor = tem.getTextEditor(cm.getAsString(Key.BODY_TEXT_EDITOR));
 
     isReady = true;
   }
@@ -170,12 +171,8 @@ public abstract class AbstractBaseOutboundMessageEngine implements IOutboundMess
     }
 
     try {
-      var path = Path.of(cm.getAsString(Key.PATH));
-      var outputPath = Path.of(cm.getAsString(Key.PATH), "output");
-      var filePath = fileName.equals("allFeedback.txt") //
-          ? Path.of(path.toString(), fileName)
-          : Path.of(outputPath.toString(), fileName);
-      Files.writeString(filePath, allOutput.toString());
+      var path = AbstractBaseProcessor.publishedPath;
+      Files.writeString(path, allOutput.toString());
     } catch (Exception e) {
       logger.error("error writing: " + fileName + e.getLocalizedMessage());
     }

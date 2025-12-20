@@ -42,6 +42,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.surftools.utils.counter.Counter;
 import com.surftools.wimp.configuration.Key;
 import com.surftools.wimp.core.MessageType;
+import com.surftools.wimp.processors.std.AbstractBaseProcessor;
 import com.surftools.wimp.utils.config.IConfigurationManager;
 
 public abstract class AbstractBaseChartService implements IChartService {
@@ -91,8 +92,7 @@ public abstract class AbstractBaseChartService implements IChartService {
    */
   @SuppressWarnings({ "unchecked", "rawtypes" })
   private void parseConfig() {
-    var fileName = messageType == null ? "summary" : messageType.name().toLowerCase();
-    fileOutputPath = Path.of(cm.getAsString(Key.PATH), "output", fileName + "_" + "plottly_chart.html");
+    fileOutputPath = Path.of(AbstractBaseProcessor.publishedPathName, "chart.html");
 
     var defaultConfig = new ChartConfig(List.of(ChartType.PIE), true, 0, 10);
     var jsonString = cm.getAsString(Key.CHART_CONFIG, "").trim();
@@ -113,8 +113,8 @@ public abstract class AbstractBaseChartService implements IChartService {
       var includedCountersString = (List<String>) jsonMap.get("includedCounters");
       counterList = filterCounters(includedCountersString, excludedCountersString, counterMap);
 
-      var safeKeys = Set.of("includedCounters", "excludedCounters", "doSingleItemCharts", "minValues", "maxValues",
-          "serviceName");
+      var safeKeys = Set
+          .of("includedCounters", "excludedCounters", "doSingleItemCharts", "minValues", "maxValues", "serviceName");
       validateJson("Global", jsonMap, safeKeys);
 
       // get "global" variables from config so that we can build default ChartConfig
@@ -131,8 +131,8 @@ public abstract class AbstractBaseChartService implements IChartService {
           logger.debug("no json for :" + name + ", using default config");
         } else {
           validateJson(name, jsonMapForCounter, Set.of("doSingleItemCharts", "minValues", "maxValues"));
-          var a_doSingleItemCharts = (Boolean) jsonMapForCounter.getOrDefault("doSingleItemCharts",
-              defaultConfig.doSingleItemCharts());
+          var a_doSingleItemCharts = (Boolean) jsonMapForCounter
+              .getOrDefault("doSingleItemCharts", defaultConfig.doSingleItemCharts());
           var a_minValueCount = (Integer) jsonMapForCounter.getOrDefault("minValues", defaultConfig.minValueCount());
           var a_maxValueCount = (Integer) jsonMapForCounter.getOrDefault("maxValues", defaultConfig.maxValueCount());
           var a_chartConfig = new ChartConfig(List.of(ChartType.PIE), a_doSingleItemCharts, a_minValueCount,

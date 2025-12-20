@@ -36,19 +36,20 @@ import com.surftools.wimp.utils.config.IConfigurationKey;
  *
  */
 public enum Key implements IConfigurationKey {
-  PRACTICE_WINLINK_CALLSIGN("winlink.callsign"), // mbo address
+  WINLINK_CALLSIGN("winlink.callsign"), // mbo address
 
-  PRACTICE_PATH_REFERENCE("practice.path.reference"), // dir where reference dirs/files are
-  PRACTICE_PATH_EXPORTED_MESSAGES_HOME("practice.path.exportedMessages"), // dir where we find exported messages
-  PRACTICE_PATH_RESOUCE_CONTENT("practice.path.resourceContent"), // FILE for ICS-213 RR generation
-  PRACTICE_PATH_NAG_CONTENT("practice.path.nagContent"), // path to FILE where end-of-year nag is
-  PRACTICE_PATH_UPLOAD_FTP_LOCAL("practice.path.upload.ftp.local"), // path where local FTP dir is
-  PRACTICE_GENERATOR_RNG_SEED("practice.generator.rngSeed"), // to get consistent results
-  PRACTICE_GENERATOR_N_YEARS("practice.generator.nYears"), // number of years to generate
-  PRACTICE_GENERATOR_INSTRUCTION_URL("practice.generator.instruction.url"), // url at the bottom of each instruction
+  PATH_REFERENCE("path.reference"), // dir where reference dirs/files are
+  PATH_EXERCISES("path.exercises"), // dir where we find input/ exported messages and will create output/ and published/
+  PATH_RESOUCE_CONTENT("path.resourceContent"), // FILE for ICS-213 RR generation
+  PATH_NAG_CONTENT("path.nagContent"), // path to FILE where end-of-year nag is
+  PATH_UPLOAD_FTP_LOCAL("path.upload.ftp.local"), // path where local FTP dir is
 
-  PRACTICE_ENABLE_LEGACY("enable.legacy"), // allows for 3rd week practice, instead of monthly training
-  PRACTICE_ENABLE_FINALIZE("enable.finalize"), // set to true to enable, renames output, sends email
+  GENERATOR_RNG_SEED("generator.rngSeed"), // to get consistent results
+  GENERATOR_N_YEARS("generator.nYears"), // number of years to generate
+  GENERATOR_INSTRUCTION_URL("generator.instruction.url"), // url at the bottom of each instruction
+
+  ENABLE_LEGACY("enable.legacy"), // allows for 3rd week practice, instead of monthly training
+  ENABLE_FINALIZE("enable.finalize"), // set to true to enable, renames output, sends email
 
   PERSISTENCE_SQLITE_URL("persistence.sqlite.url"), //
   PERSISTENCE_ALLOW_FUTURE("persistence.allow.future"), // allow/disallow future exercises into db
@@ -57,10 +58,6 @@ public enum Key implements IConfigurationKey {
   PERSISTENCE_MISS_SUBJECT("persistence.miss.subject"), // subject for outbound message
   PERSISTENCE_MISS_BODY_PATH("persistence.miss.body.path"), // path to file containing body for outbound message
   PERSISTENCE_HISTORY_MAP_TYPES("persistence.history.map.types"), // HistoryTypes to produce maps for
-
-  PATH("path"), // path to message files
-  OUTPUT_PATH("output.path"), // to override as subdir of path
-  OUTPUT_PATH_CLEAR_ON_START("output.path.clearOnStart"), // if true contents of outputDir cleared
 
   EXPECTED_MESSAGE_TYPES("expectedMessageTypes"), // MessageTypes that we will handle
 
@@ -78,10 +75,8 @@ public enum Key implements IConfigurationKey {
   PIPELINE_STDOUT("pipeline.stdout"), // list of output processors
   PIPELINE_MAIN("pipeline.main"), // list of main processors
 
-  // PRACTICE_PATH("practice.path"), // path where practice files are written
-
-  PRACTICE_ALL_FEEDBACK_TEXT_EDITOR("practice.all_feedback.textEditor"), // class name of text editor for AllFeedback
-  PRACTICE_BODY_TEXT_EDITOR("practice.body.textEditor"), // class name of text editor for outbound message body
+  ALL_FEEDBACK_TEXT_EDITOR("all_feedback.textEditor"), // class name of text editor for AllFeedback
+  BODY_TEXT_EDITOR("body.textEditor"), // class name of text editor for outbound message body
 
   EXERCISE_DATE("exerciseDate"), // for Summarizer
   EXERCISE_NAME("exerciseName"), // for Summarizer
@@ -95,7 +90,6 @@ public enum Key implements IConfigurationKey {
   EMAIL_NOTIFICATION_SUBJECT("email.notification.subject"), // with #DATE# substitution
   EMAIL_NOTIFICATION_BODY("email.notification.body"), // with #DATE# substitution
 
-  OUTBOUND_MESSAGE_ENGINE_TYPE("outboundMessage.engineType"), // PAT, WINLINK_CMS, etc
   OUTBOUND_MESSAGE_SOURCE("outboundMessage.source"), // mbo address
   OUTBOUND_MESSAGE_SENDER("outboundMessage.sender"), // from address
   OUTBOUND_MESSAGE_SUBJECT("outboundMessage.subject"), // message subject

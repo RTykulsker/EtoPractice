@@ -65,7 +65,7 @@ public class PracticeResourceData {
   public PracticeResourceData(Random _rng, IConfigurationManager cm) {
     rng = _rng;
 
-    var dataPathName = cm.getAsString(Key.PRACTICE_PATH_RESOUCE_CONTENT);
+    var dataPathName = cm.getAsString(Key.PATH_RESOUCE_CONTENT);
     var dataFilePath = Path.of(dataPathName);
 
     try {

@@ -27,9 +27,7 @@ SOFTWARE.
 
 package com.surftools.wimp.processors.std;
 
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
@@ -54,10 +52,16 @@ public abstract class AbstractBaseProcessor implements IProcessor {
   protected static IConfigurationManager cm;
   protected static IMessageManager mm;
 
-  protected static String pathName;
-  protected static Path path;
-  protected static String outputPathName;
-  protected static Path outputPath;
+  public static String exercisesPathName;
+  public static Path exercisesPath;
+  public static String exercisePathName;
+  public static Path exercisePath;
+  public static String inputPathName;
+  public static Path inputPath;
+  public static String outputPathName;
+  public static Path outputPath;
+  public static String publishedPathName;
+  public static Path publishedPath;
 
   protected static String dateString;
   protected static LocalDate date;
@@ -76,33 +80,29 @@ public abstract class AbstractBaseProcessor implements IProcessor {
     cm = _cm;
     mm = _mm;
 
-    pathName = cm.getAsString(Key.PATH);
-    // fail fast: our working directory, where our input files are
-    path = Paths.get(pathName);
-    if (!Files.exists(path)) {
-      logger.error("specified path: " + pathName + " does not exist");
-      System.exit(1);
-    } else {
-      logger.info("Starting with input path: " + path);
-    }
-
-    // allow overriding of outputPathName!
-    outputPathName = cm.getAsString(Key.OUTPUT_PATH);
-    if (outputPathName == null) {
-      outputPath = Path.of(path.toAbsolutePath().toString(), "output");
-      outputPathName = outputPath.toString();
-      logger.info("outputPath: " + outputPath);
-    } else {
-      outputPath = Path.of(outputPathName);
-    }
-
-    if (cm.getAsBoolean(Key.OUTPUT_PATH_CLEAR_ON_START, true)) {
-      FileUtils.deleteDirectory(outputPath);
-    }
-    FileUtils.makeDirIfNeeded(outputPath.toString());
-
     dateString = cm.getAsString(Key.EXERCISE_DATE);
     date = LocalDate.parse(dateString);
+    var exerciseYear = date.getYear();
+    var exerciseYearString = String.valueOf(exerciseYear);
+
+    exercisesPathName = cm.getAsString(Key.PATH_EXERCISES);
+    exercisesPath = Path.of(exercisesPathName);
+    exercisePath = Path.of(exercisesPathName, exerciseYearString, dateString);
+    exercisePathName = exercisePath.toString();
+
+    // already created in the tool, so Winlink Express export can put to right place
+    inputPath = Path.of(exercisePathName, "input");
+    inputPathName = inputPath.toString();
+
+    outputPath = Path.of(exercisePathName, "output");
+    FileUtils.deleteDirectory(outputPath);
+    FileUtils.makeDirIfNeeded(outputPath.toString());
+    outputPathName = outputPath.toString();
+
+    publishedPath = Path.of(exercisePathName, "published");
+    FileUtils.deleteDirectory(publishedPath);
+    FileUtils.makeDirIfNeeded(publishedPath.toString());
+    publishedPathName = publishedPath.toString();
   }
 
   @Override
