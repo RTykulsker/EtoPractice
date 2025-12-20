@@ -78,9 +78,9 @@ public class CleanupProcessor extends AbstractBaseProcessor {
       }
     } // end loop over files
 
-    // copy input/allFeedback.txt to output
+    // copy input/allFeedback.txt to published
     var allFeedbackSource = Path.of(inputPathName, "allFeedback.txt");
-    var allFeedbackDestination = Path.of(outputPathName, "allFeedback.txt");
+    var allFeedbackDestination = Path.of(publishedPathName, dateString + "-allFeedback.txt");
     try {
       Files.copy(allFeedbackSource, allFeedbackDestination);
       logger.info("copied allFeedback.txt to unused/");

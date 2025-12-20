@@ -27,6 +27,7 @@ SOFTWARE.
 
 package com.surftools.wimp.processors.std;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -49,8 +50,7 @@ import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
 
 /**
- * send email to various ETO members to notify that weekly practice processing
- * is complete
+ * send email to various ETO members to notify that weekly practice processing is complete
  */
 public class EmailNotificationProcessor extends AbstractBaseProcessor {
   private static final Logger logger = LoggerFactory.getLogger(EmailNotificationProcessor.class);
@@ -64,14 +64,14 @@ public class EmailNotificationProcessor extends AbstractBaseProcessor {
 
   private Session session = null;
 
-  private boolean isInitialized = true;
+  private boolean isInitialized = false;;
 
   @Override
   public void initialize(IConfigurationManager cm, IMessageManager mm) {
     var enabled = cm.getAsBoolean(Key.ENABLE_FINALIZE);
     if (!enabled) {
       logger.info("NO email notifications, because not enabled via command line");
-      isInitialized = false;
+      return;
     }
 
     dateString = cm.getAsString(Key.EXERCISE_DATE);
@@ -79,13 +79,15 @@ public class EmailNotificationProcessor extends AbstractBaseProcessor {
     from = cm.getAsString(Key.EMAIL_NOTIFICATION_FROM);
     if (from == null || from.isBlank()) {
       logger.info("NO email notifications, because from is null");
+      return;
     }
 
     var toListString = cm.getAsString(Key.EMAIL_NOTIFICATION_TO);
     if (toListString == null || toListString.isBlank()) {
       logger.info("NO email notifications, because to is null");
-      isInitialized = false;
+      return;
     }
+
     var fields = toListString.split(",");
     recipientAddresses = new InternetAddress[fields.length];
     for (var i = 0; i < fields.length; ++i) {
@@ -93,26 +95,30 @@ public class EmailNotificationProcessor extends AbstractBaseProcessor {
         recipientAddresses[i] = new InternetAddress(fields[i]);
       } catch (AddressException e) {
         logger.error("Exception parsing adddress[" + i + "] (" + fields[i] + "): " + e.getMessage());
-        isInitialized = false;
+        return;
       }
     }
 
-    var passwordFilePath = cm.getAsString(Key.EMAIL_NOTIFICATION_PASSWORD_FILEPATH);
-    if (passwordFilePath == null || passwordFilePath.isBlank()) {
+    var passwordFileName = cm.getAsString(Key.EMAIL_NOTIFICATION_PASSWORD_FILEPATH);
+    if (passwordFileName == null || passwordFileName.isBlank()) {
       logger.info("NO email notifications, because password.filePath is null");
-      isInitialized = false;
+      return;
+    }
+
+    var passwordFile = new File(passwordFileName);
+    if (!passwordFile.exists()) {
+      logger.info("NO email notifications, because password file: " + passwordFileName + " not found");
+      return;
     }
 
     try {
-      password = Files.readString(Path.of(passwordFilePath));
+      password = Files.readString(Path.of(passwordFileName));
     } catch (IOException e) {
-      logger.error("Exception reading password filePath:" + passwordFilePath + ", " + e.getMessage());
-      isInitialized = false;
-    }
-
-    if (!isInitialized) {
+      logger.error("Exception reading password filePath:" + passwordFileName + ", " + e.getMessage());
       return;
     }
+
+    isInitialized = true;
 
     subject = cm.getAsString(Key.EMAIL_NOTIFICATION_SUBJECT, "ETO: WLT processings is complete for #DATE#");
     subject = subject.replaceAll("#DATE#", dateString);

@@ -98,7 +98,7 @@ public class WinlinkExpressOutboundMessageEngine extends AbstractBaseOutboundMes
     if (allFeedbackTextEditor != null) {
       allFeedbackText = allFeedbackTextEditor.edit(allFeedbackText);
     }
-    allOutput.append(m.to() + "\n" + allFeedbackText + "\n\n");
+    allFeedback.append(m.to() + "\n" + allFeedbackText + "\n\n");
 
     /*
      * body is user-generated content. It could contain characters that could interfere with the XML wrapping around

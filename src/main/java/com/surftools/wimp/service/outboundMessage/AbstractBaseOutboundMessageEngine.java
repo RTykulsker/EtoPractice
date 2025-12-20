@@ -51,7 +51,7 @@ public abstract class AbstractBaseOutboundMessageEngine implements IOutboundMess
   protected IConfigurationManager cm;
   protected final String extraContent;
 
-  protected StringBuilder allOutput = new StringBuilder();
+  protected StringBuilder allFeedback = new StringBuilder();
 
   protected boolean isReady;
 
@@ -160,7 +160,7 @@ public abstract class AbstractBaseOutboundMessageEngine implements IOutboundMess
       text = allFeedbackTextEditor.edit(text);
     }
 
-    allOutput.append(m.to() + "\n" + text + "\n\n");
+    allFeedback.append(m.to() + "\n" + text + "\n\n");
     return messageId;
   }
 
@@ -170,9 +170,13 @@ public abstract class AbstractBaseOutboundMessageEngine implements IOutboundMess
       return;
     }
 
+    if (!fileName.equals("allFeedback.txt")) {
+      return;
+    }
+
     try {
-      var path = AbstractBaseProcessor.publishedPath;
-      Files.writeString(path, allOutput.toString());
+      var path = Path.of(AbstractBaseProcessor.inputPathName, "allFeedback.txt");
+      Files.writeString(path, allFeedback.toString());
     } catch (Exception e) {
       logger.error("error writing: " + fileName + e.getLocalizedMessage());
     }
