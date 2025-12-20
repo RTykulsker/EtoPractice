@@ -38,17 +38,15 @@ import com.surftools.wimp.practice.misc.PracticeSummary;
 import com.surftools.wimp.utils.config.IConfigurationManager;
 
 public class FieldSituationPracticeProcessor extends BasePracticeProcessor {
-  private FieldSituationMessage ref;
-
   @Override
   public void initialize(IConfigurationManager cm, IMessageManager mm) {
     super.initialize(cm, mm, MessageType.FIELD_SITUATION);
-    ref = (referenceMessage instanceof FieldSituationMessage) ? (FieldSituationMessage) referenceMessage : null;
   }
 
   @Override
   protected void specificProcessing(ExportedMessage message) {
     var m = (FieldSituationMessage) message;
+    var ref = (FieldSituationMessage) referenceMessage;
 
     count(sts.testStartsWith("Message Subject should start with #EV", ref.subject, m.subject));
     count(sts.test("Message Location should be valid", m.msgLocation.isValid(), m.msgLocation.toString()));

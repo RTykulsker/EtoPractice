@@ -38,17 +38,15 @@ import com.surftools.wimp.utils.config.IConfigurationManager;
 
 public class Ics213PracticeProcessor extends BasePracticeProcessor {
 
-  private Ics213Message ref;
-
   @Override
   public void initialize(IConfigurationManager cm, IMessageManager mm) {
     super.initialize(cm, mm, MessageType.ICS_213);
-    ref = (referenceMessage instanceof Ics213Message) ? (Ics213Message) referenceMessage : null;
   }
 
   @Override
   protected void specificProcessing(ExportedMessage message) {
     var m = (Ics213Message) message;
+    var ref = (Ics213Message) referenceMessage;
 
     count(sts.testStartsWith("Message Subject should start with #EV", referenceMessage.subject, m.subject));
     count(sts.test("Message Location should be valid", m.msgLocation.isValid(), m.msgLocation.toString()));

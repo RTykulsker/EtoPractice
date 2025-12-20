@@ -35,17 +35,15 @@ import com.surftools.wimp.practice.misc.PracticeSummary;
 import com.surftools.wimp.utils.config.IConfigurationManager;
 
 public class Hics259PracticeProcessor extends BasePracticeProcessor {
-  private Hics259Message ref;
-
   @Override
   public void initialize(IConfigurationManager cm, IMessageManager mm) {
     super.initialize(cm, mm, MessageType.HICS_259);
-    ref = (referenceMessage instanceof Hics259Message) ? (Hics259Message) referenceMessage : null;
   }
 
   @Override
   protected void specificProcessing(ExportedMessage message) {
     var m = (Hics259Message) message;
+    var ref = (Hics259Message) referenceMessage;
 
     count(sts.testStartsWith("Message Subject should start with #EV", ref.subject, m.subject));
     count(sts.test("Message Location should be valid", m.msgLocation.isValid(), m.msgLocation.toString()));

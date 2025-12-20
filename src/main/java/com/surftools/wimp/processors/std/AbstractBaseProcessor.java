@@ -95,7 +95,7 @@ public abstract class AbstractBaseProcessor implements IProcessor {
     inputPathName = inputPath.toString();
 
     outputPath = Path.of(exercisePathName, "output");
-    FileUtils.deleteDirectory(outputPath);
+    // don't delete here, already deleted in PracticeProcessorTool, FileUtils.deleteDirectory(outputPath);
     FileUtils.makeDirIfNeeded(outputPath.toString());
     outputPathName = outputPath.toString();
 

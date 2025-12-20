@@ -41,17 +41,16 @@ import com.surftools.wimp.utils.config.IConfigurationManager;
 
 public class Ics213RRPracticeProcessor extends BasePracticeProcessor {
   private final Logger logger = LoggerFactory.getLogger(Ics213RRPracticeProcessor.class);
-  private Ics213RRMessage ref;
 
   @Override
   public void initialize(IConfigurationManager cm, IMessageManager mm) {
     super.initialize(cm, mm, MessageType.ICS_213_RR);
-    ref = (referenceMessage instanceof Ics213RRMessage) ? (Ics213RRMessage) referenceMessage : null;
   }
 
   @Override
   protected void specificProcessing(ExportedMessage message) {
     var m = (Ics213RRMessage) message;
+    var ref = (Ics213RRMessage) referenceMessage;
 
     count(sts.test_2line("Message Subject should be #EV", ref.subject, m.subject));
     count(sts.test("Message Location should be valid", m.msgLocation.isValid(), m.msgLocation.toString()));
@@ -67,8 +66,9 @@ public class Ics213RRPracticeProcessor extends BasePracticeProcessor {
 
     var maxLineItems = Math.min(ref.lineItems.size(), m.lineItems.size());
     if (m.lineItems.size() != ref.lineItems.size()) {
-      logger.warn("### from: " + m.from + ",mId: " + m.messageId + ", m.items: " + m.lineItems.size() + ", ref.items: "
-          + ref.lineItems.size());
+      logger
+          .warn("### from: " + m.from + ",mId: " + m.messageId + ", m.items: " + m.lineItems.size() + ", ref.items: "
+              + ref.lineItems.size());
     }
     for (var i = 0; i < maxLineItems; ++i) {
       var lineNumber = i + 1;

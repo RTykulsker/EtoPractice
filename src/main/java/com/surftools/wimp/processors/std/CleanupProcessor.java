@@ -39,6 +39,7 @@ import org.slf4j.LoggerFactory;
 import com.surftools.utils.FileUtils;
 import com.surftools.wimp.configuration.Key;
 import com.surftools.wimp.core.IMessageManager;
+import com.surftools.wimp.practice.tools.PracticeProcessorTool;
 import com.surftools.wimp.utils.config.IConfigurationManager;
 
 public class CleanupProcessor extends AbstractBaseProcessor {
@@ -78,14 +79,24 @@ public class CleanupProcessor extends AbstractBaseProcessor {
       }
     } // end loop over files
 
-    // copy input/allFeedback.txt to published
+    // copy input/allFeedback.txt to output
     var allFeedbackSource = Path.of(inputPathName, "allFeedback.txt");
-    var allFeedbackDestination = Path.of(publishedPathName, dateString + "-allFeedback.txt");
+    var allFeedbackDestination = Path.of(outputPathName, dateString + "-allFeedback.txt");
     try {
       Files.copy(allFeedbackSource, allFeedbackDestination);
-      logger.info("copied allFeedback.txt to published/");
+      logger.info("copied allFeedback.txt to output/");
     } catch (Exception e) {
       logger.error("Exception copying file: " + allFeedbackSource.toString(), e.getMessage());
+    }
+
+    // copy configurationFile to input
+    var configurationFileSource = Path.of((String) mm.getContextObject(PracticeProcessorTool.CONFIGURATION_FILE_KEY));
+    var configurationFileDestination = Path.of(inputPathName, "configuration.txt");
+    try {
+      Files.copy(configurationFileSource, configurationFileDestination);
+      logger.info("copied configuration to input/");
+    } catch (Exception e) {
+      logger.error("Exception copying file: " + configurationFileSource.toString(), e.getMessage());
     }
 
     // rename published files chart, map and Winlink import files
@@ -166,7 +177,7 @@ public class CleanupProcessor extends AbstractBaseProcessor {
 
         messageLines.insert(0, header);
         messageLines.append(footer);
-        var path = Path.of(publishedPathName, dateString + "-Winlink-Import-All-Messages.xml");
+        var path = Path.of(outputPathName, dateString + "-Winlink-Import-All-Messages.xml");
 
         Files.writeString(path, messageLines.toString());
         logger.info("created merged Winlink import file: " + path.toFile().getName());

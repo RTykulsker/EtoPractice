@@ -57,6 +57,7 @@ import ch.qos.logback.core.FileAppender;
 public class PracticeProcessorTool {
   public static final String REFERENCE_MESSAGE_KEY = "referenceMessage";
   public static final String INSTRUCTIONS_KEY = "instructions";
+  public static final String CONFIGURATION_FILE_KEY = "configurationFileName";
 
   static {
     System.setProperty("logback.configurationFile", "src/main/resources/logback.xml");
@@ -89,7 +90,7 @@ public class PracticeProcessorTool {
     try {
       var cm = new PropertyFileConfigurationManager(configurationFileName, Key.values());
       exerciseDateString = parse(exerciseDateString, cm);
-      addDatedLogger();
+      addDatedLogger(cm);
 
       logger.info("begin run");
       var exerciseDate = LocalDate.parse(exerciseDateString);
@@ -185,6 +186,7 @@ public class PracticeProcessorTool {
       var mm = new MessageManager();
       mm.putContextObject(REFERENCE_MESSAGE_KEY, referenceMessage);
       mm.putContextObject(INSTRUCTIONS_KEY, instructionText);
+      mm.putContextObject(CONFIGURATION_FILE_KEY, configurationFileName);
 
       var pipeline = new PipelineProcessor();
       pipeline.initialize(cm, mm);
@@ -199,7 +201,7 @@ public class PracticeProcessorTool {
   }
 
   @SuppressWarnings({ "rawtypes", "unchecked" })
-  private void addDatedLogger() {
+  private void addDatedLogger(IConfigurationManager cm) {
     // Get the LoggerContext
     LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
 
@@ -214,8 +216,19 @@ public class PracticeProcessorTool {
     fileAppender.setContext(loggerContext);
     fileAppender.setAppend(false);
 
-    // Dynamically set the file name here
-    fileAppender.setFile("logs/" + exerciseDateString + "-log.txt");
+    var date = LocalDate.parse(exerciseDateString);
+    var exerciseYear = date.getYear();
+    var exerciseYearString = String.valueOf(exerciseYear);
+
+    var exercisesPathName = cm.getAsString(Key.PATH_EXERCISES);
+    var exercisePath = Path.of(exercisesPathName, exerciseYearString, exerciseDateString);
+    var exercisePathName = exercisePath.toString();
+    var outputPath = Path.of(exercisePathName, "output");
+    FileUtils.deleteDirectory(outputPath);
+    FileUtils.makeDirIfNeeded(outputPath.toString());
+    var outputPathName = outputPath.toString();
+    var logPath = Path.of(outputPathName, exerciseDateString + "-log.txt");
+    fileAppender.setFile(logPath.toString());
 
     fileAppender.setEncoder(encoder);
     fileAppender.start();
