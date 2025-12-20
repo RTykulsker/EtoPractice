@@ -83,7 +83,7 @@ public class CleanupProcessor extends AbstractBaseProcessor {
     var allFeedbackDestination = Path.of(publishedPathName, dateString + "-allFeedback.txt");
     try {
       Files.copy(allFeedbackSource, allFeedbackDestination);
-      logger.info("copied allFeedback.txt to unused/");
+      logger.info("copied allFeedback.txt to published/");
     } catch (Exception e) {
       logger.error("Exception copying file: " + allFeedbackSource.toString(), e.getMessage());
     }
