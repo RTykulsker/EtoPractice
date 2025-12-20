@@ -30,6 +30,7 @@ package com.surftools.wimp.processors.std;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -93,7 +94,7 @@ public class CleanupProcessor extends AbstractBaseProcessor {
     var configurationFileSource = Path.of((String) mm.getContextObject(PracticeProcessorTool.CONFIGURATION_FILE_KEY));
     var configurationFileDestination = Path.of(inputPathName, "configuration.txt");
     try {
-      Files.copy(configurationFileSource, configurationFileDestination);
+      Files.copy(configurationFileSource, configurationFileDestination, StandardCopyOption.REPLACE_EXISTING);
       logger.info("copied configuration to input/");
     } catch (Exception e) {
       logger.error("Exception copying file: " + configurationFileSource.toString(), e.getMessage());
