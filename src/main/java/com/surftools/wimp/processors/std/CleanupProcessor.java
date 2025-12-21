@@ -178,7 +178,7 @@ public class CleanupProcessor extends AbstractBaseProcessor {
 
         messageLines.insert(0, header);
         messageLines.append(footer);
-        var path = Path.of(outputPathName, dateString + "-Winlink-Import-All-Messages.xml");
+        var path = Path.of(winlinkPathName, dateString + "-Winlink-Import-All-Messages.xml");
 
         Files.writeString(path, messageLines.toString());
         logger.info("created merged Winlink import file: " + path.toFile().getName());

@@ -62,6 +62,8 @@ public abstract class AbstractBaseProcessor implements IProcessor {
   public static Path outputPath;
   public static String publishedPathName;
   public static Path publishedPath;
+  public static String winlinkPathName;
+  public static Path winlinkPath;
 
   protected static String dateString;
   protected static LocalDate date;
@@ -103,6 +105,11 @@ public abstract class AbstractBaseProcessor implements IProcessor {
     FileUtils.deleteDirectory(publishedPath);
     FileUtils.makeDirIfNeeded(publishedPath.toString());
     publishedPathName = publishedPath.toString();
+
+    winlinkPath = Path.of(exercisePathName, "winlink-to-be-imported");
+    FileUtils.deleteDirectory(winlinkPath);
+    FileUtils.makeDirIfNeeded(winlinkPath.toString());
+    winlinkPathName = winlinkPath.toString();
   }
 
   @Override
