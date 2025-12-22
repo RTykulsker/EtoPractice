@@ -132,14 +132,15 @@ public class HistoryMapProcessor extends AbstractBaseProcessor {
               + "\nLast date: " + filteredExercises.getFirst().date();
         }
         var iconColor = colorMap.get(historyType);
-        var mapEntry = new MapEntry(label, location, message, iconColor);
+        var to = "";
+        var mapEntry = new MapEntry(label, to, location, message, iconColor);
         mapEntries.add(mapEntry);
       }
 
-      var title = historyType.name() + "-history";
-      var description = historyType.name() + " " + cm.getAsString(Key.EXERCISE_DESCRIPTION);
-      var mapHeader = new MapHeader(title, description);
-
+      var fileName = historyType.name() + "-history-map";
+      var mapTitle = dateString + " " + historyType.getShortText();
+      var legendHTML = historyType.getLongText();
+      var mapHeader = new MapHeader(fileName, mapTitle, legendHTML);
       mapService.makeMap(outputPath, mapHeader, mapEntries);
     }
   }

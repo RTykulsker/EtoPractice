@@ -78,7 +78,7 @@ public class CleanupProcessor extends AbstractBaseProcessor {
           logger.error("Exception renaming file: " + file.toString(), e.getMessage());
         }
       }
-    } // end loop over files
+    } // end loop over output files
 
     // copy input/allFeedback.txt to output
     var allFeedbackSource = Path.of(inputPathName, "allFeedback.txt");
@@ -119,9 +119,9 @@ public class CleanupProcessor extends AbstractBaseProcessor {
         }
       }
 
-      if (name.startsWith("leaflet-ETO Weekly Practice for ")) {
+      if (name.equals("leaflet-" + dateString + "-map-feedbackCount.html")) {
         try {
-          var newFile = Path.of(publishedPathName, dateString + "-map.html").toFile();
+          var newFile = Path.of(publishedPathName, dateString + "-map-feedbackCount.html").toFile();
           publishedFile.renameTo(newFile);
           logger.info("renamed map file to: " + newFile.getName());
         } catch (Exception e) {

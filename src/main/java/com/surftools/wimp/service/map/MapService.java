@@ -30,6 +30,7 @@ package com.surftools.wimp.service.map;
 import java.nio.file.Path;
 import java.util.List;
 
+import com.surftools.utils.counter.Counter;
 import com.surftools.wimp.core.IMessageManager;
 import com.surftools.wimp.utils.config.IConfigurationManager;
 
@@ -53,5 +54,9 @@ public class MapService {
 
   public void makeMap(Path outputPath, MapHeader mapHeader, List<MapEntry> entries) {
     engine.makeMap(outputPath, mapHeader, entries);
+  }
+
+  public String makeLegendForFeedbackCount(int participantCount, Counter counter) {
+    return engine.makeLegendForFeedbackCount(participantCount, counter);
   }
 }

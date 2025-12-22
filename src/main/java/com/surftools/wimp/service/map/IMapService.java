@@ -30,6 +30,10 @@ package com.surftools.wimp.service.map;
 import java.nio.file.Path;
 import java.util.List;
 
+import com.surftools.utils.counter.Counter;
+
 public interface IMapService {
   public void makeMap(Path outputPath, MapHeader mapHeader, List<MapEntry> entries);
+
+  String makeLegendForFeedbackCount(int participantCount, Counter counter);
 }

@@ -30,25 +30,39 @@ package com.surftools.wimp.service.map;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.surftools.utils.counter.Counter;
 import com.surftools.wimp.core.IMessageManager;
 import com.surftools.wimp.utils.config.IConfigurationManager;
 
 public class LeafletMapEngine implements IMapService {
   private static final Logger logger = LoggerFactory.getLogger(LeafletMapEngine.class);
 
-  @SuppressWarnings("unused")
-  private IConfigurationManager cm;
-  @SuppressWarnings("unused")
-  private IMessageManager mm;
+  final Map<String, String> rgbMap = Map
+      .ofEntries( //
+          Map.entry("blue", "269bcc"), //
+          Map.entry("gold", "ffcd44"), //
+          Map.entry("red", "d84560"), //
+          Map.entry("green", "23b844"), //
+          Map.entry("orange", "d7884e"), //
+          Map.entry("yellow", "d4bf55"), //
+          Map.entry("violet", "a152ca"), //
+          Map.entry("grey", "8a8a8a"), //
+          Map.entry("black", "000000") //
+      );
+
+  final Set<String> ALL_ICON_COLORS = Set
+      .of("blue", "gold", "red", "green", "orange", "yellow", "violet", "grey", "black");
+
+  final Set<String> VALID_ICON_COLORS = Set // no grey
+      .of("blue", "gold", "red", "green", "orange", "yellow", "violet", "black");
 
   public LeafletMapEngine(IConfigurationManager cm, IMessageManager mm) {
-    this.cm = cm;
-    this.mm = mm;
   }
 
   public static String escapeForJavaScript(String input) {
@@ -68,12 +82,10 @@ public class LeafletMapEngine implements IMapService {
   public void makeMap(Path outputPath, MapHeader mapHeader, List<MapEntry> entries) {
     var sb = new StringBuilder();
 
-    final Set<String> validColors = Set.of("blue", "gold", "red", "green", "orange", "yellow", "violet", "grey",
-        "black");
     var labelIndex = 0;
     for (var entry : entries) {
       var color = entry.iconColor() == null ? "blue" : entry.iconColor();
-      if (!validColors.contains(color)) {
+      if (!ALL_ICON_COLORS.contains(color)) {
         throw new RuntimeException("mapEntry: " + entry + ", invalid color: " + color);
       }
       var point = new String(POINT_TEMPLATE);
@@ -88,17 +100,14 @@ public class LeafletMapEngine implements IMapService {
       sb.append(point + "\n");
     }
 
-    var legendHTML = mapHeader.description();
-    if (legendHTML.length() == 0) {
-      legendHTML = "<h3>" + mapHeader.title() + "</h3>";
-    }
+    var legendHTML = mapHeader.legendHTML();
 
     var fileContent = new String(FILE_TEMPLATE);
-    fileContent = fileContent.replaceAll("#TITLE#", mapHeader.title());
+    fileContent = fileContent.replaceAll("#TITLE#", mapHeader.mapTitle());
     fileContent = fileContent.replace("#POINTS#", sb.toString());
     fileContent = fileContent.replace("#LEGEND_HTML#", legendHTML);
 
-    var filePath = Path.of(outputPath.toString(), "leaflet-" + mapHeader.title() + ".html");
+    var filePath = Path.of(outputPath.toString(), "leaflet-" + mapHeader.fileName() + ".html");
     try {
       Files.writeString(filePath, fileContent.toString());
       logger.info("wrote " + entries.size() + " entries to: " + filePath.toString());
@@ -213,6 +222,15 @@ public class LeafletMapEngine implements IMapService {
             font-size: 12px;
           }
 
+          .legend .box {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            margin-right: 6px;
+            vertical-align: middle;
+          }
+
+
         </style>
 
       </head>
@@ -251,7 +269,7 @@ public class LeafletMapEngine implements IMapService {
 
             // Body
             const body = L.DomUtil.create('div', '', legendContainer);
-            body.innerHTML = '#LEGEND_HTML#';
+            body.innerHTML = `#LEGEND_HTML#`;
 
             return legendContainer;
           }
@@ -310,4 +328,19 @@ public class LeafletMapEngine implements IMapService {
       </body>
       </html>
             """;
+
+  @Override
+  public String makeLegendForFeedbackCount(int participantCount, Counter counter) {
+    var legendHTML = "For " + participantCount + " participants";
+
+    var it = counter.getAscendingKeyIterator();
+    var sb = new StringBuilder();
+    while (it.hasNext()) {
+      var entry = it.next();
+      sb.append("value" + ": " + entry.getKey() + ", " + "count" + ": " + entry.getValue() + "<br>");
+    }
+    legendHTML += "<br><br>Feedback Count:<br>" + sb.toString();
+    return legendHTML;
+  }
+
 }

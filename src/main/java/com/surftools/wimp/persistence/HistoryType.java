@@ -28,9 +28,27 @@ SOFTWARE.
 package com.surftools.wimp.persistence;
 
 public enum HistoryType {
-  FIRST_TIME, // first participation is last exercise
-  ONE_AND_DONE, // only one participation, but not last exercise
-  HEAVY_HITTER, // participated in 90% or more of exercises
-  ALL_OTHER, // catch all bucket for the rest
-  FILTERED_OUT // no exercises match filters
+  FIRST_TIME("First Timers", "First participation is in most recent exercise"), //
+  ONE_AND_DONE("One and Done", "Only one participation, but not in most recent exercise"), //
+  HEAVY_HITTER("Heavy Hitters", "Participated in 90% or more of exercises"), //
+  ALL_OTHER("All Others", "Catch-all bucket for the rest"), //
+  FILTERED_OUT("Filtered Out", "No exercises match filters") //
+  ;
+
+  private final String shortText;
+  private final String longText;
+
+  private HistoryType(String shortText, String longText) {
+    this.shortText = shortText;
+    this.longText = longText;
+  }
+
+  public String getShortText() {
+    return shortText;
+  }
+
+  public String getLongText() {
+    return longText;
+  }
+
 }
