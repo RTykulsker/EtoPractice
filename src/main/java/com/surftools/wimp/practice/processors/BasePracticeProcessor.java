@@ -442,6 +442,15 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
     var mapEntries = mIdFeedbackMap.values().stream().map(s -> MapEntry.fromSingleMessageFeedback(s)).toList();
     var mapService = new MapService(null, null);
     var legendHTML = "Using " + exerciseMessageType.toString() + " messages<br>" + mapEntries.size() + " participants";
+    var counter = counterMap.get("Feedback Count");
+    var it2 = counter.getAscendingKeyIterator();
+    var sb2 = new StringBuilder();
+    while (it2.hasNext()) {
+      var entry = it2.next();
+      sb2.append("value" + ": " + entry.getKey() + ", " + "count" + ": " + entry.getValue() + "<br>");
+    }
+    legendHTML += "<br><br>Feedback Count:<br>" + sb2.toString();
+
     mapService.makeMap(publishedPath, new MapHeader(cm.getAsString(Key.EXERCISE_NAME), legendHTML), mapEntries);
 
     WriteProcessor.writeTable(new ArrayList<IWritableTable>(practiceSummaries), "practice-summary.csv");
