@@ -68,8 +68,8 @@ public class LeafletMapEngine implements IMapService {
   public void makeMap(Path outputPath, MapHeader mapHeader, List<MapEntry> entries) {
     var sb = new StringBuilder();
 
-    final Set<String> validColors = Set
-        .of("blue", "gold", "red", "green", "orange", "yellow", "violet", "grey", "black");
+    final Set<String> validColors = Set.of("blue", "gold", "red", "green", "orange", "yellow", "violet", "grey",
+        "black");
     var labelIndex = 0;
     for (var entry : entries) {
       var color = entry.iconColor() == null ? "blue" : entry.iconColor();
@@ -88,9 +88,15 @@ public class LeafletMapEngine implements IMapService {
       sb.append(point + "\n");
     }
 
+    var legendHTML = mapHeader.description();
+    if (legendHTML.length() == 0) {
+      legendHTML = "<h3>" + mapHeader.title() + "</h3>";
+    }
+
     var fileContent = new String(FILE_TEMPLATE);
-    fileContent = fileContent.replace("#TITLE#", mapHeader.title());
+    fileContent = fileContent.replaceAll("#TITLE#", mapHeader.title());
     fileContent = fileContent.replace("#POINTS#", sb.toString());
+    fileContent = fileContent.replace("#LEGEND_HTML#", legendHTML);
 
     var filePath = Path.of(outputPath.toString(), "leaflet-" + mapHeader.title() + ".html");
     try {
@@ -160,6 +166,53 @@ public class LeafletMapEngine implements IMapService {
               border: none !important;
           }
 
+          /* Main legend box */
+          .leaflet-custom-legend {
+            background: white;
+            padding: 8px;
+            border-radius: 4px;
+            box-shadow: 0 0 8px rgba(0,0,0,0.3);
+            font-family: sans-serif;
+            font-size: 13px;
+            resize: both;
+            overflow: auto;
+            max-width: 260px;
+            max-height: 300px;
+            position: relative;
+          }
+
+          /* Header with close button */
+          .leaflet-custom-legend-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+            margin-bottom: 6px;
+          }
+
+          .leaflet-custom-legend-close {
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            font-size: 16px;
+            line-height: 1;
+            padding: 0 4px;
+          }
+
+          .leaflet-custom-legend-close:hover {
+            background: #eee;
+          }
+
+          /* Toggle button */
+          .legend-toggle-btn {
+            background: white;
+            padding: 4px 6px;
+            border-radius: 4px;
+            box-shadow: 0 0 6px rgba(0,0,0,0.3);
+            cursor: pointer;
+            font-size: 12px;
+          }
+
         </style>
 
       </head>
@@ -169,6 +222,70 @@ public class LeafletMapEngine implements IMapService {
       <script>
 
         const map = L.map('map').setView([40, -91], 4);
+
+        // ------------------------------
+        // Legend Control
+        // ------------------------------
+        let legendContainer;  // <-- store reference so toggle can reopen it
+
+        const LegendControl = L.Control.extend({
+          options: { position: 'bottomleft' },
+
+          onAdd: function (map) {
+            legendContainer = L.DomUtil.create('div', 'leaflet-custom-legend');
+
+            L.DomEvent.disableClickPropagation(legendContainer);
+            L.DomEvent.disableScrollPropagation(legendContainer);
+
+            // Header
+            const header = L.DomUtil.create('div', 'leaflet-custom-legend-header', legendContainer);
+            header.innerHTML = `<span>#TITLE#</span>`;
+
+            const closeBtn = L.DomUtil.create('button', 'leaflet-custom-legend-close', header);
+            closeBtn.innerHTML = '&times;';
+
+            closeBtn.addEventListener('click', () => {
+              legendContainer.style.display = 'none';
+              toggleButton.style.display = 'block';
+            });
+
+            // Body
+            const body = L.DomUtil.create('div', '', legendContainer);
+            body.innerHTML = '#LEGEND_HTML#';
+
+            return legendContainer;
+          }
+        });
+
+        map.addControl(new LegendControl());
+
+        // ------------------------------
+        // Toggle Button Control
+        // ------------------------------
+        let toggleButton;
+
+        const ToggleLegendControl = L.Control.extend({
+          options: { position: 'bottomleft' },
+
+          onAdd: function (map) {
+            toggleButton = L.DomUtil.create('div', 'legend-toggle-btn');
+            toggleButton.innerHTML = '#TITLE#';
+
+            L.DomEvent.disableClickPropagation(toggleButton);
+
+            toggleButton.addEventListener('click', () => {
+              legendContainer.style.display = 'block';
+              toggleButton.style.display = 'none';
+            });
+
+            return toggleButton;
+          }
+        });
+
+        map.addControl(new ToggleLegendControl());
+
+        // Hide toggle button initially
+        toggleButton.style.display = 'none';
 
         const iconSizeX = [13,21];
 
@@ -193,23 +310,4 @@ public class LeafletMapEngine implements IMapService {
       </body>
       </html>
             """;
-
-  // public static void main(String[] args) throws Exception {
-  // var outputPath = Path.of("2025-08-21/output");
-  // var inputPath = Path.of(outputPath.toString(), "feedback-hics_259.csv");
-  // var fieldsArray = ReadProcessor.readCsvFileIntoFieldsArray(inputPath, ',',
-  // false, 1);
-  // var mapEntries = new ArrayList<MapEntry>(fieldsArray.size());
-  // for (var fieldEntry : fieldsArray) {
-  // var pair = new LatLongPair(fieldEntry[1], fieldEntry[2]);
-  // var content = "MessageId: " + fieldEntry[5] + "\n" + "Feedback Count: " +
-  // fieldEntry[3] + "\n" + "Feedback: "
-  // + fieldEntry[4];
-  // var mapEntry = new MapEntry(fieldEntry[0], pair, content);
-  // mapEntries.add(mapEntry);
-  // }
-  // var mapService = new MapService(null, null);
-  // mapService.makeMap(outputPath, new MapHeader("ETO-2025-08-21--HIC-259", ""),
-  // mapEntries);
-  // }
 }
