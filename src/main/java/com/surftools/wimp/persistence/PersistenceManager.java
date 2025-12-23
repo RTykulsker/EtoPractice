@@ -29,6 +29,9 @@ package com.surftools.wimp.persistence;
 
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.surftools.wimp.persistence.dto.BulkInsertEntry;
 import com.surftools.wimp.persistence.dto.Exercise;
 import com.surftools.wimp.persistence.dto.ReturnRecord;
@@ -36,6 +39,8 @@ import com.surftools.wimp.persistence.dto.ReturnStatus;
 import com.surftools.wimp.utils.config.IConfigurationManager;
 
 public class PersistenceManager implements IPersistenceManager {
+  private static final Logger logger = LoggerFactory.getLogger(PersistenceManager.class);
+
   protected IConfigurationManager cm;
   protected IPersistenceEngine engine;
   protected EngineType engineType;
@@ -87,10 +92,10 @@ public class PersistenceManager implements IPersistenceManager {
   public ReturnRecord getHealth() {
     var ret = engine.getHealth();
     if (ret == null) {
-      throw new RuntimeException("null return from getHealth()");
-    }
-    if (ret.status() == ReturnStatus.ERROR) {
-      throw new RuntimeException("Database health error: " + ret.content());
+      logger.error("null return from getHealth()");
+      ret = new ReturnRecord(ReturnStatus.ERROR, "null return from getHealth()", null);
+    } else if (ret.status() == ReturnStatus.ERROR) {
+      logger.error("Database health error: " + ret.content());
     }
     return ret;
   }
