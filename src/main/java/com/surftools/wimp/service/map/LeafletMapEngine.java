@@ -43,21 +43,20 @@ import com.surftools.wimp.utils.config.IConfigurationManager;
 public class LeafletMapEngine implements IMapService {
   private static final Logger logger = LoggerFactory.getLogger(LeafletMapEngine.class);
 
-  final Map<String, String> rgbMap = Map
-      .ofEntries( //
-          Map.entry("blue", "269bcc"), //
-          Map.entry("gold", "ffcd44"), //
-          Map.entry("red", "d84560"), //
-          Map.entry("green", "23b844"), //
-          Map.entry("orange", "d7884e"), //
-          Map.entry("yellow", "d4bf55"), //
-          Map.entry("violet", "a152ca"), //
-          Map.entry("grey", "8a8a8a"), //
-          Map.entry("black", "000000") //
-      );
+  final Map<String, String> rgbMap = Map.ofEntries( //
+      Map.entry("blue", "2a81cdb"), //
+      Map.entry("gold", "ffd326"), //
+      Map.entry("red", "cb2b32"), //
+      Map.entry("green", "2aad27"), //
+      Map.entry("orange", "cb8427"), //
+      Map.entry("yellow", "cac428"), //
+      Map.entry("violet", "9c2bcb"), //
+      Map.entry("grey", "7b7b7b"), //
+      Map.entry("black", "3d3d3d") //
+  );
 
-  final Set<String> ALL_ICON_COLORS = Set
-      .of("blue", "gold", "red", "green", "orange", "yellow", "violet", "grey", "black");
+  final Set<String> ALL_ICON_COLORS = Set.of("blue", "gold", "red", "green", "orange", "yellow", "violet", "grey",
+      "black");
 
   final Set<String> VALID_ICON_COLORS = Set // no grey
       .of("blue", "gold", "red", "green", "orange", "yellow", "violet", "black");
@@ -94,9 +93,10 @@ public class LeafletMapEngine implements IMapService {
       point = point.replace("#LATITUDE#", entry.location().getLatitude());
       point = point.replace("#LONGITUDE#", entry.location().getLongitude());
       point = point.replace("#COLOR#", color);
-      var message = entry.message().replaceAll("\n", "<br/>");
-      message = escapeForJavaScript(message);
-      point = point.replace("#CONTENT#", message);
+      var content = entry.label() + "<br/>" + entry.message().replaceAll("\n", "<br/>");
+      content = escapeForJavaScript(content);
+      content = content.replaceAll("\"", "'");
+      point = point.replace("#CONTENT#", content);
       sb.append(point + "\n");
     }
 
@@ -117,217 +117,256 @@ public class LeafletMapEngine implements IMapService {
   }
 
   private static final String POINT_TEMPLATE = """
-      const #LABEL_INDEX# = L.marker([#LATITUDE#, #LONGITUDE#],{icon: #COLOR#Icon})
-        .bindTooltip("#LABEL#",{permanent: true,direction: 'bottom', className: "my-labels"})
-        .bindPopup('<b>#LABEL#</b><br/>#CONTENT#')
-        .addTo(map);
-      """;
+      addMarkerWithLabel(#LATITUDE#, #LONGITUDE#, "#LABEL#", "#CONTENT#","#COLOR#");
+            """;
 
   private static final String FILE_TEMPLATE = """
       <!DOCTYPE html>
       <html lang="en">
       <head>
-        <base target="_top">
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
+      <meta charset="utf-8" />
+      <title>#TITLE#</title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-        <title>#TITLE#</title>
+      <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      />
 
-          <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-           integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-           crossorigin="">
+      <style>
+        html, body { height: 100%; margin: 0; }
+        #map { height: 100%; }
 
-          <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-           integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-           crossorigin=""></script>
+        .label-text {
+          font-family: system-ui, sans-serif;
+          font-weight: 600;
+          color: #1a237e;
+          white-space: nowrap;
+          text-shadow: 0 0 2px white, 0 0 4px white;
+          transform-origin: left center;
+          pointer-events: none;
+        }
 
-        <style>
-          html, body {
-            height: 100%;
-            width: 100%;
-            margin: 0;
-          }
+        .leaflet-custom-legend {
+      	background: white;
+      	padding: 8px;
+      	border-radius: 4px;
+      	box-shadow: 0 0 8px rgba(0,0,0,0.3);
+      	font-family: sans-serif;
+      	font-size: 13px;
+      	resize: both;
+      	overflow: auto;
+      	max-width: 260px;
+      	max-height: 300px;
+      	position: relative;
+        }
 
-          .leaflet-container {
-              height: 1000px;
-              width: 2000px;
-              max-width: 100%;
-              max-height: 100%;
-          }
+        .leaflet-custom-legend-header {
+      	display: flex;
+      	justify-content: space-between;
+      	align-items: center;
+      	font-weight: bold;
+      	margin-bottom: 6px;
+        }
 
-          .leaflet-tooltip.my-labels {
-              background-color: transparent;
-              border: transparent;
-              box-shadow: none;
-              font-weight: bold;
-              font-size: 14px;
-          }
+        .leaflet-custom-legend-close {
+      	cursor: pointer;
+      	border: none;
+      	background: transparent;
+      	font-size: 16px;
+      	line-height: 1;
+      	padding: 0 4px;
+        }
 
-          .leaflet-popup-tip {
-              background: rgba(0, 0, 0, 0) !important;
-              box-shadow: none !important;
-          }
+        .leaflet-custom-legend-close:hover {
+      	background: #eee;
+        }
 
-          .leaflet-tooltip-top:before,
-          .leaflet-tooltip-bottom:before,
-          .leaflet-tooltip-left:before,
-          .leaflet-tooltip-right:before {
-              border: none !important;
-          }
+        .legend-toggle-btn {
+      	background: white;
+      	padding: 4px 6px;
+      	border-radius: 4px;
+      	box-shadow: 0 0 6px rgba(0,0,0,0.3);
+      	cursor: pointer;
+      	font-size: 12px;
+        }
 
-          /* Main legend box */
-          .leaflet-custom-legend {
-            background: white;
-            padding: 8px;
-            border-radius: 4px;
-            box-shadow: 0 0 8px rgba(0,0,0,0.3);
-            font-family: sans-serif;
-            font-size: 13px;
-            resize: both;
-            overflow: auto;
-            max-width: 260px;
-            max-height: 300px;
-            position: relative;
-          }
+        .legend .box {
+      	display: inline-block;
+      	width: 14px;
+      	height: 14px;
+      	margin-right: 6px;
+      	vertical-align: middle;
+        }
 
-          /* Header with close button */
-          .leaflet-custom-legend-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-weight: bold;
-            margin-bottom: 6px;
-          }
-
-          .leaflet-custom-legend-close {
-            cursor: pointer;
-            border: none;
-            background: transparent;
-            font-size: 16px;
-            line-height: 1;
-            padding: 0 4px;
-          }
-
-          .leaflet-custom-legend-close:hover {
-            background: #eee;
-          }
-
-          /* Toggle button */
-          .legend-toggle-btn {
-            background: white;
-            padding: 4px 6px;
-            border-radius: 4px;
-            box-shadow: 0 0 6px rgba(0,0,0,0.3);
-            cursor: pointer;
-            font-size: 12px;
-          }
-
-          .legend .box {
-            display: inline-block;
-            width: 14px;
-            height: 14px;
-            margin-right: 6px;
-            vertical-align: middle;
-          }
-
-
-        </style>
-
+      </style>
       </head>
       <body>
-
       <div id="map"></div>
+
+      <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
       <script>
+      // ------------------------------------------------------------
+      // Map
+      // ------------------------------------------------------------
+      const map = L.map('map').setView([40, -91], 4);
 
-        const map = L.map('map').setView([40, -91], 4);
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19
+      }).addTo(map);
 
-        // ------------------------------
-        // Legend Control
-        // ------------------------------
-        let legendContainer;  // <-- store reference so toggle can reopen it
+      // ------------------------------
+      // Legend Control
+      // ------------------------------
+      let legendContainer;  // <-- store reference so toggle can reopen it
 
-        const LegendControl = L.Control.extend({
-          options: { position: 'bottomleft' },
+      const LegendControl = L.Control.extend({
+        options: { position: 'bottomleft' },
 
-          onAdd: function (map) {
-            legendContainer = L.DomUtil.create('div', 'leaflet-custom-legend');
+        onAdd: function (map) {
+      	legendContainer = L.DomUtil.create('div', 'leaflet-custom-legend');
 
-            L.DomEvent.disableClickPropagation(legendContainer);
-            L.DomEvent.disableScrollPropagation(legendContainer);
+      	L.DomEvent.disableClickPropagation(legendContainer);
+      	L.DomEvent.disableScrollPropagation(legendContainer);
 
-            // Header
-            const header = L.DomUtil.create('div', 'leaflet-custom-legend-header', legendContainer);
-            header.innerHTML = `<span>#TITLE#</span>`;
+      	// Header
+      	const header = L.DomUtil.create('div', 'leaflet-custom-legend-header', legendContainer);
+      	header.innerHTML = `<span>#TITLE#</span>`;
 
-            const closeBtn = L.DomUtil.create('button', 'leaflet-custom-legend-close', header);
-            closeBtn.innerHTML = '&times;';
+      	const closeBtn = L.DomUtil.create('button', 'leaflet-custom-legend-close', header);
+      	closeBtn.innerHTML = '&times;';
 
-            closeBtn.addEventListener('click', () => {
-              legendContainer.style.display = 'none';
-              toggleButton.style.display = 'block';
-            });
+      	closeBtn.addEventListener('click', () => {
+      	  legendContainer.style.display = 'none';
+      	  toggleButton.style.display = 'block';
+      	});
 
-            // Body
-            const body = L.DomUtil.create('div', '', legendContainer);
-            body.innerHTML = `#LEGEND_HTML#`;
+      	// Body
+      	const body = L.DomUtil.create('div', '', legendContainer);
+      	body.innerHTML = `#LEGEND_HTML#`;
 
-            return legendContainer;
-          }
+      	return legendContainer;
+        }
+      });
+
+      map.addControl(new LegendControl());
+
+      // ------------------------------
+      // Toggle Button Control
+      // ------------------------------
+      let toggleButton;
+
+      const ToggleLegendControl = L.Control.extend({
+        options: { position: 'bottomleft' },
+
+        onAdd: function (map) {
+      	toggleButton = L.DomUtil.create('div', 'legend-toggle-btn');
+      	toggleButton.innerHTML = '#TITLE#';
+
+      	L.DomEvent.disableClickPropagation(toggleButton);
+
+      	toggleButton.addEventListener('click', () => {
+      	  legendContainer.style.display = 'block';
+      	  toggleButton.style.display = 'none';
+      	});
+
+      	return toggleButton;
+        }
+      });
+
+      map.addControl(new ToggleLegendControl());
+
+      // Hide toggle button initially
+      toggleButton.style.display = 'none';
+
+      // ------------------------------------------------------------
+      // Google Maps–style prominence curve
+      // ------------------------------------------------------------
+      function computeScale(z) {
+        const minZoom = 8;
+        const maxZoom = 18;
+        const minScale = 0.4;
+        const maxScale = 2.8;
+
+        const t = Math.min(1, Math.max(0, (z - minZoom) / (maxZoom - minZoom)));
+        const eased = 1 - Math.pow(1 - t, 3);
+
+        return minScale + eased * (maxScale - minScale);
+      }
+
+      // ------------------------------------------------------------
+      // Marker icon color map (no shadow)
+      // ------------------------------------------------------------
+      const iconColors = {
+        blue:  "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png",
+        red:   "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png",
+        green: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png",
+        orange:"https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-orange.png",
+        yellow:"https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-yellow.png",
+        violet:"https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-violet.png",
+        grey:  "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-grey.png",
+        black: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-black.png"
+      };
+
+      // ------------------------------------------------------------
+      // Marker + scalable label + optional popup + icon color
+      // NEW SIGNATURE: addMarkerWithLabel(lat, lng, labelText, popupText, color)
+      // ------------------------------------------------------------
+      function addMarkerWithLabel(lat, lng, labelText, popupText = null, color = "blue") {
+        const iconUrl = iconColors[color] || iconColors.blue;
+
+        const markerIcon = L.icon({
+          iconUrl,
+          iconSize: [13, 21],
+          iconAnchor: [-5, 10],
+          popupAnchor: [1, -10]
         });
 
-        map.addControl(new LegendControl());
+        const marker = L.marker([lat, lng], { icon: markerIcon }).addTo(map);
 
-        // ------------------------------
-        // Toggle Button Control
-        // ------------------------------
-        let toggleButton;
+        if (popupText) {
+          marker.bindPopup(popupText);
+        }
 
-        const ToggleLegendControl = L.Control.extend({
-          options: { position: 'bottomleft' },
-
-          onAdd: function (map) {
-            toggleButton = L.DomUtil.create('div', 'legend-toggle-btn');
-            toggleButton.innerHTML = '#TITLE#';
-
-            L.DomEvent.disableClickPropagation(toggleButton);
-
-            toggleButton.addEventListener('click', () => {
-              legendContainer.style.display = 'block';
-              toggleButton.style.display = 'none';
-            });
-
-            return toggleButton;
-          }
-        });
-
-        map.addControl(new ToggleLegendControl());
-
-        // Hide toggle button initially
-        toggleButton.style.display = 'none';
-
-        const iconSizeX = [13,21];
-
-        const blueIcon = new L.Icon({iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png', iconSize: iconSizeX});
-        const goldIcon = new L.Icon({iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-gold.png', iconSize: iconSizeX});
-        const redIcon = new L.Icon({iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png', iconSize: iconSizeX});
-        const greenIcon = new L.Icon({iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png', iconSize: iconSizeX});
-        const orangeIcon = new L.Icon({iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-orange.png', iconSize: iconSizeX});
-        const yellowIcon = new L.Icon({iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-yellow.png', iconSize: iconSizeX});
-        const violetIcon = new L.Icon({iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-violet.png', iconSize: iconSizeX});
-        const greyIcon = new L.Icon({iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-grey.png', iconSize: iconSizeX});
-        const blackIcon = new L.Icon({iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-black.png', iconSize: iconSizeX});
-
-        const tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          maxZoom: 19,
-          attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        L.marker([lat, lng], {
+          interactive: false,
+          icon: L.divIcon({
+            className: "",
+            iconAnchor: [-5, -10],
+            html: `<div class="label-text">${labelText}</div>`
+          })
         }).addTo(map);
+      }
 
-        #POINTS#
+      // ------------------------------------------------------------
+      // Base markers
+      // ------------------------------------------------------------
+      #POINTS#
 
+      // ------------------------------------------------------------
+      // Update label scale on zoom
+      // ------------------------------------------------------------
+      map.on("zoomend", () => {
+        const scale = computeScale(map.getZoom());
+
+        map.eachLayer(layer => {
+          if (layer instanceof L.Marker && layer.options.icon instanceof L.DivIcon) {
+            const el = layer.getElement();
+            if (!el) return;
+
+            const text = el.querySelector(".label-text");
+            if (text) {
+              text.style.transform = `scale(${scale})`;
+            }
+          }
+        });
+      });
       </script>
       </body>
       </html>
-            """;
+
+                       """;
 
   @Override
   public String makeLegendForFeedbackCount(int participantCount, Counter counter) {
