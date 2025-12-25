@@ -40,20 +40,20 @@ import com.surftools.utils.counter.Counter;
 import com.surftools.wimp.core.IMessageManager;
 import com.surftools.wimp.utils.config.IConfigurationManager;
 
-public class LeafletMapEngine implements IMapService {
+public class LeafletMapEngine extends MapService {
   private static final Logger logger = LoggerFactory.getLogger(LeafletMapEngine.class);
 
-  final Map<String, String> rgbMap = Map.ofEntries( //
-      Map.entry("blue", "2a81cdb"), //
-      Map.entry("gold", "ffd326"), //
-      Map.entry("red", "cb2b32"), //
-      Map.entry("green", "2aad27"), //
-      Map.entry("orange", "cb8427"), //
-      Map.entry("yellow", "cac428"), //
-      Map.entry("violet", "9c2bcb"), //
-      Map.entry("grey", "7b7b7b"), //
-      Map.entry("black", "3d3d3d") //
-  );
+//  final Map<String, String> rgbMap = Map.ofEntries( //
+//      Map.entry("blue", "2a81cb"), //
+//      Map.entry("gold", "ffd326"), //
+//      Map.entry("red", "cb2b32"), //
+//      Map.entry("green", "2aad27"), //
+//      Map.entry("orange", "cb8427"), //
+//      Map.entry("yellow", "cac428"), //
+//      Map.entry("violet", "9c2bcb"), //
+//      Map.entry("grey", "7b7b7b"), //
+//      Map.entry("black", "3d3d3d") //
+//  );
 
   final Set<String> ALL_ICON_COLORS = Set.of("blue", "gold", "red", "green", "orange", "yellow", "violet", "grey",
       "black");
@@ -62,6 +62,7 @@ public class LeafletMapEngine implements IMapService {
       .of("blue", "gold", "red", "green", "orange", "yellow", "violet", "black");
 
   public LeafletMapEngine(IConfigurationManager cm, IMessageManager mm) {
+
   }
 
   public static String escapeForJavaScript(String input) {
@@ -84,27 +85,28 @@ public class LeafletMapEngine implements IMapService {
     var labelIndex = 0;
     for (var entry : entries) {
       var color = entry.iconColor() == null ? "blue" : entry.iconColor();
-      if (!ALL_ICON_COLORS.contains(color)) {
+      if (!color.startsWith("#") && !ALL_ICON_COLORS.contains(color)) {
         throw new RuntimeException("mapEntry: " + entry + ", invalid color: " + color);
       }
-      var point = new String(POINT_TEMPLATE);
-      point = point.replaceAll("#LABEL_INDEX#", "label_" + labelIndex++);
-      point = point.replaceAll("#LABEL#", entry.label());
-      point = point.replace("#LATITUDE#", entry.location().getLatitude());
-      point = point.replace("#LONGITUDE#", entry.location().getLongitude());
-      point = point.replace("#COLOR#", color);
-      var content = entry.label() + "<br/>" + entry.message().replaceAll("\n", "<br/>");
+
+      var marker = new String(MARKER_TEMPLATE);
+      marker = marker.replaceAll("#LABEL_INDEX#", "label_" + labelIndex++);
+      marker = marker.replaceAll("#LABEL#", entry.label());
+      marker = marker.replace("#LATITUDE#", entry.location().getLatitude());
+      marker = marker.replace("#LONGITUDE#", entry.location().getLongitude());
+      marker = marker.replace("#COLOR#", color);
+      var content = entry.message().replaceAll("\n", "<br/>");
       content = escapeForJavaScript(content);
       content = content.replaceAll("\"", "'");
-      point = point.replace("#CONTENT#", content);
-      sb.append(point + "\n");
+      marker = marker.replace("#CONTENT#", content);
+      sb.append(marker + "\n");
     }
 
     var legendHTML = mapHeader.legendHTML();
 
     var fileContent = new String(FILE_TEMPLATE);
     fileContent = fileContent.replaceAll("#TITLE#", mapHeader.mapTitle());
-    fileContent = fileContent.replace("#POINTS#", sb.toString());
+    fileContent = fileContent.replace("#MARKERS#", sb.toString());
     fileContent = fileContent.replace("#LEGEND_HTML#", legendHTML);
 
     var filePath = Path.of(outputPath.toString(), "leaflet-" + mapHeader.fileName() + ".html");
@@ -116,8 +118,8 @@ public class LeafletMapEngine implements IMapService {
     }
   }
 
-  private static final String POINT_TEMPLATE = """
-      addMarkerWithLabel(#LATITUDE#, #LONGITUDE#, "#LABEL#", "#CONTENT#","#COLOR#");
+  private static final String MARKER_TEMPLATE = """
+      addMarker(#LATITUDE#, #LONGITUDE#, "#LABEL#", "#CONTENT#","#COLOR#");
             """;
 
   private static final String FILE_TEMPLATE = """
@@ -148,55 +150,55 @@ public class LeafletMapEngine implements IMapService {
         }
 
         .leaflet-custom-legend {
-      	background: white;
-      	padding: 8px;
-      	border-radius: 4px;
-      	box-shadow: 0 0 8px rgba(0,0,0,0.3);
-      	font-family: sans-serif;
-      	font-size: 13px;
-      	resize: both;
-      	overflow: auto;
-      	max-width: 260px;
-      	max-height: 300px;
-      	position: relative;
+        background: white;
+        padding: 8px;
+        border-radius: 4px;
+        box-shadow: 0 0 8px rgba(0,0,0,0.3);
+        font-family: sans-serif;
+        font-size: 13px;
+        resize: both;
+        overflow: auto;
+        max-width: 260px;
+        max-height: 300px;
+        position: relative;
         }
 
         .leaflet-custom-legend-header {
-      	display: flex;
-      	justify-content: space-between;
-      	align-items: center;
-      	font-weight: bold;
-      	margin-bottom: 6px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-weight: bold;
+        margin-bottom: 6px;
         }
 
         .leaflet-custom-legend-close {
-      	cursor: pointer;
-      	border: none;
-      	background: transparent;
-      	font-size: 16px;
-      	line-height: 1;
-      	padding: 0 4px;
+        cursor: pointer;
+        border: none;
+        background: transparent;
+        font-size: 16px;
+        line-height: 1;
+        padding: 0 4px;
         }
 
         .leaflet-custom-legend-close:hover {
-      	background: #eee;
+        background: #eee;
         }
 
         .legend-toggle-btn {
-      	background: white;
-      	padding: 4px 6px;
-      	border-radius: 4px;
-      	box-shadow: 0 0 6px rgba(0,0,0,0.3);
-      	cursor: pointer;
-      	font-size: 12px;
+        background: white;
+        padding: 4px 6px;
+        border-radius: 4px;
+        box-shadow: 0 0 6px rgba(0,0,0,0.3);
+        cursor: pointer;
+        font-size: 12px;
         }
 
         .legend .box {
-      	display: inline-block;
-      	width: 14px;
-      	height: 14px;
-      	margin-right: 6px;
-      	vertical-align: middle;
+        display: inline-block;
+        width: 14px;
+        height: 14px;
+        margin-right: 6px;
+        vertical-align: middle;
         }
 
       </style>
@@ -225,28 +227,28 @@ public class LeafletMapEngine implements IMapService {
         options: { position: 'bottomleft' },
 
         onAdd: function (map) {
-      	legendContainer = L.DomUtil.create('div', 'leaflet-custom-legend');
+        legendContainer = L.DomUtil.create('div', 'leaflet-custom-legend');
 
-      	L.DomEvent.disableClickPropagation(legendContainer);
-      	L.DomEvent.disableScrollPropagation(legendContainer);
+        L.DomEvent.disableClickPropagation(legendContainer);
+        L.DomEvent.disableScrollPropagation(legendContainer);
 
-      	// Header
-      	const header = L.DomUtil.create('div', 'leaflet-custom-legend-header', legendContainer);
-      	header.innerHTML = `<span>#TITLE#</span>`;
+        // Header
+        const header = L.DomUtil.create('div', 'leaflet-custom-legend-header', legendContainer);
+        header.innerHTML = `<span>#TITLE#</span>`;
 
-      	const closeBtn = L.DomUtil.create('button', 'leaflet-custom-legend-close', header);
-      	closeBtn.innerHTML = '&times;';
+        const closeBtn = L.DomUtil.create('button', 'leaflet-custom-legend-close', header);
+        closeBtn.innerHTML = '&times;';
 
-      	closeBtn.addEventListener('click', () => {
-      	  legendContainer.style.display = 'none';
-      	  toggleButton.style.display = 'block';
-      	});
+        closeBtn.addEventListener('click', () => {
+          legendContainer.style.display = 'none';
+          toggleButton.style.display = 'block';
+        });
 
-      	// Body
-      	const body = L.DomUtil.create('div', '', legendContainer);
-      	body.innerHTML = `#LEGEND_HTML#`;
+        // Body
+        const body = L.DomUtil.create('div', '', legendContainer);
+        body.innerHTML = `#LEGEND_HTML#`;
 
-      	return legendContainer;
+        return legendContainer;
         }
       });
 
@@ -261,17 +263,17 @@ public class LeafletMapEngine implements IMapService {
         options: { position: 'bottomleft' },
 
         onAdd: function (map) {
-      	toggleButton = L.DomUtil.create('div', 'legend-toggle-btn');
-      	toggleButton.innerHTML = '#TITLE#';
+        toggleButton = L.DomUtil.create('div', 'legend-toggle-btn');
+        toggleButton.innerHTML = '#TITLE#';
 
-      	L.DomEvent.disableClickPropagation(toggleButton);
+        L.DomEvent.disableClickPropagation(toggleButton);
 
-      	toggleButton.addEventListener('click', () => {
-      	  legendContainer.style.display = 'block';
-      	  toggleButton.style.display = 'none';
-      	});
+        toggleButton.addEventListener('click', () => {
+          legendContainer.style.display = 'block';
+          toggleButton.style.display = 'none';
+        });
 
-      	return toggleButton;
+        return toggleButton;
         }
       });
 
@@ -310,39 +312,69 @@ public class LeafletMapEngine implements IMapService {
       };
 
       // ------------------------------------------------------------
-      // Marker + scalable label + optional popup + icon color
-      // NEW SIGNATURE: addMarkerWithLabel(lat, lng, labelText, popupText, color)
+      // Marker icon generator using arbitrary hex color
       // ------------------------------------------------------------
-      function addMarkerWithLabel(lat, lng, labelText, popupText = null, color = "blue") {
-        const iconUrl = iconColors[color] || iconColors.blue;
-
-        const markerIcon = L.icon({
-          iconUrl,
-          iconSize: [13, 21],
-          iconAnchor: [-5, 10],
-          popupAnchor: [1, -10]
+      function makeColorIcon(hexColor) {
+        return L.divIcon({
+          className: "",
+          html: `
+            <div style="
+              width: 18px;
+              height: 18px;
+              background: ${hexColor};
+              border-radius: 50%;
+              border: 2px solid white;
+              box-shadow: 0 0 3px rgba(0,0,0,0.4);
+            "></div>
+          `,
+          iconSize: [13, 13],
+          iconAnchor: [0, 0]
         });
-
-        const marker = L.marker([lat, lng], { icon: markerIcon }).addTo(map);
-
-        if (popupText) {
-          marker.bindPopup(popupText);
-        }
-
-        L.marker([lat, lng], {
-          interactive: false,
-          icon: L.divIcon({
-            className: "",
-            iconAnchor: [-5, -10],
-            html: `<div class="label-text">${labelText}</div>`
-          })
-        }).addTo(map);
       }
 
       // ------------------------------------------------------------
-      // Base markers
+      // addMarker
       // ------------------------------------------------------------
-      #POINTS#
+      function addMarker(lat, lng, labelText, popupText = null, color) {
+
+
+        if (!color.startsWith("#")) {
+          const iconUrl = iconColors[color] || iconColors.blue;
+
+          const markerIcon = L.icon({
+            iconUrl,
+            iconSize: [13, 21],
+            iconAnchor: [-5, 10],
+            popupAnchor: [1, -10]
+          });
+
+          const marker = L.marker([lat, lng], { icon: markerIcon }).addTo(map);
+
+          if (popupText) {
+            marker.bindPopup(popupText);
+          }
+        } else {
+          const marker = L.marker([lat, lng], { icon: makeColorIcon(color) }).addTo(map);
+
+          if (popupText) {
+            marker.bindPopup(popupText);
+          }
+
+          L.marker([lat, lng], {
+            interactive: false,
+            icon: L.divIcon({
+              className: "",
+              iconAnchor: [-5, -30],
+              html: `<div class="label-text">${labelText}</div>`
+            })
+          }).addTo(map);
+        }
+      }
+
+      // ------------------------------------------------------------
+      // add markers here
+      // ------------------------------------------------------------
+      #MARKERS#
 
       // ------------------------------------------------------------
       // Update label scale on zoom
@@ -378,6 +410,37 @@ public class LeafletMapEngine implements IMapService {
       var entry = it.next();
       sb.append("value" + ": " + entry.getKey() + ", " + "count" + ": " + entry.getValue() + "<br>");
     }
+    legendHTML += "<br><br>Feedback Count:<br>" + sb.toString();
+    return legendHTML;
+  }
+
+  @Override
+  public String makeColorizedLegendForFeedbackCount(int participantCount, Counter counter,
+      Map<Integer, String> gradientMap) {
+
+    var lastIndex = gradientMap.size() - 1;
+    var lastColor = gradientMap.get(lastIndex);
+    var legendHTML = "For " + participantCount + " participants";
+
+    var it = counter.getAscendingKeyIterator();
+    var sb = new StringBuilder();
+    var lastCount = 0;
+    var entryIndex = -1;
+    while (it.hasNext()) {
+      var entry = it.next();
+      var count = entry.getValue();
+
+      ++entryIndex;
+      if (entryIndex >= gradientMap.size() - 1) {
+        lastCount += count;
+      } else {
+        var color = gradientMap.get(entryIndex);
+        sb.append("<div><span class=\"box\" style=\"background:" + color + "\">&nbsp;&nbsp;&nbsp;</span>"
+            + "&nbsp;value: " + entryIndex + ", count: " + count + "</div>" + "\n");
+      }
+    }
+    sb.append("<div><span class=\"box\" style=\"background:" + lastColor + "\">&nbsp;&nbsp;&nbsp;</span>"
+        + "&nbsp;value: " + lastIndex + " or more" + ", count: " + lastCount + "</div>" + "\n");
     legendHTML += "<br><br>Feedback Count:<br>" + sb.toString();
     return legendHTML;
   }

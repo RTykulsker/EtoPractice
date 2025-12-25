@@ -144,9 +144,8 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
     var exerciseMessageTypeString = cm.getAsString(Key.EXPECTED_MESSAGE_TYPES);
     exerciseMessageType = MessageType.fromString(exerciseMessageTypeString);
     if (exerciseMessageType != processorMessageType) {
-      logger
-          .debug("processor messageType (" + processorMessageType.name() + ") != exercise messageType("
-              + exerciseMessageType.name() + "), skipping");
+      logger.debug("processor messageType (" + processorMessageType.name() + ") != exercise messageType("
+          + exerciseMessageType.name() + "), skipping");
       return;
     }
 
@@ -201,9 +200,8 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
           var extraContent = String.join("\n", lines.stream().filter(s -> !s.trim().startsWith("#")).toList()).trim();
           if (extraContent != null && extraContent.length() > 0) {
             outboundMessageExtraContent = extraContent;
-            logger
-                .info("file: " + extraContentPathName + " provides the following extra content:\n"
-                    + outboundMessageExtraContent);
+            logger.info("file: " + extraContentPathName + " provides the following extra content:\n"
+                + outboundMessageExtraContent);
           }
         } catch (Exception e) {
           logger.warn("Could not get extra content for outbound messages. Using default");
@@ -385,9 +383,8 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
     logger.info(sb.toString());
 
     if (badLocationMessageIds.size() > 0) {
-      logger
-          .info("adjusting lat/long for " + badLocationMessageIds.size() + " messages: "
-              + String.join(",", badLocationMessageIds));
+      logger.info("adjusting lat/long for " + badLocationMessageIds.size() + " messages: "
+          + String.join(",", badLocationMessageIds));
       var newLocations = LocationUtils.jitter(badLocationMessageIds.size(), LatLongPair.ZERO_ZERO, 10_000);
       for (int i = 0; i < badLocationMessageIds.size(); ++i) {
         var messageId = badLocationMessageIds.get(i);
@@ -443,9 +440,14 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
     chartService.makeCharts();
 
     var dateString = cm.getAsString(Key.EXERCISE_DATE);
-    var mapEntries = mIdFeedbackMap.values().stream().map(s -> MapEntry.fromSingleMessageFeedback(s)).toList();
     var mapService = new MapService(cm, mm);
-    var legendHTML = mapService.makeLegendForFeedbackCount(mapEntries.size(), counterMap.get("Feedback Count"));
+
+    var gradientMap = mapService.makeGradientMap(120, 0, 10);
+    var mapEntries = mIdFeedbackMap.values().stream().map(s -> MapEntry.fromSingleMessageFeedback(s, gradientMap))
+        .toList();
+
+    var legendHTML = mapService.makeColorizedLegendForFeedbackCount(mapEntries.size(), counterMap.get("Feedback Count"),
+        gradientMap);
     var mapTitle = dateString + " Feedback Counts";
     var mapHeader = new MapHeader(dateString + "-map-feedbackCount", mapTitle, legendHTML);
     mapService.makeMap(publishedPath, mapHeader, mapEntries);

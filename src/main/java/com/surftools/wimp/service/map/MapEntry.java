@@ -27,6 +27,8 @@ SOFTWARE.
 
 package com.surftools.wimp.service.map;
 
+import java.util.Map;
+
 import com.surftools.utils.location.LatLongPair;
 import com.surftools.wimp.core.IWritableTable;
 import com.surftools.wimp.feedback.FeedbackMessage;
@@ -48,6 +50,22 @@ public record MapEntry(String label, String to, LatLongPair location, String mes
     var content = "MessageId: " + messageId + "\n" + "Feedback Count: " + feedbackResult.feedbackCount() + "\n"
         + "Feedback: " + feedbackResult.feedback();
     return new MapEntry(feedbackResult.call(), to, location, content, "blue");
+  }
+
+  public static MapEntry fromSingleMessageFeedback(IWritableTable s, Map<Integer, String> gradientMap) {
+    final var lastColorMapIndex = gradientMap.size() - 1;
+    final var lastColor = gradientMap.get(lastColorMapIndex);
+
+    var feedbackMessage = (FeedbackMessage) s;
+    var feedbackResult = feedbackMessage.feedbackResult();
+    var to = feedbackMessage.message().to;
+    var location = new LatLongPair(feedbackResult.latitude(), feedbackResult.longitude());
+    var messageId = feedbackMessage.message().messageId;
+    var count = feedbackResult.feedbackCount();
+    var color = gradientMap.getOrDefault(count, lastColor);
+    var content = "MessageId: " + messageId + "\n" + "Feedback Count: " + feedbackResult.feedbackCount() + "\n"
+        + "Feedback: " + feedbackResult.feedback();
+    return new MapEntry(feedbackResult.call(), to, location, content, color);
   }
 
 }

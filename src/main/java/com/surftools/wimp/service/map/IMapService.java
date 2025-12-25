@@ -29,6 +29,7 @@ package com.surftools.wimp.service.map;
 
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 
 import com.surftools.utils.counter.Counter;
 
@@ -36,4 +37,9 @@ public interface IMapService {
   public void makeMap(Path outputPath, MapHeader mapHeader, List<MapEntry> entries);
 
   String makeLegendForFeedbackCount(int participantCount, Counter counter);
+
+  public Map<Integer, String> makeGradientMap(double startHue, double endHue, int nSteps);
+
+  public String makeColorizedLegendForFeedbackCount(int participantCount, Counter feedbackCounter,
+      Map<Integer, String> rgbMap);
 }
