@@ -359,16 +359,15 @@ public class LeafletMapEngine extends MapService {
           if (popupText) {
             marker.bindPopup(popupText);
           }
-
-          L.marker([lat, lng], {
-            interactive: false,
-            icon: L.divIcon({
-              className: "",
-              iconAnchor: [-5, -30],
-              html: `<div class="label-text">${labelText}</div>`
-            })
-          }).addTo(map);
         }
+        L.marker([lat, lng], {
+          interactive: false,
+          icon: L.divIcon({
+            className: "",
+            iconAnchor: [-5, -30],
+            html: `<div class="label-text">${labelText}</div>`
+          })
+        }).addTo(map);
       }
 
       // ------------------------------------------------------------
