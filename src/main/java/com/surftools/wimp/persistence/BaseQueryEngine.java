@@ -49,7 +49,8 @@ import com.surftools.wimp.persistence.dto.User;
 import com.surftools.wimp.utils.config.IConfigurationManager;
 
 /**
- * because some queries are too complicated for me to figure out in SQL, I'll do it in code
+ * because some queries are too complicated for me to figure out in SQL, I'll do
+ * it in code
  */
 public abstract class BaseQueryEngine implements IPersistenceEngine {
   private static final Logger logger = LoggerFactory.getLogger(BaseQueryEngine.class);
@@ -78,10 +79,20 @@ public abstract class BaseQueryEngine implements IPersistenceEngine {
    * create our own join
    */
   protected void join() {
+//    var debugShortList = List.of(1L);
+
     for (var event : idEventMap.values()) {
       var user = idUserMap.get(event.userId());
       var exercise = idExerciseMap.get(event.exerciseId());
       var entry = allJoinMap.getOrDefault(user.call(), new JoinedUser(user));
+
+//      if (debugShortList.contains(user.id())) {
+//        logger.info("Processing user: " + user.call() + ", date: " + exercise.date() + ", type: " + exercise.type());
+//      } else {
+//        logger.debug("skipping user: " + user.call());
+//        continue;
+//      }
+
       entry.update(event, exercise);
       allJoinMap.put(user.call(), entry);
       if (user.isActive()) {
@@ -175,9 +186,8 @@ public abstract class BaseQueryEngine implements IPersistenceEngine {
           join.context = intersection;
           candidateJoins.add(join);
         } else {
-          logger
-              .debug("skipping call: " + join.user.call() + " because didn't participate in previous " + missLimit
-                  + " exercises");
+          logger.debug("skipping call: " + join.user.call() + " because didn't participate in previous " + missLimit
+              + " exercises");
         }
       }
     } // end for over all calls/joins
@@ -206,7 +216,14 @@ public abstract class BaseQueryEngine implements IPersistenceEngine {
       var intersection = new HashSet<Exercise>(filteredExercises);
       intersection.retainAll(join.exercises);
 
-      join.context = intersection;
+      var selectedExercises = new ArrayList<Exercise>(intersection);
+      Collections.sort(selectedExercises);
+      join.context = selectedExercises;
+
+      var debugCall = join.user.call();
+      if (debugCall.equals("KM6SO")) {
+        System.out.println("me");
+      }
 
       var iSize = intersection.size();
       if (iSize == 0) {

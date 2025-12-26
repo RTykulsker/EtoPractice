@@ -378,21 +378,33 @@ public class LeafletMapEngine extends MapService {
       // ------------------------------------------------------------
       // Update label scale on zoom
       // ------------------------------------------------------------
-      map.on("zoomend", () => {
-        const scale = computeScale(map.getZoom());
+      function updateLabelScale() {
+        const baseZoom = 4;
+        const z = map.getZoom();
+        const dz = z - baseZoom;
 
-        map.eachLayer(layer => {
-          if (layer instanceof L.Marker && layer.options.icon instanceof L.DivIcon) {
-            const el = layer.getElement();
-            if (!el) return;
+        let scale;
 
-            const text = el.querySelector(".label-text");
-            if (text) {
-              text.style.transform = `scale(${scale})`;
-            }
-          }
+        // Hard cutoff: unreadable at zoom 4 or below
+        if (z <= 4) {
+          scale = 0.05;   // microscopic
+        } else {
+          // Smooth sigmoid curve above zoom 4
+          const minScale = 0.25;
+          const maxScale = 2.8;
+          const growth = 0.45;
+
+          scale = minScale + (maxScale - minScale) * (1 / (1 + Math.exp(-growth * dz)));
+        }
+
+        document.querySelectorAll(".label-text").forEach(el => {
+          el.style.transform = `translate(-50%, 4px) scale(${scale})`;
         });
-      });
+      }
+
+      map.on(" zoomend", updateLabelScale);
+      updateLabelScale();
+
       </script>
       </body>
       </html>

@@ -55,13 +55,12 @@ import com.surftools.wimp.utils.config.IConfigurationManager;
 public class HistoryMapProcessor extends AbstractBaseProcessor {
   private static final Logger logger = LoggerFactory.getLogger(HistoryMapProcessor.class);
   private Set<HistoryType> historyTypesSet = new LinkedHashSet<HistoryType>(Arrays.asList(HistoryType.values()));
-  private final Map<HistoryType, String> colorMap = Map
-      .of(//
-          HistoryType.FIRST_TIME, "gold", //
-          HistoryType.ONE_AND_DONE, "red", //
-          HistoryType.HEAVY_HITTER, "blue", //
-          HistoryType.ALL_OTHER, "green", //
-          HistoryType.FILTERED_OUT, "grey");
+  private final Map<HistoryType, String> colorMap = Map.of(//
+      HistoryType.FIRST_TIME, "gold", //
+      HistoryType.ONE_AND_DONE, "red", //
+      HistoryType.HEAVY_HITTER, "blue", //
+      HistoryType.ALL_OTHER, "green", //
+      HistoryType.FILTERED_OUT, "grey");
 
   @Override
   public void initialize(IConfigurationManager cm, IMessageManager mm) {
@@ -120,7 +119,7 @@ public class HistoryMapProcessor extends AbstractBaseProcessor {
       for (var joinedUser : joinedUsers) {
         var context = joinedUser.context;
         @SuppressWarnings("unchecked")
-        var filteredExercises = new ArrayList<Exercise>((Set<Exercise>) context);
+        var filteredExercises = (ArrayList<Exercise>) context;
         var label = joinedUser.user.call();
         var location = joinedUser.location;
         String message = null;
