@@ -95,7 +95,7 @@ public class HistoryMapProcessor extends AbstractBaseProcessor {
       return;
     }
 
-    ret = db.getUsersHistory(Set.of("Practice"), null, true);
+    ret = db.getUsersHistory(null, null, true);// ret = db.getUsersHistory(Set.of("Practice"), null, true);
     if (ret.status() != ReturnStatus.OK) {
       logger.error("Could not get history from database: " + ret.content());
       return;
