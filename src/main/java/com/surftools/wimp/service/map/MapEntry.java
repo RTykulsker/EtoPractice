@@ -36,8 +36,9 @@ import com.surftools.wimp.practice.misc.PracticeSummary;
 
 public record MapEntry(String label, String to, LatLongPair location, String message, String iconColor) {
   public static MapEntry fromSummary(PracticeSummary summary) {
-    var content = "MessageId: " + summary.messageId + "\n" + "Feedback Count: " + summary.getFeedbackCount() + "\n"
-        + "Feedback: " + summary.getFeedback();
+    var prefix = "<b>" + summary.from + "</b><hr>";
+    var content = prefix + "MessageId: " + summary.messageId + "\n" + "Feedback Count: " + summary.getFeedbackCount()
+        + "\n" + "Feedback: " + summary.getFeedback();
     return new MapEntry(summary.from, summary.to, summary.location, content, "blue");
   }
 
@@ -47,7 +48,9 @@ public record MapEntry(String label, String to, LatLongPair location, String mes
     var to = feedbackMessage.message().to;
     var location = new LatLongPair(feedbackResult.latitude(), feedbackResult.longitude());
     var messageId = feedbackMessage.message().messageId;
-    var content = "MessageId: " + messageId + "\n" + "Feedback Count: " + feedbackResult.feedbackCount() + "\n"
+    var from = feedbackMessage.message().from;
+    var prefix = "<b>" + from + "</b><hr>";
+    var content = prefix + "MessageId: " + messageId + "\n" + "Feedback Count: " + feedbackResult.feedbackCount() + "\n"
         + "Feedback: " + feedbackResult.feedback();
     return new MapEntry(feedbackResult.call(), to, location, content, "blue");
   }
