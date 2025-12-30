@@ -48,6 +48,7 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.surftools.utils.MultiDateTimeParser;
 import com.surftools.utils.counter.Counter;
 import com.surftools.utils.counter.ICounter;
 import com.surftools.utils.location.LatLongPair;
@@ -75,6 +76,8 @@ import com.surftools.wimp.practice.tools.PracticeGeneratorTool;
 import com.surftools.wimp.practice.tools.PracticeProcessorTool;
 import com.surftools.wimp.processors.std.AbstractBaseProcessor;
 import com.surftools.wimp.processors.std.AcknowledgementProcessor;
+import com.surftools.wimp.processors.std.AcknowledgementProcessor.AckEntry;
+import com.surftools.wimp.processors.std.AcknowledgementProcessor.AckKey;
 import com.surftools.wimp.processors.std.WriteProcessor;
 import com.surftools.wimp.service.chart.ChartServiceFactory;
 import com.surftools.wimp.service.map.MapEntry;
@@ -121,7 +124,7 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
 
   protected List<PracticeSummary> practiceSummaries = new ArrayList<>();
 
-  protected Map<String, String> ackTextMap;
+  protected Map<String, AckEntry> ackMap;
 
   protected String nextInstructions;
 
@@ -174,7 +177,7 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
 
     referenceMessage = (ExportedMessage) mm.getContextObject(PracticeProcessorTool.REFERENCE_MESSAGE_KEY);
 
-    ackTextMap = (Map<String, String>) mm.getContextObject(AcknowledgementProcessor.ACK_TEXT_MAP);
+    ackMap = (Map<String, AckEntry>) mm.getContextObject(AcknowledgementProcessor.ACK_MAP);
 
     nextInstructions = (String) mm.getContextObject(PracticeProcessorTool.INSTRUCTIONS_KEY);
 
@@ -270,16 +273,24 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
         sts.test("To and Cc list should not contain \"monthly/training/clearinghouse\" addresses", pred, intersection));
   }
 
-  protected void endCommonProcessing(ExportedMessage message) {
+  protected void endCommonProcessing(ExportedMessage m) {
+    var ackEntry = ackMap.get(m.from);
+    var ackKey = new AckKey(m.from, m.messageId, m.getMessageType());
+    var unexpectedMessage = ackEntry.unexpectedMessageMap.get(ackKey);
+    if (unexpectedMessage != null) {
+      ackEntry.unexpectedMessageMap.remove(ackKey);
+      ackEntry.expectedMessageMap.put(ackKey, m);
+    }
+    var ackText = AcknowledgementProcessor.makeText(m.from);
 
     if (feedbackLocation == null || feedbackLocation.equals(LatLongPair.ZERO_ZERO)) {
       feedbackLocation = LatLongPair.ZERO_ZERO;
-      badLocationMessageIds.add(message.messageId);
+      badLocationMessageIds.add(m.messageId);
       sts.test("LAT/LON should be provided", false, "missing");
     } else if (!feedbackLocation.isValid()) {
       sts.test("LAT/LON should be provided", false, "invalid " + feedbackLocation.toString());
       feedbackLocation = LatLongPair.ZERO_ZERO;
-      badLocationMessageIds.add(message.messageId);
+      badLocationMessageIds.add(m.messageId);
     } else {
       sts.test("LAT/LON should be provided", true, null);
     }
@@ -296,9 +307,9 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
 
     var feedbackResult = new FeedbackResult(sender, feedbackLocation.getLatitude(), feedbackLocation.getLongitude(),
         explanations.size(), feedback);
-    mIdFeedbackMap.put(message.messageId, new FeedbackMessage(feedbackResult, message));
+    mIdFeedbackMap.put(m.messageId, new FeedbackMessage(feedbackResult, m));
 
-    var ackText = ackTextMap.get(sender);
+//    var ackText = ackTextMap.get(sender);
     var sb = new StringBuilder();
     sb.append("ACKNOWLEDGEMENTS" + "\n");
     sb.append(ackText);
@@ -310,7 +321,7 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
 
       var outboundMessageFeedback = outboundMessagePrefixContent + feedback + outboundMessagePostfixContent;
       var outboundMessage = new OutboundMessage(outboundMessageSender, sender, //
-          makeOutboundMessageSubject(message), outboundMessageFeedback, null);
+          makeOutboundMessageSubject(m), outboundMessageFeedback, null);
       outboundMessageList.add(outboundMessage);
     }
   }
@@ -396,28 +407,25 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
       }
     }
 
-    // this is how we get feedback to folks who only send unexpected messages,
-    // back-port?
+//    // this is how we get feedback to folks who only send unexpected messages,
+//    // back-port?
     var enableFeedbackForOnlyUnexpected = true;
     if (enableFeedbackForOnlyUnexpected) {
-      final var DASHES = "----------------------------------------------------------------------------------------------";
-      @SuppressWarnings("unchecked")
-      var ackTextMap = (Map<String, String>) (mm.getContextObject(AcknowledgementProcessor.ACK_TEXT_MAP));
+      // var ackTextMap = (Map<String, String>)
+      // (mm.getContextObject(AcknowledgementProcessor.ACK_TEXT_MAP));
       var nextInstructions = (String) mm.getContextObject(PracticeProcessorTool.INSTRUCTIONS_KEY);
-      var allSenderSet = new HashSet<String>(ackTextMap.keySet());
+      var allSenderSet = new HashSet<String>(ackMap.keySet());
       var expectedSenderList = outboundMessageList.stream().map(m -> m.to()).toList();
       allSenderSet.removeAll(expectedSenderList);
       var unexpectedSenderSet = allSenderSet;
       logger.info("Senders who only sent unexpected messages: " + String.join(",", unexpectedSenderSet));
       for (var sender : unexpectedSenderSet) {
-        var ackText = ackTextMap.get(sender);
+        var ackText = AcknowledgementProcessor.makeText(sender);
         var sb1 = new StringBuilder();
         sb1.append("ACKNOWLEDGEMENTS" + "\n");
         sb1.append(ackText);
-        sb1.append("\n" + DASHES + "\n");
-        sb1.append("\nFEEDBACK" + "\n");
-        sb1.append("no " + exerciseMessageType.name() + " message received\n");
-        sb1.append("\n" + DASHES);
+        sb1.append("FEEDBACK" + "\n");
+        sb1.append("no " + exerciseMessageType.name() + " message received");
         sb1.append(nextInstructions);
         sb1.append(outboundMessagePostfixContent);
         var text = sb1.toString();
@@ -460,6 +468,16 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
     if (dbResult.status() == ReturnStatus.ERROR) {
       logger.error("### database update failed: " + dbResult.content());
     }
+  }
+
+  protected LocalDateTime parseDateTime(String dateString, String timeString) {
+    final var list = List.of(//
+        "yyyy-MM-dd HH:mm", // default
+        "yyyy-MM-dd HH:mm 'Z'", // default, with Z
+        "yyyy/MM/dd HH:mm" // default with slashes
+    );
+    final var mdtp = new MultiDateTimeParser(list);
+    return mdtp.parseDateTime(dateString + " " + timeString);
   }
 
   protected String formatPercent(Double d) {

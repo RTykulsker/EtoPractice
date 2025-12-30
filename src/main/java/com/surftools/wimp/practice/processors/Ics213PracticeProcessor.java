@@ -27,8 +27,6 @@ SOFTWARE.
 
 package com.surftools.wimp.practice.processors;
 
-import java.time.LocalDateTime;
-
 import com.surftools.wimp.core.IMessageManager;
 import com.surftools.wimp.core.MessageType;
 import com.surftools.wimp.message.ExportedMessage;
@@ -47,6 +45,7 @@ public class Ics213PracticeProcessor extends BasePracticeProcessor {
   protected void specificProcessing(ExportedMessage message) {
     var m = (Ics213Message) message;
     var ref = (Ics213Message) referenceMessage;
+    var formDateTime = parseDateTime(m.formDate, m.formTime);
 
     count(sts.testStartsWith("Message Subject should start with #EV", referenceMessage.subject, m.subject));
     count(sts.test("Message Location should be valid", m.msgLocation.isValid(), m.msgLocation.toString()));
@@ -57,16 +56,12 @@ public class Ics213PracticeProcessor extends BasePracticeProcessor {
     count(sts.test("Form To should be #EV", ref.formTo, m.formTo));
     count(sts.test("Form From should be #EV", ref.formFrom, m.formFrom));
     count(sts.test("Form Subject should be #EV", ref.formSubject, m.formSubject));
-
-    var formDateTime = LocalDateTime.parse(m.formDate + " " + m.formTime, DTF);
     count(sts.testOnOrAfter("Form Date and Time should be on or after #EV", windowOpenDT, formDateTime, DTF));
     count(sts.testOnOrBefore("Form Date and Time should be on or before #EV", windowCloseDT, formDateTime, DTF));
-
     count(sts.test("Message should be #EV", ref.formMessage, m.formMessage));
     count(sts.test("Approved by should be #EV", ref.approvedBy, m.approvedBy));
     count(sts.test("Position/Title should be #EV", ref.position, m.position));
 
-    var practiceSummary = new PracticeSummary(m, sts);
-    practiceSummaries.add(practiceSummary);
+    practiceSummaries.add(new PracticeSummary(m, sts));
   }
 }
