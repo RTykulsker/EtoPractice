@@ -222,7 +222,7 @@ public class AcknowledgementProcessor extends AbstractBaseProcessor {
           var refEntry = referenceMap.get(exerciseId);
           if (refEntry == null) {
             unexpectedMessageMap.put(ackKey, m);
-          } else {
+          } else { //
             var refDate = refEntry.date;
             if (date.isBefore(refDate)) {
               earlyMessageMap.put(ackKey, m);
