@@ -302,7 +302,7 @@ public class LeafletMapEngine extends MapService {
           // Initialize map
           // ------------------------------------------------------------
 
-          const map = L.map("map").setView([40, -100], 5);
+          const map = L.map("map").setView([37.5, -100], 5);
           // ------------------------------------------------------------
           // BASEMAPS
           // ------------------------------------------------------------
