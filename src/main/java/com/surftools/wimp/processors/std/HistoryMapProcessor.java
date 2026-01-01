@@ -45,7 +45,6 @@ import com.surftools.wimp.persistence.PersistenceManager;
 import com.surftools.wimp.persistence.dto.Exercise;
 import com.surftools.wimp.persistence.dto.ReturnStatus;
 import com.surftools.wimp.service.map.MapEntry;
-import com.surftools.wimp.service.map.MapHeader;
 import com.surftools.wimp.service.map.MapService;
 import com.surftools.wimp.utils.config.IConfigurationManager;
 
@@ -55,12 +54,13 @@ import com.surftools.wimp.utils.config.IConfigurationManager;
 public class HistoryMapProcessor extends AbstractBaseProcessor {
   private static final Logger logger = LoggerFactory.getLogger(HistoryMapProcessor.class);
   private Set<HistoryType> historyTypesSet = new LinkedHashSet<HistoryType>(Arrays.asList(HistoryType.values()));
-  private final Map<HistoryType, String> colorMap = Map.of(//
-      HistoryType.FIRST_TIME, "gold", //
-      HistoryType.ONE_AND_DONE, "red", //
-      HistoryType.HEAVY_HITTER, "blue", //
-      HistoryType.ALL_OTHER, "green", //
-      HistoryType.FILTERED_OUT, "grey");
+  private final Map<HistoryType, String> colorMap = Map
+      .of(//
+          HistoryType.FIRST_TIME, "gold", //
+          HistoryType.ONE_AND_DONE, "red", //
+          HistoryType.HEAVY_HITTER, "blue", //
+          HistoryType.ALL_OTHER, "green", //
+          HistoryType.FILTERED_OUT, "grey");
 
   @Override
   public void initialize(IConfigurationManager cm, IMessageManager mm) {
@@ -139,8 +139,8 @@ public class HistoryMapProcessor extends AbstractBaseProcessor {
       var fileName = historyType.name() + "-history-map";
       var mapTitle = dateString + " " + historyType.getShortText();
       var legendHTML = historyType.getLongText();
-      var mapHeader = new MapHeader(fileName, mapTitle, legendHTML);
-      mapService.makeMap(outputPath, mapHeader, mapEntries);
+      // var mapHeader = new MapHeader(fileName, mapTitle, legendHTML);
+      // mapService.makeMap(outputPath, mapHeader, mapEntries);
     }
   }
 

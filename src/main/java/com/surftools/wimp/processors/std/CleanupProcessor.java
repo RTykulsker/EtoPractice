@@ -73,7 +73,7 @@ public class CleanupProcessor extends AbstractBaseProcessor {
       if (fileName.equals("practice-summary.csv")) {
         try {
           Files.move(file.toPath(), Path.of(publishedPathName, dateString + "-standard-summary.csv"));
-          logger.info("renamed practice-summary.csv" + fileName + " to: " + dateString + "-standard-summary.csv");
+          logger.info("renamed practice-summary.csv to: " + dateString + "-standard-summary.csv");
         } catch (Exception e) {
           logger.error("Exception renaming file: " + file.toString(), e.getMessage());
         }
@@ -119,6 +119,7 @@ public class CleanupProcessor extends AbstractBaseProcessor {
         }
       }
 
+      logger.info("fileName: " + name);
       if (name.equals("leaflet-" + dateString + "-map-feedbackCount.html")) {
         try {
           var newFile = Path.of(publishedPathName, dateString + "-map-feedbackCount.html").toFile();

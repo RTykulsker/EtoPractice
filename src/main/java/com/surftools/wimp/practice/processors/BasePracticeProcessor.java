@@ -80,8 +80,9 @@ import com.surftools.wimp.processors.std.AcknowledgementProcessor.AckEntry;
 import com.surftools.wimp.processors.std.AcknowledgementProcessor.AckKey;
 import com.surftools.wimp.processors.std.WriteProcessor;
 import com.surftools.wimp.service.chart.ChartServiceFactory;
+import com.surftools.wimp.service.map.MapContext;
 import com.surftools.wimp.service.map.MapEntry;
-import com.surftools.wimp.service.map.MapHeader;
+import com.surftools.wimp.service.map.MapLayer;
 import com.surftools.wimp.service.map.MapService;
 import com.surftools.wimp.service.outboundMessage.OutboundMessage;
 import com.surftools.wimp.service.outboundMessage.OutboundMessageService;
@@ -147,8 +148,9 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
     var exerciseMessageTypeString = cm.getAsString(Key.EXPECTED_MESSAGE_TYPES);
     exerciseMessageType = MessageType.fromString(exerciseMessageTypeString);
     if (exerciseMessageType != processorMessageType) {
-      logger.debug("processor messageType (" + processorMessageType.name() + ") != exercise messageType("
-          + exerciseMessageType.name() + "), skipping");
+      logger
+          .debug("processor messageType (" + processorMessageType.name() + ") != exercise messageType("
+              + exerciseMessageType.name() + "), skipping");
       return;
     }
 
@@ -203,8 +205,9 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
           var extraContent = String.join("\n", lines.stream().filter(s -> !s.trim().startsWith("#")).toList()).trim();
           if (extraContent != null && extraContent.length() > 0) {
             outboundMessageExtraContent = extraContent;
-            logger.info("file: " + extraContentPathName + " provides the following extra content:\n"
-                + outboundMessageExtraContent);
+            logger
+                .info("file: " + extraContentPathName + " provides the following extra content:\n"
+                    + outboundMessageExtraContent);
           }
         } catch (Exception e) {
           logger.warn("Could not get extra content for outbound messages. Using default");
@@ -269,8 +272,7 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
     var result = addressesList.stream().distinct().filter(clearinghouseList::contains).toList();
     var intersection = String.join(",", result);
     var pred = intersection.length() == 0;
-    count(
-        sts.test("To and Cc list should not contain \"monthly/training/clearinghouse\" addresses", pred, intersection));
+    count(sts.test("To and Cc list should not contain monthly/training/clearinghouse addresses", pred, intersection));
   }
 
   protected void endCommonProcessing(ExportedMessage m) {
@@ -309,7 +311,7 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
         explanations.size(), feedback);
     mIdFeedbackMap.put(m.messageId, new FeedbackMessage(feedbackResult, m));
 
-//    var ackText = ackTextMap.get(sender);
+    // var ackText = ackTextMap.get(sender);
     var sb = new StringBuilder();
     sb.append("ACKNOWLEDGEMENTS" + "\n");
     sb.append(ackText);
@@ -394,8 +396,9 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
     logger.info(sb.toString());
 
     if (badLocationMessageIds.size() > 0) {
-      logger.info("adjusting lat/long for " + badLocationMessageIds.size() + " messages: "
-          + String.join(",", badLocationMessageIds));
+      logger
+          .info("adjusting lat/long for " + badLocationMessageIds.size() + " messages: "
+              + String.join(",", badLocationMessageIds));
       var newLocations = LocationUtils.jitter(badLocationMessageIds.size(), LatLongPair.ZERO_ZERO, 10_000);
       for (int i = 0; i < badLocationMessageIds.size(); ++i) {
         var messageId = badLocationMessageIds.get(i);
@@ -407,8 +410,8 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
       }
     }
 
-//    // this is how we get feedback to folks who only send unexpected messages,
-//    // back-port?
+    // // this is how we get feedback to folks who only send unexpected messages,
+    // // back-port?
     var enableFeedbackForOnlyUnexpected = true;
     if (enableFeedbackForOnlyUnexpected) {
       // var ackTextMap = (Map<String, String>)
@@ -450,15 +453,61 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
     var dateString = cm.getAsString(Key.EXERCISE_DATE);
     var mapService = new MapService(cm, mm);
 
-    var gradientMap = mapService.makeGradientMap(120, 0, 10);
-    var mapEntries = mIdFeedbackMap.values().stream().map(s -> MapEntry.fromSingleMessageFeedback(s, gradientMap))
-        .toList();
+    // feedback map
+    var feedbackCounter = new Counter();
+    final int nLayers = 6;
+    var truncatedCountMap = new HashMap<Integer, Integer>(); // 9 -> 9 or more
+    for (var summary : mIdFeedbackMap.values()) {
+      var feedbackMessage = (FeedbackMessage) summary;
+      var count = feedbackMessage.feedbackResult().feedbackCount();
+      var key = Math.min(nLayers - 1, count);
+      var value = truncatedCountMap.getOrDefault(key, Integer.valueOf(0));
+      ++value;
+      truncatedCountMap.put(key, value);
+    }
 
-    var legendHTML = mapService.makeColorizedLegendForFeedbackCount(mapEntries.size(), counterMap.get("Feedback Count"),
-        gradientMap);
-    var mapTitle = dateString + " Feedback Counts";
-    var mapHeader = new MapHeader(dateString + "-map-feedbackCount", mapTitle, legendHTML);
-    mapService.makeMap(publishedPath, mapHeader, mapEntries);
+    var gradientMap = mapService.makeGradientMap(120, 0, nLayers);
+    var layers = new ArrayList<MapLayer>();
+    var countLayerNameMap = new HashMap<Integer, String>();
+    for (var i = 0; i < nLayers; ++i) {
+      var value = String.valueOf(i);
+      var count = truncatedCountMap.get(i);
+      if (i == nLayers - 1) {
+        value = i + " or more";
+      }
+      var layerName = "value: " + value + ", count: " + count;
+      countLayerNameMap.put(i, layerName);
+
+      var color = gradientMap.get(i);
+      var layer = new MapLayer(layerName, color);
+      layers.add(layer);
+    }
+
+    var mapEntries = new ArrayList<MapEntry>(mIdFeedbackMap.values().size());
+    for (var s : mIdFeedbackMap.values()) {
+      var feedbackMessage = (FeedbackMessage) s;
+      var m = feedbackMessage.message();
+      var r = feedbackMessage.feedbackResult();
+      var count = r.feedbackCount();
+
+      final var lastColorMapIndex = gradientMap.size() - 1;
+      final var lastColor = gradientMap.get(lastColorMapIndex);
+
+      var location = m.mapLocation;
+      var color = gradientMap.getOrDefault(count, lastColor);
+      var prefix = "<b>" + m.from + "</b><hr>";
+      var content = prefix + "Feedback Count: " + r.feedbackCount() + "\n" + "Feedback: " + r.feedback();
+      var mapEntry = new MapEntry(m.from, m.to, location, content, color);
+      mapEntries.add(mapEntry);
+      feedbackCounter.increment(r.feedbackCount());
+    }
+
+    var legendTitle = dateString + " Feedback Counts (" + mIdFeedbackMap.values().size() + " total)";
+    var context = new MapContext(publishedPath, //
+        dateString + "-map-feedbackCount", // file name
+        dateString + " Feedback Counts", // map title
+        null, legendTitle, layers, mapEntries);
+    mapService.makeMap(context);
 
     WriteProcessor.writeTable(new ArrayList<IWritableTable>(practiceSummaries), "practice-summary.csv");
 
@@ -471,11 +520,12 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
   }
 
   protected LocalDateTime parseDateTime(String dateString, String timeString) {
-    final var list = List.of(//
-        "yyyy-MM-dd HH:mm", // default
-        "yyyy-MM-dd HH:mm 'Z'", // default, with Z
-        "yyyy/MM/dd HH:mm" // default with slashes
-    );
+    final var list = List
+        .of(//
+            "yyyy-MM-dd HH:mm", // default
+            "yyyy-MM-dd HH:mm 'Z'", // default, with Z
+            "yyyy/MM/dd HH:mm" // default with slashes
+        );
     final var mdtp = new MultiDateTimeParser(list);
     return mdtp.parseDateTime(dateString + " " + timeString);
   }

@@ -27,25 +27,23 @@ SOFTWARE.
 
 package com.surftools.wimp.service.map;
 
-import java.nio.file.Path;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
-import com.surftools.utils.counter.Counter;
 import com.surftools.wimp.core.IMessageManager;
 import com.surftools.wimp.utils.config.IConfigurationManager;
 
 public class MapService implements IMapService {
 
+  public static final MapGeometry DEFAULT_MAP_GEOMETRY = new MapGeometry("40", "-91", "5", "19");
+
   private IMapService engine;
 
   public MapService() {
-
   }
 
   public MapService(IConfigurationManager cm, IMessageManager mm) {
-
     // TODO configuration
     var engineType = MapEngineType.LEAFLET;
     switch (engineType) {
@@ -59,13 +57,13 @@ public class MapService implements IMapService {
   }
 
   @Override
-  public void makeMap(Path outputPath, MapHeader mapHeader, List<MapEntry> entries) {
-    engine.makeMap(outputPath, mapHeader, entries);
+  public Set<String> getValidIconColors() {
+    return engine.getValidIconColors();
   }
 
   @Override
-  public String makeLegendForFeedbackCount(int participantCount, Counter counter) {
-    return engine.makeLegendForFeedbackCount(participantCount, counter);
+  public String getInvalidIconColor() {
+    return engine.getInvalidIconColor();
   }
 
   private int[] hsvToRgb(double h, double s, double v) {
@@ -136,8 +134,8 @@ public class MapService implements IMapService {
   }
 
   @Override
-  public String makeColorizedLegendForFeedbackCount(int participantCount, Counter feedbackCounter,
-      Map<Integer, String> rgbMap) {
-    return engine.makeColorizedLegendForFeedbackCount(participantCount, feedbackCounter, rgbMap);
+  public void makeMap(MapContext mapContext) {
+    engine.makeMap(mapContext);
   }
+
 }

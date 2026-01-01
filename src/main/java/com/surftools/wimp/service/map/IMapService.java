@@ -27,19 +27,50 @@ SOFTWARE.
 
 package com.surftools.wimp.service.map;
 
-import java.nio.file.Path;
-import java.util.List;
 import java.util.Map;
-
-import com.surftools.utils.counter.Counter;
+import java.util.Set;
 
 public interface IMapService {
-  public void makeMap(Path outputPath, MapHeader mapHeader, List<MapEntry> entries);
+  public void makeMap(MapContext mapContext);
 
-  String makeLegendForFeedbackCount(int participantCount, Counter counter);
+  public Set<String> getValidIconColors();
+
+  public String getInvalidIconColor();
 
   public Map<Integer, String> makeGradientMap(double startHue, double endHue, int nSteps);
 
-  public String makeColorizedLegendForFeedbackCount(int participantCount, Counter feedbackCounter,
-      Map<Integer, String> rgbMap);
+  public static final Map<String, String> etoColorMap = Map
+      .ofEntries(//
+          Map.entry("ETO-01", "#cac428"), //
+          Map.entry("ETO-02", "#2a81cb"), //
+          Map.entry("ETO-03", "#cb2b32"), //
+          Map.entry("ETO-04", "#2aad27"), //
+          Map.entry("ETO-05", "#cb8427"), //
+          Map.entry("ETO-06", "#9c2bcb"), //
+          Map.entry("ETO-07", "#cac428"), //
+          Map.entry("ETO-08", "#2aad27"), //
+          Map.entry("ETO-09", "#cb2b32"), //
+          Map.entry("ETO-10", "#2a81cb"), //
+          Map.entry("ETO-CAN", "#9c2bcb"), //
+          Map.entry("ETO-DX", "#ffd326"), //
+          Map.entry("unknown", "#7b7b7b"));
+
+  public static final Map<String, String> rgbMap = Map
+      .ofEntries( //
+          Map.entry("blue", "#2a81cb"), //
+          Map.entry("gold", "#ffd326"), //
+          Map.entry("red", "#cb2b32"), //
+          Map.entry("green", "#2aad27"), //
+          Map.entry("orange", "#cb8427"), //
+          Map.entry("yellow", "#cac428"), //
+          Map.entry("violet", "#9c2bcb"), //
+          Map.entry("grey", "#7b7b7b"), //
+          Map.entry("black", "#3d3d3d") //
+      );
+
+  public static final Set<String> ALL_ICON_COLORS = Set
+      .of("blue", "gold", "red", "green", "orange", "yellow", "violet", "grey", "black");
+
+  public static final Set<String> VALID_ICON_COLORS = Set // no grey
+      .of("blue", "gold", "red", "green", "orange", "yellow", "violet", "black");
 }

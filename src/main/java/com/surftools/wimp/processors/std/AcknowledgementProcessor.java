@@ -52,8 +52,7 @@ import com.surftools.wimp.practice.tools.PracticeGeneratorTool;
 import com.surftools.wimp.utils.config.IConfigurationManager;
 
 /**
- * Processor to send Acknowledgement messages via Winlink and map to every
- * message sender
+ * Processor to send Acknowledgement messages via Winlink and map to every message sender
  *
  *
  * @author bobt
@@ -160,8 +159,9 @@ public class AcknowledgementProcessor extends AbstractBaseProcessor {
   @Override
   public void postProcess() {
     if (badLocationSenders.size() > 0) {
-      logger.info("adjusting lat/long for " + badLocationSenders.size() + " messages from: "
-          + String.join(",", badLocationSenders));
+      logger
+          .info("adjusting lat/long for " + badLocationSenders.size() + " messages from: "
+              + String.join(",", badLocationSenders));
       var newLocations = LocationUtils.jitter(badLocationSenders.size(), LatLongPair.ZERO_ZERO, 10_000);
       for (int i = 0; i < badLocationSenders.size(); ++i) {
         var from = badLocationSenders.get(i);
@@ -222,7 +222,7 @@ public class AcknowledgementProcessor extends AbstractBaseProcessor {
           var refEntry = referenceMap.get(exerciseId);
           if (refEntry == null) {
             unexpectedMessageMap.put(ackKey, m);
-          } else { //
+          } else {
             var refDate = refEntry.date;
             if (date.isBefore(refDate)) {
               earlyMessageMap.put(ackKey, m);
@@ -276,13 +276,14 @@ public class AcknowledgementProcessor extends AbstractBaseProcessor {
     }
 
     private String format(AckType ackType, int formatStyle) {
-      final Map<Integer, String> formatMap = Map.of(//
-          1, "%s,%s,%s", //
-          2, "%s %s %s", //
-          3, "Date: %s\nMessageId: %s\nType: %s\n", //
-          4, "Date: %s, MessageId: %s, Type: %s", //
-          5, "Date: %s, MessageId: %s, Type: %s\n" //
-      );
+      final Map<Integer, String> formatMap = Map
+          .of(//
+              1, "%s,%s,%s", //
+              2, "%s %s %s", //
+              3, "Date: %s\nMessageId: %s\nType: %s\n", //
+              4, "Date: %s, MessageId: %s, Type: %s", //
+              5, "Date: %s, MessageId: %s, Type: %s\n" //
+          );
 
       var formatString = formatMap.get(formatStyle);
       Map<AckKey, ExportedMessage> map = null;
@@ -300,8 +301,8 @@ public class AcknowledgementProcessor extends AbstractBaseProcessor {
       Collections.sort(values); // by sort time!
       var resultList = new ArrayList<String>();
       for (var m : values) {
-        var aResult = String.format(formatString, DTF.format(m.msgDateTime), m.messageId,
-            m.getMessageType().toString());
+        var aResult = String
+            .format(formatString, DTF.format(m.msgDateTime), m.messageId, m.getMessageType().toString());
         resultList.add(aResult);
       }
       var results = String.join("\n", resultList);
