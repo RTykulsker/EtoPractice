@@ -119,12 +119,11 @@ public class CleanupProcessor extends AbstractBaseProcessor {
         }
       }
 
-      logger.info("fileName: " + name);
       if (name.equals("leaflet-" + dateString + "-map-feedbackCount.html")) {
         try {
           var newFile = Path.of(publishedPathName, dateString + "-map-feedbackCount.html").toFile();
           publishedFile.renameTo(newFile);
-          logger.info("renamed map file to: " + newFile.getName());
+          logger.info("renamed map file to: " + newFile);
         } catch (Exception e) {
           logger.error("Exception renaming file: " + name, e.getMessage());
         }
