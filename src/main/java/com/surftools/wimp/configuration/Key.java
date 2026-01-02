@@ -57,7 +57,7 @@ public enum Key implements IConfigurationKey {
   PERSISTENCE_MISS_LIMIT("persistence.miss.limit"), // max # of missed exercises before we don't bother any more
   PERSISTENCE_MISS_SUBJECT("persistence.miss.subject"), // subject for outbound message
   PERSISTENCE_MISS_BODY_PATH("persistence.miss.body.path"), // path to file containing body for outbound message
-  PERSISTENCE_HISTORY_MAP_TYPES("persistence.history.map.types"), // HistoryTypes to produce maps for
+  PERSISTENCE_START_OF_TIME("persistence.startOfTime"), // when does the database go from beta to production
 
   EXPECTED_MESSAGE_TYPES("expectedMessageTypes"), // MessageTypes that we will handle
 

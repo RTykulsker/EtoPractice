@@ -27,6 +27,7 @@ SOFTWARE.
 
 package com.surftools.wimp.persistence;
 
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -49,8 +50,7 @@ import com.surftools.wimp.persistence.dto.User;
 import com.surftools.wimp.utils.config.IConfigurationManager;
 
 /**
- * because some queries are too complicated for me to figure out in SQL, I'll do
- * it in code
+ * because some queries are too complicated for me to figure out in SQL, I'll do it in code
  */
 public abstract class BaseQueryEngine implements IPersistenceEngine {
   private static final Logger logger = LoggerFactory.getLogger(BaseQueryEngine.class);
@@ -70,28 +70,33 @@ public abstract class BaseQueryEngine implements IPersistenceEngine {
   protected final boolean onlyUseActive;
   protected final boolean allowFuture;
 
+  protected LocalDate startOfTime;
+
   public BaseQueryEngine(IConfigurationManager cm) {
     onlyUseActive = cm.getAsBoolean(Key.PERSISTENCE_ONLY_USE_ACTIVE, true);
     allowFuture = cm.getAsBoolean(Key.PERSISTENCE_ALLOW_FUTURE, false);
+
+    var startOfTimeString = cm.getAsString(Key.PERSISTENCE_START_OF_TIME, "2026-01-01");
+    startOfTime = LocalDate.parse(startOfTimeString);
   }
 
   /**
    * create our own join
    */
   protected void join() {
-//    var debugShortList = List.of(1L);
+    // var debugShortList = List.of(1L);
 
     for (var event : idEventMap.values()) {
       var user = idUserMap.get(event.userId());
       var exercise = idExerciseMap.get(event.exerciseId());
       var entry = allJoinMap.getOrDefault(user.call(), new JoinedUser(user));
 
-//      if (debugShortList.contains(user.id())) {
-//        logger.info("Processing user: " + user.call() + ", date: " + exercise.date() + ", type: " + exercise.type());
-//      } else {
-//        logger.debug("skipping user: " + user.call());
-//        continue;
-//      }
+      // if (debugShortList.contains(user.id())) {
+      // logger.info("Processing user: " + user.call() + ", date: " + exercise.date() + ", type: " + exercise.type());
+      // } else {
+      // logger.debug("skipping user: " + user.call());
+      // continue;
+      // }
 
       entry.update(event, exercise);
       allJoinMap.put(user.call(), entry);
@@ -110,56 +115,17 @@ public abstract class BaseQueryEngine implements IPersistenceEngine {
     allExerciseTypes = new HashSet<String>(allExerciseSet.stream().map(e -> e.type()).toList());
   }
 
-  protected List<Exercise> getFilteredExercises(Set<String> _requiredExerciseTypes, Exercise fromExercise) {
-    var filteredExercises = new ArrayList<Exercise>();
-    var requiredExerciseTypes = (_requiredExerciseTypes == null || _requiredExerciseTypes.size() == 0) //
-        ? allExerciseTypes
-        : _requiredExerciseTypes;
-    logger.debug("requiredTypes: " + String.join(", ", requiredExerciseTypes));
-
-    var startExercise = fromExercise == null ? lastExercise : fromExercise;
-    if (startExercise.id() <= 0) {
-      throw new IllegalArgumentException("Invalid startExerciseId: " + startExercise);
-    }
-    logger.debug("startExercise: " + startExercise);
-
-    // skip over exercises until the startExercise, then include them all
-    var include = false;
-    var candidateExercises = new ArrayList<Exercise>();
-    for (var exercise : allExerciseSet) {
-      if (exercise.id() == startExercise.id()) {
-        include = true;
-      }
-      if (include) {
-        candidateExercises.add(exercise);
-      }
-    }
-    logger.debug("candidateExercises.size(): " + candidateExercises.size());
-
-    for (var exercise : candidateExercises) {
-      if (requiredExerciseTypes.contains(exercise.type())) {
-        logger.debug("including exercise: " + exercise);
-        filteredExercises.add(exercise);
-      } else {
-        logger.debug("excluding wrong type exercise: " + exercise);
-      }
-    }
-    logger.info("filteredExercises.size(): " + filteredExercises.size());
-    return filteredExercises;
-  }
-
   @Override
-  public ReturnRecord getUsersMissingExercises(Set<String> requiredExerciseTypes, Exercise fromExercise,
-      int missLimit) {
+  public ReturnRecord getUsersMissingExercises(List<Exercise> filteredExercises, int missLimit) {
     var joinMap = onlyUseActive ? activeJoinMap : allJoinMap;
     logger.debug("joinMap.size(): " + joinMap.size());
 
-    var filteredExercises = getFilteredExercises(requiredExerciseTypes, fromExercise);
     if (filteredExercises.size() == 0) {
       logger.info("no filtered Exercises");
       return new ReturnRecord(ReturnStatus.OK, null, null);
     }
 
+    Collections.sort(filteredExercises);
     var firstFilteredExercise = filteredExercises.get(0);
     var candidateExercises = new LinkedHashSet<Exercise>();
     for (var exercise : filteredExercises) {
@@ -186,8 +152,9 @@ public abstract class BaseQueryEngine implements IPersistenceEngine {
           join.context = intersection;
           candidateJoins.add(join);
         } else {
-          logger.debug("skipping call: " + join.user.call() + " because didn't participate in previous " + missLimit
-              + " exercises");
+          logger
+              .debug("skipping call: " + join.user.call() + " because didn't participate in previous " + missLimit
+                  + " exercises");
         }
       }
     } // end for over all calls/joins
@@ -198,21 +165,50 @@ public abstract class BaseQueryEngine implements IPersistenceEngine {
   }
 
   @Override
-  public ReturnRecord getUsersHistory(Set<String> requiredExerciseTypes, Exercise fromExercise, boolean doPartition) {
-    Map<HistoryType, List<JoinedUser>> map = new HashMap<>();
-    var joinMap = onlyUseActive ? activeJoinMap : allJoinMap;
-    Object content = (doPartition) ? map : new ArrayList<JoinedUser>();
+  public ReturnRecord getFilteredExercises(Set<String> _requiredExerciseTypes, LocalDate fromDate) {
 
-    var filteredExercises = getFilteredExercises(requiredExerciseTypes, fromExercise);
+    var filteredExercises = new ArrayList<Exercise>();
+    var requiredExerciseTypes = (_requiredExerciseTypes == null || _requiredExerciseTypes.size() == 0) //
+        ? allExerciseTypes
+        : _requiredExerciseTypes;
+    logger.debug("requiredTypes: " + String.join(", ", requiredExerciseTypes));
+
+    var allExercises = new ArrayList<Exercise>(idExerciseMap.values());
+    Collections.sort(allExercises); // most recent first
+    allExercises.reversed();
+
+    for (var exercise : allExercises.reversed()) {
+      if (!requiredExerciseTypes.contains(exercise.type())) {
+        logger.debug("skipping exercise type(" + exercise.type() + "):" + exercise);
+        continue;
+      }
+
+      if (exercise.date().isBefore(startOfTime)) {
+        logger.debug("skipping exercise because before StartOfTime(" + startOfTime.toString() + "): " + exercise);
+      }
+
+      if (fromDate != null && exercise.date().isBefore(fromDate)) {
+        logger.debug("skipping exercise because before fromDate(" + fromDate.toString() + "): " + exercise);
+      }
+
+      filteredExercises.add(exercise);
+    }
+
+    logger.info("filteredExercises.size(): " + filteredExercises.size());
+    return new ReturnRecord(ReturnStatus.OK, null, filteredExercises);
+  }
+
+  @Override
+  public ReturnRecord getUsersHistory(List<Exercise> filteredExercises) {
+    var joinMap = onlyUseActive ? activeJoinMap : allJoinMap;
+    var content = new ArrayList<JoinedUser>();
+
     if (filteredExercises.size() == 0) {
       logger.info("no filtered Exercises");
       return new ReturnRecord(ReturnStatus.OK, null, content);
     }
-    var firstFilteredExercise = filteredExercises.get(0);
-    var heavyHitLimit = (int) Math.round(filteredExercises.size() * 0.9);
 
     for (var join : joinMap.values()) {
-      HistoryType ht = null;
       var intersection = new HashSet<Exercise>(filteredExercises);
       intersection.retainAll(join.exercises);
 
@@ -220,47 +216,9 @@ public abstract class BaseQueryEngine implements IPersistenceEngine {
       Collections.sort(selectedExercises);
       join.context = selectedExercises;
 
-      var debugCall = join.user.call();
-      if (debugCall.equals("KM6SO")) {
-        System.out.println("me");
-      }
-
-      var iSize = intersection.size();
-      if (iSize == 0) {
-        ht = HistoryType.FILTERED_OUT;
-        logger.debug("call: " + join.user.call() + ", type: " + ht.name() + ", iSize: " + iSize);
-      } else if (iSize == 1) {
-        if (join.exercises.get(0).id() == firstFilteredExercise.id()) {
-          ht = HistoryType.FIRST_TIME;
-          logger.debug("call: " + join.user.call() + ", type: " + ht.name() + ", iSize: " + iSize);
-        } else {
-          ht = HistoryType.ONE_AND_DONE;
-          logger.debug("call: " + join.user.call() + ", type: " + ht.name() + ", iSize: " + iSize);
-        }
-      } else if (iSize >= heavyHitLimit) {
-        ht = HistoryType.HEAVY_HITTER;
-        logger.debug("call: " + join.user.call() + ", type: " + ht.name() + ", iSize: " + iSize);
-      } else {
-        ht = HistoryType.ALL_OTHER;
-        logger.debug("call: " + join.user.call() + ", type: " + ht.name() + ", iSize: " + iSize);
-      }
-
-      var list = map.getOrDefault(ht, new ArrayList<JoinedUser>());
-      list.add(join);
-      map.put(ht, list);
+      join.exercises = selectedExercises;
+      content.add(join);
     } // end for over all calls/joins
-
-    for (var ht : HistoryType.values()) {
-      logger.info("HistoryType: " + ht.name() + ", count: " + map.getOrDefault(ht, new ArrayList<JoinedUser>()).size());
-    }
-
-    if (!doPartition) {
-      @SuppressWarnings("unchecked")
-      var list = (ArrayList<JoinedUser>) content;
-      for (var ht : HistoryType.values()) {
-        list.addAll(map.getOrDefault(ht, new ArrayList<JoinedUser>()));
-      }
-    }
 
     return new ReturnRecord(ReturnStatus.OK, null, content);
   }

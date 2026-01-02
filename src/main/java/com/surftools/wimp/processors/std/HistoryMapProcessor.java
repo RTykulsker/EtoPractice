@@ -27,24 +27,22 @@ SOFTWARE.
 
 package com.surftools.wimp.processors.std;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.surftools.wimp.configuration.Key;
 import com.surftools.wimp.core.IMessageManager;
-import com.surftools.wimp.persistence.HistoryType;
+import com.surftools.wimp.persistence.IPersistenceManager;
 import com.surftools.wimp.persistence.JoinedUser;
 import com.surftools.wimp.persistence.PersistenceManager;
 import com.surftools.wimp.persistence.dto.Exercise;
 import com.surftools.wimp.persistence.dto.ReturnStatus;
+import com.surftools.wimp.service.map.MapContext;
 import com.surftools.wimp.service.map.MapEntry;
+import com.surftools.wimp.service.map.MapLayer;
 import com.surftools.wimp.service.map.MapService;
 import com.surftools.wimp.utils.config.IConfigurationManager;
 
@@ -53,33 +51,10 @@ import com.surftools.wimp.utils.config.IConfigurationManager;
  */
 public class HistoryMapProcessor extends AbstractBaseProcessor {
   private static final Logger logger = LoggerFactory.getLogger(HistoryMapProcessor.class);
-  private Set<HistoryType> historyTypesSet = new LinkedHashSet<HistoryType>(Arrays.asList(HistoryType.values()));
-  private final Map<HistoryType, String> colorMap = Map
-      .of(//
-          HistoryType.FIRST_TIME, "gold", //
-          HistoryType.ONE_AND_DONE, "red", //
-          HistoryType.HEAVY_HITTER, "blue", //
-          HistoryType.ALL_OTHER, "green", //
-          HistoryType.FILTERED_OUT, "grey");
 
   @Override
   public void initialize(IConfigurationManager cm, IMessageManager mm) {
 
-    var historyTypesString = cm.getAsString(Key.PERSISTENCE_HISTORY_MAP_TYPES);
-    if (historyTypesString != null) {
-      historyTypesSet.clear();
-      var fields = historyTypesString.split(",");
-      for (var field : fields) {
-        field = field.trim();
-        var type = HistoryType.valueOf(field);
-        if (type == null) {
-          throw new RuntimeException("Undefined historyType: " + field);
-        } else {
-          historyTypesSet.add(type);
-        }
-      }
-    }
-    logger.info("HistoryTypes: " + String.join(", ", historyTypesSet.stream().map(s -> s.name()).toList()));
   }
 
   @Override
@@ -95,53 +70,53 @@ public class HistoryMapProcessor extends AbstractBaseProcessor {
       return;
     }
 
-    ret = db.getUsersHistory(null, null, true);// ret = db.getUsersHistory(Set.of("Practice"), null, true);
+    makeFirstTimeMap(db);
+  }
+
+  private void makeFirstTimeMap(IPersistenceManager db) {
+    var ret = db.getFilteredExercises(null, date); // all types
     if (ret.status() != ReturnStatus.OK) {
-      logger.error("Could not get history from database: " + ret.content());
+      logger.error("Could not get filteredExercises from database: " + ret.content());
+      return;
+    }
+    @SuppressWarnings("unchecked")
+    var filteredExercises = (List<Exercise>) ret.data();
+
+    ret = db.getUsersHistory(filteredExercises);
+    if (ret.status() != ReturnStatus.OK) {
+      logger.error("Could not get userHistory from database: " + ret.content());
       return;
     }
 
     @SuppressWarnings("unchecked")
-    Map<HistoryType, List<JoinedUser>> historyMap = (Map<HistoryType, List<JoinedUser>>) ret.data();
-    if (historyMap.size() == 0) {
-      logger.warn("no Users with missed exercises");
-      return;
+    var joins = (List<JoinedUser>) ret.data();
+    var firstTimers = new ArrayList<JoinedUser>();
+    var exerciseDate = LocalDate.parse(dateString);
+    for (var join : joins) {
+      if (join.exercises.size() == 1 && join.exercises.get(0).date().equals(exerciseDate)) {
+        firstTimers.add(join);
+      }
     }
+    logger.debug("Got " + firstTimers.size() + " firstTimers ");
 
     var mapService = new MapService(cm, mm);
-    for (var historyType : historyTypesSet) {
-      var joinedUsers = historyMap.get(historyType);
-      if (joinedUsers == null) {
-        logger.warn("no joinedUsers for type: " + historyType.name());
-        continue;
-      }
-      var mapEntries = new ArrayList<MapEntry>();
-      for (var joinedUser : joinedUsers) {
-        var context = joinedUser.context;
-        @SuppressWarnings("unchecked")
-        var filteredExercises = (ArrayList<Exercise>) context;
-        var label = joinedUser.user.call();
-        var location = joinedUser.location;
-        String message = null;
-        if (historyType == HistoryType.ONE_AND_DONE || historyType == HistoryType.FIRST_TIME) {
-          message = filteredExercises.size() + " exercise" + "\nDate: " + filteredExercises.getFirst().date();
-        } else {
-          message = filteredExercises.size() + " exercises" + "\nFirst date: "//
-              + filteredExercises.getLast().date() //
-              + "\nLast date: " + filteredExercises.getFirst().date();
-        }
-        var iconColor = colorMap.get(historyType);
-        var to = "";
-        var mapEntry = new MapEntry(label, to, location, message, iconColor);
-        mapEntries.add(mapEntry);
-      }
+    var layers = new ArrayList<MapLayer>();
+    var layer = new MapLayer("First Time Participants (" + firstTimers.size() + ")", "#ffd326");
+    layers.add(layer);
 
-      var fileName = historyType.name() + "-history-map";
-      var mapTitle = dateString + " " + historyType.getShortText();
-      var legendHTML = historyType.getLongText();
-      // var mapHeader = new MapHeader(fileName, mapTitle, legendHTML);
-      // mapService.makeMap(outputPath, mapHeader, mapEntries);
+    var mapEntries = new ArrayList<MapEntry>();
+    for (var join : firstTimers) {
+      var content = "<b>" + join.user.call() + "</b><hr>" + "First Exercise!";
+      var mapEntry = new MapEntry(join.user.call(), "", join.location, content, "#ffd326");
+      mapEntries.add(mapEntry);
     }
+
+    var legendTitle = dateString + " First Time Participants (" + joins.size() + " total)";
+    var context = new MapContext(publishedPath, //
+        dateString + "-map-First-Timers", // file name
+        dateString + " First Timer Participants", // map title
+        null, legendTitle, layers, mapEntries);
+    mapService.makeMap(context);
   }
 
 }

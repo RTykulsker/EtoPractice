@@ -27,6 +27,8 @@ SOFTWARE.
 
 package com.surftools.wimp.persistence;
 
+import java.time.LocalDate;
+import java.util.List;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -77,15 +79,19 @@ public class PersistenceManager implements IPersistenceManager {
   }
 
   @Override
-  public ReturnRecord getUsersMissingExercises(Set<String> requiredExerciseTypes, Exercise fromExercise,
-      int missLimit) {
+  public ReturnRecord getUsersMissingExercises(List<Exercise> filteredExercises, int missLimit) {
 
-    return engine.getUsersMissingExercises(requiredExerciseTypes, fromExercise, missLimit);
+    return engine.getUsersMissingExercises(filteredExercises, missLimit);
   }
 
   @Override
-  public ReturnRecord getUsersHistory(Set<String> requiredExerciseTypes, Exercise fromExercise, boolean doPartition) {
-    return engine.getUsersHistory(requiredExerciseTypes, fromExercise, doPartition);
+  public ReturnRecord getFilteredExercises(Set<String> requiredExerciseTypes, LocalDate fromDate) {
+    return engine.getFilteredExercises(requiredExerciseTypes, fromDate);
+  }
+
+  @Override
+  public ReturnRecord getUsersHistory(List<Exercise> filteredExercises) {
+    return engine.getUsersHistory(filteredExercises);
   }
 
   @Override

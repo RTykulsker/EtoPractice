@@ -171,7 +171,7 @@ public class PracticeProcessorTool {
       cm.putString(Key.PIPELINE_STDIN, "Read,Classifier,Acknowledgement,Deduplication");
       cm.putString(Key.PIPELINE_MAIN, "Ics213,Ics213RR,Ics205,Hics259,FieldSituation");
       // cm.putString(Key.PIPELINE_STDOUT, "Write,MissedExercise,HistoryMap,Cleanup,Upload,EmailNotification");
-      cm.putString(Key.PIPELINE_STDOUT, "Write,MissedExercise,HistoryMap,Cleanup,EmailNotification");
+      cm.putString(Key.PIPELINE_STDOUT, "Write,HistoryMap,Cleanup,EmailNotification");
 
       var edPrefix = "com.surftools.wimp.practice.misc.Practice";
       cm.putString(Key.ALL_FEEDBACK_TEXT_EDITOR, edPrefix + "AllFeedbackTextEditor");
@@ -180,6 +180,8 @@ public class PracticeProcessorTool {
       cm.putString(Key.OUTBOUND_MESSAGE_SOURCE, winlinkCallsign);
       cm.putString(Key.OUTBOUND_MESSAGE_SENDER, "ETO-PRACTICE");
       cm.putString(Key.OUTBOUND_MESSAGE_SUBJECT, "ETO Practice Exercise Feedback");
+
+      cm.putString(Key.PERSISTENCE_START_OF_TIME, "2026-01-01");
 
       cm.putBoolean(Key.ENABLE_FINALIZE, enableFinalize);
 

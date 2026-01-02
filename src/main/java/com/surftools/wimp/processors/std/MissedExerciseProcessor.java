@@ -31,7 +31,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,6 +39,7 @@ import com.surftools.wimp.configuration.Key;
 import com.surftools.wimp.core.IMessageManager;
 import com.surftools.wimp.persistence.JoinedUser;
 import com.surftools.wimp.persistence.PersistenceManager;
+import com.surftools.wimp.persistence.dto.Exercise;
 import com.surftools.wimp.persistence.dto.ReturnStatus;
 import com.surftools.wimp.practice.tools.PracticeProcessorTool;
 import com.surftools.wimp.service.outboundMessage.OutboundMessage;
@@ -70,8 +70,16 @@ public class MissedExerciseProcessor extends AbstractBaseProcessor {
       return;
     }
 
+    ret = db.getFilteredExercises(null, date);
+    if (ret.status() != ReturnStatus.OK) {
+      logger.error("Could not get filteredExercises database: " + ret.content());
+      return;
+    }
+    @SuppressWarnings("unchecked")
+    var filteredExercises = (List<Exercise>) ret.data();
+
     var missLimit = cm.getAsInt(Key.PERSISTENCE_MISS_LIMIT, 3);
-    ret = db.getUsersMissingExercises(Set.of("Practice"), null, missLimit);
+    ret = db.getUsersMissingExercises(filteredExercises, missLimit);
     if (ret.status() != ReturnStatus.OK) {
       logger.error("Could not get missed Exercise records from database: " + ret.content());
       return;
