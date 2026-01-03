@@ -40,7 +40,8 @@ import com.surftools.wimp.core.MessageType;
 /**
  * base class of all parsed Winlink Messages
  *
- * all fields, but "to" may or may not be present, and are parsed with no interpretation
+ * all fields, but "to" may or may not be present, and are parsed with no
+ * interpretation
  *
  * @author bobt
  *
@@ -151,7 +152,7 @@ public class ExportedMessage implements IMessage, IWritableTable {
     this.subject = exportedMessage.subject;
 
     this.msgDateTime = exportedMessage.msgDateTime;
-    this.msgLocation = exportedMessage.msgLocation;
+    this.msgLocation = (exportedMessage.msgLocation != null) ? exportedMessage.msgLocation : LatLongPair.INVALID;
     this.msgLocationSource = exportedMessage.msgLocationSource;
 
     this.mime = exportedMessage.mime;
