@@ -108,9 +108,8 @@ public class PracticeProcessorTool {
       }
 
       var messageType = PracticeGeneratorTool.MESSAGE_TYPE_MAP.get(ord);
-      logger
-          .info("Exercise Date: " + exerciseDate.toString() + ", " + PracticeUtils.getOrdinalLabel(ord)
-              + " Thursday; exercise message type: " + messageType.toString());
+      logger.info("Exercise Date: " + exerciseDate.toString() + ", " + PracticeUtils.getOrdinalLabel(ord)
+          + " Thursday; exercise message type: " + messageType.toString());
 
       var exercisesPathName = cm.getAsString(Key.PATH_EXERCISES);
       logger.info("exercises home" + exercisesPathName);
@@ -119,8 +118,8 @@ public class PracticeProcessorTool {
       var referencePathName = cm.getAsString(Key.PATH_REFERENCE);
       logger.info("reference home: " + referencePathName);
       var exerciseYearString = String.valueOf(exerciseDate.getYear());
-      var referencePath = Path
-          .of(referencePathName, exerciseYearString, exerciseDateString, exerciseDateString + "-reference.json");
+      var referencePath = Path.of(referencePathName, exerciseYearString, exerciseDateString,
+          exerciseDateString + "-reference.json");
       var jsonString = Files.readString(referencePath);
       var deserializer = new PracticeJsonMessageDeserializer();
       var referenceMessage = deserializer.deserialize(jsonString, messageType);
@@ -139,18 +138,16 @@ public class PracticeProcessorTool {
       var nextExerciseDate = exerciseDate.plusDays((ord == 2 && !enableLegacy) ? 14 : 7);
       var nextExerciseYear = nextExerciseDate.getYear();
       var nextExerciseDateString = dtf.format(nextExerciseDate);
-      var instructionPath = Path
-          .of(referencePathName, String.valueOf(nextExerciseYear), nextExerciseDateString,
-              nextExerciseDateString + "-instructions.txt");
+      var instructionPath = Path.of(referencePathName, String.valueOf(nextExerciseYear), nextExerciseDateString,
+          nextExerciseDateString + "-instructions.txt");
       var instructionText = Files.readString(instructionPath);
       var sb = new StringBuilder();
       sb.append("\n\n");
       if (ord == 2 && !enableLegacy) {
         sb.append("INSTRUCTIONS for next week:" + "\n");
         sb.append("Next Thursday is a \"Third Thursday Training Exercise\"," + "\n");
-        sb
-            .append("so look for instructions on our web site at https://emcomm-training.org/Winlink_Thursdays.html"
-                + "\n");
+        sb.append(
+            "so look for instructions on our web site at https://emcomm-training.org/Winlink_Thursdays.html" + "\n");
         sb.append("However, here are the " + instructionText + "\n");
       } else {
         sb.append("INSTRUCTIONS for " + instructionText + "\n");
@@ -170,7 +167,8 @@ public class PracticeProcessorTool {
 
       cm.putString(Key.PIPELINE_STDIN, "Read,Classifier,Acknowledgement,Deduplication");
       cm.putString(Key.PIPELINE_MAIN, "Ics213,Ics213RR,Ics205,Hics259,FieldSituation");
-      // cm.putString(Key.PIPELINE_STDOUT, "Write,MissedExercise,HistoryMap,Cleanup,Upload,EmailNotification");
+      // cm.putString(Key.PIPELINE_STDOUT,
+      // "Write,MissedExercise,HistoryMap,Cleanup,Upload,EmailNotification");
       cm.putString(Key.PIPELINE_STDOUT, "Write,HistoryMap,Cleanup,EmailNotification");
 
       var edPrefix = "com.surftools.wimp.practice.misc.Practice";
@@ -181,7 +179,7 @@ public class PracticeProcessorTool {
       cm.putString(Key.OUTBOUND_MESSAGE_SENDER, "ETO-PRACTICE");
       cm.putString(Key.OUTBOUND_MESSAGE_SUBJECT, "ETO Practice Exercise Feedback");
 
-      cm.putString(Key.PERSISTENCE_START_OF_TIME, "2026-01-01");
+      cm.putString(Key.PERSISTENCE_EPOCH_DATE, "2026-01-01");
 
       cm.putBoolean(Key.ENABLE_FINALIZE, enableFinalize);
 

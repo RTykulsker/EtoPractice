@@ -27,8 +27,6 @@ SOFTWARE.
 
 package com.surftools.wimp.practice.processors;
 
-import java.time.LocalDateTime;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,17 +56,15 @@ public class Ics213RRPracticeProcessor extends BasePracticeProcessor {
     count(sts.test("Organization Name should be #EV", ref.organization, m.organization));
     count(sts.test("Incident Name should be #EV", ref.incidentName, m.incidentName));
 
-    var formDateTime = LocalDateTime.parse(m.activityDateTime, DTF);
-    count(sts.testOnOrAfter("Form Date and Time should be on or after #EV", windowOpenDT, formDateTime, DTF));
-    count(sts.testOnOrBefore("Form Date and Time should be on or before #EV", windowCloseDT, formDateTime, DTF));
+    count(sts.testIfPresent("Form Date should be present", m.activityDateTime));
+    count(sts.testIfPresent("Form Time should be present", m.activityDateTime));
 
     count(sts.test("Resource Request Number should be #EV", ref.requestNumber, m.requestNumber));
 
     var maxLineItems = Math.min(ref.lineItems.size(), m.lineItems.size());
     if (m.lineItems.size() != ref.lineItems.size()) {
-      logger
-          .warn("### from: " + m.from + ",mId: " + m.messageId + ", m.items: " + m.lineItems.size() + ", ref.items: "
-              + ref.lineItems.size());
+      logger.warn("### from: " + m.from + ",mId: " + m.messageId + ", m.items: " + m.lineItems.size() + ", ref.items: "
+          + ref.lineItems.size());
     }
     for (var i = 0; i < maxLineItems; ++i) {
       var lineNumber = i + 1;

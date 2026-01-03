@@ -27,9 +27,6 @@ SOFTWARE.
 
 package com.surftools.wimp.practice.processors;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-
 import com.surftools.wimp.core.IMessageManager;
 import com.surftools.wimp.core.MessageType;
 import com.surftools.wimp.message.ExportedMessage;
@@ -55,10 +52,7 @@ public class FieldSituationPracticeProcessor extends BasePracticeProcessor {
     count(sts.test("Organization Name should be #EV", ref.organization, m.organization));
     count(sts.test("Precedence should be #EV", ref.precedence, m.precedence));
 
-    final var dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss'Z'");
-    var formDateTime = LocalDateTime.parse(m.formDateTime.replaceAll("  ", " "), dtf);
-    count(sts.testOnOrAfter("Form Date/Time should be on or after #EV", windowOpenDT, formDateTime, dtf));
-    count(sts.testOnOrBefore("Form Date/Time should be on or before #EV", windowCloseDT, formDateTime, dtf));
+    count(sts.testIfPresent("Form Date/Time should be present", m.formDateTime));
     count(sts.test("Task # should be #EV", ref.task, m.task));
     count(sts.test("Emergent/Life Safety need should be #EV", ref.isHelpNeeded, m.isHelpNeeded));
     count(sts.test("City should be #EV", ref.city, m.city));
@@ -167,9 +161,8 @@ public class FieldSituationPracticeProcessor extends BasePracticeProcessor {
 
     count(sts.test("NOAA Weather audio degraded be #EV", ref.noaaAudioDegraded, m.noaaAudioDegraded));
     if (ref.noaaAudioDegraded.equals("YES")) {
-      count(sts
-          .test("NOAA Weather Radio degraded station should be #EV", ref.noaaAudioDegradedComments,
-              m.noaaAudioDegradedComments));
+      count(sts.test("NOAA Weather Radio degraded station should be #EV", ref.noaaAudioDegradedComments,
+          m.noaaAudioDegradedComments));
     } else {
       count(
           sts.testIfEmpty("NOAA Weather Radio degraded station provider should be empty", m.noaaAudioDegradedComments));

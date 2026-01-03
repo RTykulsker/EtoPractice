@@ -45,6 +45,7 @@ import com.surftools.wimp.service.map.MapEntry;
 import com.surftools.wimp.service.map.MapLayer;
 import com.surftools.wimp.service.map.MapService;
 import com.surftools.wimp.utils.config.IConfigurationManager;
+import com.surftools.wimp.utils.config.IWritableConfigurationManager;
 
 /**
  * compose maps of participation history
@@ -52,9 +53,11 @@ import com.surftools.wimp.utils.config.IConfigurationManager;
 public class HistoryMapProcessor extends AbstractBaseProcessor {
   private static final Logger logger = LoggerFactory.getLogger(HistoryMapProcessor.class);
 
+  private IWritableConfigurationManager cm;
+
   @Override
   public void initialize(IConfigurationManager cm, IMessageManager mm) {
-
+    this.cm = (IWritableConfigurationManager) cm;
   }
 
   @Override
@@ -71,6 +74,8 @@ public class HistoryMapProcessor extends AbstractBaseProcessor {
     }
 
     makeFirstTimeMap(db);
+    makeCurrentMap(db);
+    makeHistoricMap(db);
   }
 
   private void makeFirstTimeMap(IPersistenceManager db) {
@@ -90,31 +95,240 @@ public class HistoryMapProcessor extends AbstractBaseProcessor {
 
     @SuppressWarnings("unchecked")
     var joins = (List<JoinedUser>) ret.data();
+
     var firstTimers = new ArrayList<JoinedUser>();
     var exerciseDate = LocalDate.parse(dateString);
+    var exerciseDateCount = 0;
     for (var join : joins) {
-      if (join.exercises.size() == 1 && join.exercises.get(0).date().equals(exerciseDate)) {
-        firstTimers.add(join);
+      if (join.exercises.size() > 0 && join.exercises.get(0).date().equals(exerciseDate)) {
+        ++exerciseDateCount;
+        if (join.exercises.size() == 1) {
+          firstTimers.add(join);
+        }
       }
     }
-    logger.debug("Got " + firstTimers.size() + " firstTimers ");
+    logger.info("Got " + firstTimers.size() + " exerciseDateCount First Timers");
 
-    var mapService = new MapService(cm, mm);
+    var color = MapService.rgbMap.get("gold");
+
     var layers = new ArrayList<MapLayer>();
-    var layer = new MapLayer("First Time Participants (" + firstTimers.size() + ")", "#ffd326");
+    var layer = new MapLayer("First Time Participants (" + firstTimers.size() + ")", color);
     layers.add(layer);
 
     var mapEntries = new ArrayList<MapEntry>();
     for (var join : firstTimers) {
       var content = "<b>" + join.user.call() + "</b><hr>" + "First Exercise!";
-      var mapEntry = new MapEntry(join.user.call(), "", join.location, content, "#ffd326");
+      var mapEntry = new MapEntry(join.user.call(), "", join.location, content, color);
       mapEntries.add(mapEntry);
     }
 
-    var legendTitle = dateString + " First Time Participants (" + joins.size() + " total)";
+    var legendTitle = dateString + " First Time Participants (" + exerciseDateCount + " total)";
+
+    var mapService = new MapService(cm, mm);
     var context = new MapContext(publishedPath, //
         dateString + "-map-First-Timers", // file name
         dateString + " First Timer Participants", // map title
+        null, legendTitle, layers, mapEntries);
+    mapService.makeMap(context);
+  }
+
+  String intToSuffix(int i) {
+    switch (i) {
+    case 1:
+      return "st";
+    case 2:
+      return "nd";
+    case 3:
+      return "rd";
+    default:
+      return "th";
+    }
+  }
+
+  private void makeCurrentMap(PersistenceManager db) {
+    var ret = db.getFilteredExercises(null, null); // all types, all dates
+    if (ret.status() != ReturnStatus.OK) {
+      logger.error("Could not get filteredExercises from database: " + ret.content());
+      return;
+    }
+    @SuppressWarnings("unchecked")
+    var filteredExercises = (List<Exercise>) ret.data();
+    var nExercises = filteredExercises.size();
+
+    final var nBuckets = 4;
+    var bucketLimits = new int[nBuckets];
+    for (var i = 0; i < nBuckets; ++i) {
+      var limit = ((i + 1) * nExercises) / nBuckets;
+      bucketLimits[i] = limit;
+    }
+    var mapService = new MapService(cm, mm);
+    var gradientMap = mapService.makeGradientMap(240, 120, nBuckets);
+    var firstTimeColor = MapService.rgbMap.get("gold");
+
+    ret = db.getUsersHistory(filteredExercises);
+    if (ret.status() != ReturnStatus.OK) {
+      logger.error("Could not get userHistory from database: " + ret.content());
+      return;
+    }
+
+    @SuppressWarnings("unchecked")
+    var joins = (List<JoinedUser>) ret.data();
+
+    var firstTimeCount = 0;
+    var bucketCounts = new int[nBuckets];
+    var exerciseDate = LocalDate.parse(dateString);
+    var exerciseDateCount = 0;
+    var mapEntries = new ArrayList<MapEntry>();
+    for (var join : joins) {
+      if (join.exercises.size() > 0 && join.exercises.get(0).date().equals(exerciseDate)) {
+        ++exerciseDateCount;
+        if (join.exercises.size() == 1) {
+          ++firstTimeCount;
+          var content = "<b>" + join.user.call() + "</b><hr>" + "First Exercise!";
+          var mapEntry = new MapEntry(join.user.call(), "", join.location, content, firstTimeColor);
+          mapEntries.add(mapEntry);
+        } else {
+          var exerciseCount = join.exercises.size();
+          var found = false;
+          for (var i = 0; i <= nBuckets; ++i) {
+            if (exerciseCount > bucketLimits[i]) {
+              continue;
+            }
+            ++bucketCounts[i];
+            var sb = new StringBuilder("<b>" + join.user.call() + "</b><hr>");
+
+            sb.append("Exercise Count: " + exerciseCount + " / " + nExercises + " exercises<br>");
+
+            var rate = (100d * exerciseCount) / (nExercises);
+            sb.append("Exercise rate: " + String.format("%.2f", rate) + "%<br>");
+            sb.append("Last Date: " + join.exercises.get(0).date() + "<br>");
+            sb.append("First Date: " + join.exercises.get(exerciseCount - 1).date() + "<br>");
+            var content = sb.toString();
+            var mapEntry = new MapEntry(join.user.call(), "", join.location, content, gradientMap.get(i));
+            mapEntries.add(mapEntry);
+            found = true;
+            break;
+          } // end loop over buckets
+          if (!found) {
+            logger.error("####### not found for call: " + join.user.call());
+          }
+        } // end if more than one exercise
+      } // end if join has an exercise on this exercise date
+    } // end loop over joins
+
+    var layers = new ArrayList<MapLayer>();
+    var layer = new MapLayer("First Time Participants (" + firstTimeCount + ")", firstTimeColor);
+    layers.add(layer);
+    for (var i = 0; i < nBuckets; ++i) {
+      var qi = i + 1;
+      layer = new MapLayer(qi + intToSuffix(qi) + " Quartile (" + bucketCounts[i] + ")", gradientMap.get(i));
+      layers.add(layer);
+    }
+
+    var legendTitle = dateString + " Current Exercise Participants (" + exerciseDateCount + " total)";
+
+    var context = new MapContext(publishedPath, //
+        dateString + "-map-current-participants", // file name
+        dateString + " Current Exercise Participants", // map title
+        null, legendTitle, layers, mapEntries);
+    mapService.makeMap(context);
+  }
+
+  private void makeHistoricMap(PersistenceManager db) {
+    var ret = db.getFilteredExercises(null, null); // all types, all dates
+    if (ret.status() != ReturnStatus.OK) {
+      logger.error("Could not get filteredExercises from database: " + ret.content());
+      return;
+    }
+    @SuppressWarnings("unchecked")
+    var filteredExercises = (List<Exercise>) ret.data();
+    var nExercises = filteredExercises.size();
+
+    final var nBuckets = 4;
+    var bucketLimits = new int[nBuckets];
+    for (var i = 0; i < nBuckets; ++i) {
+      var limit = ((i + 1) * nExercises) / nBuckets;
+      bucketLimits[i] = limit;
+    }
+    var mapService = new MapService(cm, mm);
+    var gradientMap = mapService.makeGradientMap(240, 120, nBuckets);
+    var firstTimeColor = MapService.rgbMap.get("gold");
+    var oneAndDoneColor = MapService.rgbMap.get("red");
+
+    ret = db.getUsersHistory(filteredExercises);
+    if (ret.status() != ReturnStatus.OK) {
+      logger.error("Could not get userHistory from database: " + ret.content());
+      return;
+    }
+
+    @SuppressWarnings("unchecked")
+    var joins = (List<JoinedUser>) ret.data();
+
+    var firstTimeCount = 0;
+    var oneAndDoneCount = 0;
+    var bucketCounts = new int[nBuckets];
+    var exerciseDate = LocalDate.parse(dateString);
+    var mapEntries = new ArrayList<MapEntry>();
+    for (var join : joins) {
+      if (join.exercises.size() == 1) {
+        if (join.exercises.get(0).date().equals(exerciseDate)) {
+          ++firstTimeCount;
+          var content = "<b>" + join.user.call() + "</b><hr>" + "First Exercise!";
+          var mapEntry = new MapEntry(join.user.call(), "", join.location, content, firstTimeColor);
+          mapEntries.add(mapEntry);
+        } else {
+          ++oneAndDoneCount;
+          var content = "<b>" + join.user.call() + "</b><hr>" + "Only Exercise: "
+              + join.exercises.get(0).date().toString();
+          var mapEntry = new MapEntry(join.user.call(), "", join.location, content, oneAndDoneColor);
+          mapEntries.add(mapEntry);
+        }
+      } else {
+        var exerciseCount = join.exercises.size();
+        var found = false;
+        for (var i = 0; i <= nBuckets; ++i) {
+          if (exerciseCount > bucketLimits[i]) {
+            continue;
+          }
+          ++bucketCounts[i];
+          var sb = new StringBuilder("<b>" + join.user.call() + "</b><hr>");
+
+          sb.append("Exercise Count: " + exerciseCount + " / " + nExercises + " exercises<br>");
+
+          var rate = (100d * exerciseCount) / (nExercises);
+          sb.append("Exercise rate: " + String.format("%.2f", rate) + "%<br>");
+          if (join.exercises.size() > 0) {
+            sb.append("Last Date: " + join.exercises.get(0).date() + "<br>");
+            sb.append("First Date: " + join.exercises.get(exerciseCount - 1).date() + "<br>");
+          }
+          var content = sb.toString();
+          var mapEntry = new MapEntry(join.user.call(), "", join.location, content, gradientMap.get(i));
+          mapEntries.add(mapEntry);
+          found = true;
+          break;
+        } // end loop over buckets
+        if (!found) {
+          logger.error("####### not found for call: " + join.user.call());
+        }
+      } // end if more than one exercise
+    } // end loop over joins
+
+    var layers = new ArrayList<MapLayer>();
+    var layer = new MapLayer("First Time Participants (" + firstTimeCount + ")", firstTimeColor);
+    layers.add(layer);
+    for (var i = 0; i < nBuckets; ++i) {
+      var qi = i + 1;
+      layer = new MapLayer(qi + intToSuffix(qi) + " Quartile (" + bucketCounts[i] + ")", gradientMap.get(i));
+      layers.add(layer);
+    }
+    layer = new MapLayer("One Time Only Participants (" + oneAndDoneCount + ")", oneAndDoneColor);
+    layers.add(layer);
+
+    var legendTitle = dateString + " Historic Exercise Participants (" + joins.size() + " total)";
+
+    var context = new MapContext(publishedPath, //
+        dateString + "-map-historic-participants", // file name
+        dateString + " Historic Exercise Participants", // map title
         null, legendTitle, layers, mapEntries);
     mapService.makeMap(context);
   }

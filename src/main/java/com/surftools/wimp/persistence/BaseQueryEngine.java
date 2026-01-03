@@ -50,10 +50,12 @@ import com.surftools.wimp.persistence.dto.User;
 import com.surftools.wimp.utils.config.IConfigurationManager;
 
 /**
- * because some queries are too complicated for me to figure out in SQL, I'll do it in code
+ * because some queries are too hard for me to do in SQL, I'll do it in code
  */
 public abstract class BaseQueryEngine implements IPersistenceEngine {
   private static final Logger logger = LoggerFactory.getLogger(BaseQueryEngine.class);
+
+  protected IConfigurationManager cm;
 
   protected static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
   protected boolean isDirty = true;
@@ -70,14 +72,10 @@ public abstract class BaseQueryEngine implements IPersistenceEngine {
   protected final boolean onlyUseActive;
   protected final boolean allowFuture;
 
-  protected LocalDate startOfTime;
-
   public BaseQueryEngine(IConfigurationManager cm) {
+    this.cm = cm;
     onlyUseActive = cm.getAsBoolean(Key.PERSISTENCE_ONLY_USE_ACTIVE, true);
     allowFuture = cm.getAsBoolean(Key.PERSISTENCE_ALLOW_FUTURE, false);
-
-    var startOfTimeString = cm.getAsString(Key.PERSISTENCE_START_OF_TIME, "2026-01-01");
-    startOfTime = LocalDate.parse(startOfTimeString);
   }
 
   /**
@@ -92,7 +90,8 @@ public abstract class BaseQueryEngine implements IPersistenceEngine {
       var entry = allJoinMap.getOrDefault(user.call(), new JoinedUser(user));
 
       // if (debugShortList.contains(user.id())) {
-      // logger.info("Processing user: " + user.call() + ", date: " + exercise.date() + ", type: " + exercise.type());
+      // logger.info("Processing user: " + user.call() + ", date: " + exercise.date()
+      // + ", type: " + exercise.type());
       // } else {
       // logger.debug("skipping user: " + user.call());
       // continue;
@@ -152,9 +151,8 @@ public abstract class BaseQueryEngine implements IPersistenceEngine {
           join.context = intersection;
           candidateJoins.add(join);
         } else {
-          logger
-              .debug("skipping call: " + join.user.call() + " because didn't participate in previous " + missLimit
-                  + " exercises");
+          logger.debug("skipping call: " + join.user.call() + " because didn't participate in previous " + missLimit
+              + " exercises");
         }
       }
     } // end for over all calls/joins
@@ -166,6 +164,9 @@ public abstract class BaseQueryEngine implements IPersistenceEngine {
 
   @Override
   public ReturnRecord getFilteredExercises(Set<String> _requiredExerciseTypes, LocalDate fromDate) {
+    // pull from cm EVERY time, because we might me hacking it
+    var epochDateString = cm.getAsString(Key.PERSISTENCE_EPOCH_DATE, "2026-01-01");
+    var epochDate = LocalDate.parse(epochDateString);
 
     var filteredExercises = new ArrayList<Exercise>();
     var requiredExerciseTypes = (_requiredExerciseTypes == null || _requiredExerciseTypes.size() == 0) //
@@ -175,7 +176,6 @@ public abstract class BaseQueryEngine implements IPersistenceEngine {
 
     var allExercises = new ArrayList<Exercise>(idExerciseMap.values());
     Collections.sort(allExercises); // most recent first
-    allExercises.reversed();
 
     for (var exercise : allExercises.reversed()) {
       if (!requiredExerciseTypes.contains(exercise.type())) {
@@ -183,12 +183,14 @@ public abstract class BaseQueryEngine implements IPersistenceEngine {
         continue;
       }
 
-      if (exercise.date().isBefore(startOfTime)) {
-        logger.debug("skipping exercise because before StartOfTime(" + startOfTime.toString() + "): " + exercise);
+      if (exercise.date().isBefore(epochDate)) {
+        logger.debug("skipping exercise because before EpochDate(" + epochDate.toString() + "): " + exercise);
+        continue;
       }
 
       if (fromDate != null && exercise.date().isBefore(fromDate)) {
         logger.debug("skipping exercise because before fromDate(" + fromDate.toString() + "): " + exercise);
+        continue;
       }
 
       filteredExercises.add(exercise);

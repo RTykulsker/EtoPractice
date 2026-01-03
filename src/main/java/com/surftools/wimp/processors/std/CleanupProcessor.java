@@ -119,20 +119,24 @@ public class CleanupProcessor extends AbstractBaseProcessor {
         }
       }
 
-      if (name.equals("leaflet-" + dateString + "-map-feedbackCount.html")) {
+      if (name.startsWith("leaflet-")) {
         try {
-          var newFile = Path.of(publishedPathName, dateString + "-map-feedbackCount.html").toFile();
+          var newName = name.substring("leaflet-".length());
+          var newFile = Path.of(publishedPathName, newName).toFile();
           publishedFile.renameTo(newFile);
           logger.info("renamed map file to: " + newFile);
         } catch (Exception e) {
           logger.error("Exception renaming file: " + name, e.getMessage());
         }
       }
+
     } // end rename loop over files
 
     // because I'd rather write 50 lines of code than point and click to import two
     // files into Winlink Express ...
-    try {
+    try
+
+    {
       outputFiles = outputDir.listFiles();
       var messageLines = new StringBuffer();
       for (var outputFile : outputFiles) {

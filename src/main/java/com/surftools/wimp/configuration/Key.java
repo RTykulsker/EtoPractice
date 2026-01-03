@@ -39,7 +39,7 @@ public enum Key implements IConfigurationKey {
   WINLINK_CALLSIGN("winlink.callsign"), // mbo address
 
   PATH_REFERENCE("path.reference"), // dir where reference dirs/files are
-  PATH_EXERCISES("path.exercises"), // dir where we find input/ exported messages and will create output/ and published/
+  PATH_EXERCISES("path.exercises"), // dir where we find input/, output/ and published/
   PATH_RESOUCE_CONTENT("path.resourceContent"), // FILE for ICS-213 RR generation
   PATH_NAG_CONTENT("path.nagContent"), // path to FILE where end-of-year nag is
   PATH_UPLOAD_FTP_LOCAL("path.upload.ftp.local"), // path where local FTP dir is
@@ -57,7 +57,7 @@ public enum Key implements IConfigurationKey {
   PERSISTENCE_MISS_LIMIT("persistence.miss.limit"), // max # of missed exercises before we don't bother any more
   PERSISTENCE_MISS_SUBJECT("persistence.miss.subject"), // subject for outbound message
   PERSISTENCE_MISS_BODY_PATH("persistence.miss.body.path"), // path to file containing body for outbound message
-  PERSISTENCE_START_OF_TIME("persistence.startOfTime"), // when does the database go from beta to production
+  PERSISTENCE_EPOCH_DATE("persistence.epochDate"), // when does the database go from beta to production
 
   EXPECTED_MESSAGE_TYPES("expectedMessageTypes"), // MessageTypes that we will handle
 

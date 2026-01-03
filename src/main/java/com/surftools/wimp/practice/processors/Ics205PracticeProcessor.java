@@ -27,9 +27,6 @@ SOFTWARE.
 
 package com.surftools.wimp.practice.processors;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,10 +57,8 @@ public class Ics205PracticeProcessor extends BasePracticeProcessor {
     count(sts.test("Organization Name should be #EV", ref.organization, m.organization));
     count(sts.test("Incident Name should be #EV", ref.incidentName, m.incidentName));
 
-    final var dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-    var dateTimePrepared = LocalDateTime.parse(m.dateTimePrepared, dtf);
-    count(sts.testOnOrAfter("Date/Time prepared should be on or after #EV", windowOpenDT, dateTimePrepared, dtf));
-    count(sts.testOnOrBefore("Date/Time prepared should be on or before #EV", windowCloseDT, dateTimePrepared, dtf));
+    count(sts.testIfPresent("Form Date/Time prepared should be present", m.dateTimePrepared));
+
     count(sts.test("Op Period Date From should be #EV", ref.dateFrom, m.dateFrom));
     count(sts.test("Op Period Date To should be #EV", ref.dateTo, m.dateTo));
     count(sts.test("Op Period Time From should be #EV", ref.timeFrom, m.timeFrom));
@@ -140,9 +135,7 @@ public class Ics205PracticeProcessor extends BasePracticeProcessor {
     }
 
     sts.setExplanationPrefix("");
-    var dateTimeApproved = LocalDateTime.parse(m.approvedDateTime, dtf);
-    count(sts.testOnOrAfter("Date/Time approved should be on or after #EV", windowOpenDT, dateTimeApproved, dtf));
-    count(sts.testOnOrBefore("Date/Time approved should be on or before #EV", windowCloseDT, dateTimeApproved, dtf));
+    count(sts.testIfPresent("Date/Time approved should be on or after #EV", m.approvedDateTime));
     count(sts.test("IAP Page should be #EV", ref.iapPage, m.iapPage));
     var practiceSummary = new PracticeSummary(m, sts);
     practiceSummaries.add(practiceSummary);
