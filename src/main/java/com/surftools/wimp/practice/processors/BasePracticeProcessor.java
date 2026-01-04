@@ -80,6 +80,7 @@ import com.surftools.wimp.processors.std.AcknowledgementProcessor.AckEntry;
 import com.surftools.wimp.processors.std.AcknowledgementProcessor.AckKey;
 import com.surftools.wimp.processors.std.WriteProcessor;
 import com.surftools.wimp.service.chart.ChartServiceFactory;
+import com.surftools.wimp.service.map.IMapService;
 import com.surftools.wimp.service.map.MapContext;
 import com.surftools.wimp.service.map.MapEntry;
 import com.surftools.wimp.service.map.MapLayer;
@@ -148,8 +149,9 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
     var exerciseMessageTypeString = cm.getAsString(Key.EXPECTED_MESSAGE_TYPES);
     exerciseMessageType = MessageType.fromString(exerciseMessageTypeString);
     if (exerciseMessageType != processorMessageType) {
-      logger.debug("processor messageType (" + processorMessageType.name() + ") != exercise messageType("
-          + exerciseMessageType.name() + "), skipping");
+      logger
+          .debug("processor messageType (" + processorMessageType.name() + ") != exercise messageType("
+              + exerciseMessageType.name() + "), skipping");
       return;
     }
 
@@ -204,8 +206,9 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
           var extraContent = String.join("\n", lines.stream().filter(s -> !s.trim().startsWith("#")).toList()).trim();
           if (extraContent != null && extraContent.length() > 0) {
             outboundMessageExtraContent = extraContent;
-            logger.info("file: " + extraContentPathName + " provides the following extra content:\n"
-                + outboundMessageExtraContent);
+            logger
+                .info("file: " + extraContentPathName + " provides the following extra content:\n"
+                    + outboundMessageExtraContent);
           }
         } catch (Exception e) {
           logger.warn("Could not get extra content for outbound messages. Using default");
@@ -394,8 +397,9 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
     logger.info(sb.toString());
 
     if (badLocationMessageIds.size() > 0) {
-      logger.info("adjusting lat/long for " + badLocationMessageIds.size() + " messages: "
-          + String.join(",", badLocationMessageIds));
+      logger
+          .info("adjusting lat/long for " + badLocationMessageIds.size() + " messages: "
+              + String.join(",", badLocationMessageIds));
       var newLocations = LocationUtils.jitter(badLocationMessageIds.size(), LatLongPair.ZERO_ZERO, 10_000);
       for (int i = 0; i < badLocationMessageIds.size(); ++i) {
         var messageId = badLocationMessageIds.get(i);
@@ -433,7 +437,6 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
         outboundMessageList.add(outboundMessage);
       }
     }
-
     var results = new ArrayList<>(mIdFeedbackMap.values());
     WriteProcessor.writeTable(results, "feedback-" + exerciseMessageType.toString() + ".csv");
 
@@ -447,6 +450,20 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
     chartService.initialize(cm, counterMap, exerciseMessageType);
     chartService.makeCharts();
 
+    makeFeedbackMap();
+    makeMessageTypeMap();
+
+    WriteProcessor.writeTable(new ArrayList<IWritableTable>(practiceSummaries), "practice-summary.csv");
+
+    var db = new PersistenceManager(cm);
+    var input = makeDbInput(practiceSummaries);
+    var dbResult = db.bulkInsert(input);
+    if (dbResult.status() == ReturnStatus.ERROR) {
+      logger.error("### database update failed: " + dbResult.content());
+    }
+  }
+
+  private void makeFeedbackMap() {
     var dateString = cm.getAsString(Key.EXERCISE_DATE);
     var mapService = new MapService(cm, mm);
 
@@ -506,22 +523,110 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
         null, legendTitle, layers, mapEntries);
     mapService.makeMap(context);
 
-    WriteProcessor.writeTable(new ArrayList<IWritableTable>(practiceSummaries), "practice-summary.csv");
+  }
 
-    var db = new PersistenceManager(cm);
-    var input = makeDbInput(practiceSummaries);
-    var dbResult = db.bulkInsert(input);
-    if (dbResult.status() == ReturnStatus.ERROR) {
-      logger.error("### database update failed: " + dbResult.content());
+  private void makeMessageTypeMap() {
+    var mapService = new MapService(cm, mm);
+    var colorGreen = IMapService.rgbMap.get("green");
+    var colorBlue = IMapService.rgbMap.get("blue");
+    var colorRed = IMapService.rgbMap.get("red");
+
+    // counts by participant/sender/call
+    var missingLocationCalls = new ArrayList<>();
+    var expectedCount = 0; // expected only
+    var mixedCount = 0; // both expected and unexpected messageTypes
+    var unexpectedCount = 0; // unexpected only
+    var validLocationMapEntries = new ArrayList<MapEntry>();
+    var invalidLocationMapEntries = new ArrayList<MapEntry>();
+    var it = mm.getSenderIterator();
+    while (it.hasNext()) {
+      var sender = it.next();
+
+      var location = (LatLongPair) null;
+      Map<MessageType, List<ExportedMessage>> map = mm.getMessagesForSender(sender);
+      var senderMessageTypes = new ArrayList<MessageType>(map.keySet());
+      Collections.sort(senderMessageTypes, ((t, o) -> t == exerciseMessageType ? 1 : t.name().compareTo(o.name())));
+      var hasExpected = false;
+      var hasUnexpected = false;
+      var popupText = new StringBuilder("<b>" + sender + "</b><hr>" + "\n");
+      for (var type : senderMessageTypes) {
+        var messageList = map.get(type);
+        var count = messageList == null ? "0" : String.valueOf(messageList.size());
+        var mIds = messageList.stream().map(m -> m.messageId).toList();
+        var mIdPrefix = mIds.size() == 1 ? "mId: " : "mIds: ";
+        var mIdString = String.join(",", mIds);
+        popupText.append("Type: " + type.name() + ", count: " + count + ", " + mIdPrefix + mIdString + "\n");
+        if (type == exerciseMessageType) {
+          hasExpected = true;
+          location = messageList.get(0).mapLocation.isValid() ? messageList.get(0).mapLocation : null;
+        } else {
+          hasUnexpected = true;
+          for (var m : messageList) {
+            if (m.mapLocation.isValid()) {
+              location = m.mapLocation;
+              break;
+            }
+          }
+        }
+      } // end loop over types for sender
+
+      var colorName = "";
+      if (hasExpected) {
+        if (hasUnexpected) {
+          ++mixedCount;
+          colorName = colorBlue;
+        } else {
+          ++expectedCount;
+          colorName = colorGreen;
+        }
+      } else {
+        ++unexpectedCount;
+        colorName = colorRed;
+      }
+      var mapEntry = new MapEntry(sender, "", location, popupText.toString(), colorName);
+      if (location.isValid()) {
+        validLocationMapEntries.add(mapEntry);
+      } else {
+        invalidLocationMapEntries.add(mapEntry);
+      }
+    } // end loop over senders
+
+    if (invalidLocationMapEntries.size() > 0) {
+      var invalidSenders = invalidLocationMapEntries.stream().map(m -> m.label()).toList();
+      logger
+          .info("adjusting lat/long for " + badLocationMessageIds.size() + " messages: "
+              + String.join(",", invalidSenders));
+      var newLocations = LocationUtils.jitter(invalidLocationMapEntries.size(), LatLongPair.ZERO_ZERO, 10_000);
+      for (int i = 0; i < invalidLocationMapEntries.size(); ++i) {
+        var old = invalidLocationMapEntries.get(i);
+        var newLocation = newLocations.get(i);
+        var newMapEntry = new MapEntry(old.label(), old.to(), newLocation, old.message(), old.iconColor());
+        validLocationMapEntries.add(newMapEntry);
+      }
     }
+
+    var layers = new ArrayList<MapLayer>();
+    layers.add(new MapLayer("Only " + exerciseMessageType.name() + " messages, count: " + expectedCount, colorGreen));
+    layers
+        .add(new MapLayer("Both " + exerciseMessageType.name() + " and other messages, count: " + mixedCount,
+            colorBlue));
+    layers.add(new MapLayer("Only other messages, count: " + unexpectedCount, colorRed));
+
+    var legendTitle = dateString + " Message Type Counts (" + mIdFeedbackMap.values().size() + " total)";
+    var context = new MapContext(publishedPath, //
+        dateString + "-map-messageTypes", // file name
+        dateString + " Message Type Counts", // map title
+        null, legendTitle, layers, validLocationMapEntries);
+    mapService.makeMap(context);
   }
 
   protected LocalDateTime parseDateTime(String dateString, String timeString) {
-    final var list = List.of(//
-        "yyyy-MM-dd HH:mm", // default
-        "yyyy-MM-dd HH:mm 'Z'", // default, with Z
-        "yyyy/MM/dd HH:mm" // default with slashes
-    );
+    final var list = List
+        .of(//
+            "yyyy-MM-dd HH:mm", // default
+            "yyyy-MM-dd HH:mm 'Z'", // default, with Z
+            "yyyy/MM/dd HH:mm" // default with slashes
+        );
     final var mdtp = new MultiDateTimeParser(list);
     return mdtp.parseDateTime(dateString + " " + timeString);
   }
