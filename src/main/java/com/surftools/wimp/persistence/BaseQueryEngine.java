@@ -211,6 +211,13 @@ public abstract class BaseQueryEngine implements IPersistenceEngine {
     }
 
     for (var join : joinMap.values()) {
+
+      @SuppressWarnings("unused")
+      var debug = false;
+      if (join.user.call().equals("KM6SO")) {
+        debug = true;
+      }
+
       var intersection = new HashSet<Exercise>(filteredExercises);
       intersection.retainAll(join.exercises);
 
