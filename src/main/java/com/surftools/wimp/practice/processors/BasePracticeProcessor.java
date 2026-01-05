@@ -450,8 +450,10 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
     chartService.initialize(cm, counterMap, exerciseMessageType);
     chartService.makeCharts();
 
-    makeFeedbackMap();
+    var mapEntries = makeFeedbackMap();
     makeMessageTypeMap();
+    makeExerciseIdMap(mapEntries);
+    makeStartDateMap(mapEntries);
 
     WriteProcessor.writeTable(new ArrayList<IWritableTable>(practiceSummaries), "practice-summary.csv");
 
@@ -463,7 +465,7 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
     }
   }
 
-  private void makeFeedbackMap() {
+  private List<MapEntry> makeFeedbackMap() {
     var dateString = cm.getAsString(Key.EXERCISE_DATE);
     var mapService = new MapService(cm, mm);
 
@@ -523,6 +525,71 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
         null, legendTitle, layers, mapEntries);
     mapService.makeMap(context);
 
+    return mapEntries;
+  }
+
+  private void makeExerciseIdMap(List<MapEntry> mapEntries) {
+    var mapService = new MapService(cm, mm);
+    var colorGreen = IMapService.rgbMap.get("green");
+    var colorRed = IMapService.rgbMap.get("red");
+    var exerciseIdCountGood = 0;
+    var exerciseIdCountBad = 0;
+
+    var newMapEntries = new ArrayList<MapEntry>();
+    for (var old : mapEntries) {
+      var color = "";
+      if (old.message().contains("Exercise Id")) {
+        color = colorRed;
+        ++exerciseIdCountBad;
+      } else {
+        color = colorGreen;
+        ++exerciseIdCountGood;
+      }
+      newMapEntries.add(new MapEntry(old.label(), old.to(), old.location(), old.message(), color));
+    }
+
+    var layers = new ArrayList<MapLayer>();
+    layers.add(new MapLayer("Correct Exercise Id messages, count: " + exerciseIdCountGood, colorGreen));
+    layers.add(new MapLayer("Incorrect Exercise Id messages, count: " + exerciseIdCountBad, colorRed));
+
+    var legendTitle = dateString + " ExerciseId Counts (" + mIdFeedbackMap.values().size() + " total)";
+    var context = new MapContext(publishedPath, //
+        dateString + "-map-exerciseId", // file name
+        dateString + " Exercise Id correct", // map title
+        null, legendTitle, layers, newMapEntries);
+    mapService.makeMap(context);
+  }
+
+  private void makeStartDateMap(List<MapEntry> mapEntries) {
+    var mapService = new MapService(cm, mm);
+    var colorGreen = IMapService.rgbMap.get("green");
+    var colorRed = IMapService.rgbMap.get("red");
+    var startDateCountGood = 0;
+    var startDateCountBad = 0;
+
+    var newMapEntries = new ArrayList<MapEntry>();
+    for (var old : mapEntries) {
+      var color = "";
+      if (old.message().contains("Message should be posted on or after")) {
+        color = colorRed;
+        ++startDateCountBad;
+      } else {
+        color = colorGreen;
+        ++startDateCountGood;
+      }
+      newMapEntries.add(new MapEntry(old.label(), old.to(), old.location(), old.message(), color));
+    }
+
+    var layers = new ArrayList<MapLayer>();
+    layers.add(new MapLayer("Mssages sent on-time, count: " + startDateCountGood, colorGreen));
+    layers.add(new MapLayer("Messages sent early, count: " + startDateCountBad, colorRed));
+
+    var legendTitle = dateString + " Messages sent on-time Counts (" + mIdFeedbackMap.values().size() + " total)";
+    var context = new MapContext(publishedPath, //
+        dateString + "-map-startDate", // file name
+        dateString + " Messages Sent On-time Counts", // map title
+        null, legendTitle, layers, newMapEntries);
+    mapService.makeMap(context);
   }
 
   private void makeMessageTypeMap() {
@@ -532,7 +599,6 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
     var colorRed = IMapService.rgbMap.get("red");
 
     // counts by participant/sender/call
-    var missingLocationCalls = new ArrayList<>();
     var expectedCount = 0; // expected only
     var mixedCount = 0; // both expected and unexpected messageTypes
     var unexpectedCount = 0; // unexpected only
