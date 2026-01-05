@@ -550,7 +550,7 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
     layers.add(new MapLayer("Incorrect Exercise Id messages, count: " + exerciseIdCountBad, colorRed));
 
     var legendTitle = dateString + " ExerciseId Counts (" + mIdFeedbackMap.values().size() + " total)";
-    var context = new MapContext(publishedPath, //
+    var context = new MapContext(outputPath, //
         dateString + "-map-exerciseId", // file name
         dateString + " Exercise Id correct", // map title
         null, legendTitle, layers, newMapEntries);
@@ -582,7 +582,7 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
     layers.add(new MapLayer("Messages sent early, count: " + startDateCountBad, colorRed));
 
     var legendTitle = dateString + " Messages sent on-time Counts (" + mIdFeedbackMap.values().size() + " total)";
-    var context = new MapContext(publishedPath, //
+    var context = new MapContext(outputPath, //
         dateString + "-map-startDate", // file name
         dateString + " Messages Sent On-time Counts", // map title
         null, legendTitle, layers, newMapEntries);
