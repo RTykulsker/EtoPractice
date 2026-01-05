@@ -180,40 +180,51 @@ public class HistoryMapProcessor extends AbstractBaseProcessor {
     var exerciseDateCount = 0;
     var mapEntries = new ArrayList<MapEntry>();
     for (var join : joins) {
+
+      @SuppressWarnings("unused")
+      var debug = false;
+      if (join.user.call().equals("KM6SO")) {
+        debug = true;
+      }
+
+      // we only want current exercise folks
       if (join.exercises.size() > 0 && join.exercises.get(0).date().equals(exerciseDate)) {
         ++exerciseDateCount;
-        if (join.exercises.size() == 1) {
-          ++firstTimeCount;
-          var content = "<b>" + join.user.call() + "</b><hr>" + "First Exercise!";
-          var mapEntry = new MapEntry(join.user.call(), "", join.location, content, firstTimeColor);
-          mapEntries.add(mapEntry);
-        } else {
-          var exerciseCount = join.exercises.size();
-          var found = false;
-          for (var i = 0; i <= nBuckets; ++i) {
-            if (exerciseCount > bucketLimits[i]) {
-              continue;
-            }
-            ++bucketCounts[i];
-            var sb = new StringBuilder("<b>" + join.user.call() + "</b><hr>");
+      } else {
+        continue;
+      }
 
-            sb.append("Exercise Count: " + exerciseCount + " / " + nExercises + " exercises<br>");
-
-            var rate = (100d * exerciseCount) / (nExercises);
-            sb.append("Exercise rate: " + String.format("%.2f", rate) + "%<br>");
-            sb.append("Last Date: " + join.exercises.get(0).date() + "<br>");
-            sb.append("First Date: " + join.exercises.get(exerciseCount - 1).date() + "<br>");
-            var content = sb.toString();
-            var mapEntry = new MapEntry(join.user.call(), "", join.location, content, gradientMap.get(i));
-            mapEntries.add(mapEntry);
-            found = true;
-            break;
-          } // end loop over buckets
-          if (!found) {
-            logger.error("####### not found for call: " + join.user.call());
+      if (join.exercises.size() == 1) {
+        ++firstTimeCount;
+        var content = "<b>" + join.user.call() + "</b><hr>" + "First Exercise!";
+        var mapEntry = new MapEntry(join.user.call(), "", join.location, content, firstTimeColor);
+        mapEntries.add(mapEntry);
+      } else {
+        var exerciseCount = join.exercises.size();
+        var found = false;
+        for (var i = 0; i <= nBuckets; ++i) {
+          if (exerciseCount > bucketLimits[i]) {
+            continue;
           }
-        } // end if more than one exercise
-      } // end if join has an exercise on this exercise date
+          ++bucketCounts[i];
+          var sb = new StringBuilder("<b>" + join.user.call() + "</b><hr>");
+
+          sb.append("Exercise Count: " + exerciseCount + " / " + nExercises + " exercises<br>");
+
+          var rate = (100d * exerciseCount) / (nExercises);
+          sb.append("Exercise rate: " + String.format("%.2f", rate) + "%<br>");
+          sb.append("Last Date: " + join.exercises.get(0).date() + "<br>");
+          sb.append("First Date: " + join.exercises.get(exerciseCount - 1).date() + "<br>");
+          var content = sb.toString();
+          var mapEntry = new MapEntry(join.user.call(), "", join.location, content, gradientMap.get(i));
+          mapEntries.add(mapEntry);
+          found = true;
+          break;
+        } // end loop over buckets
+        if (!found) {
+          logger.error("####### not found for call: " + join.user.call());
+        }
+      } // end not first-time
     } // end loop over joins
 
     var layers = new ArrayList<MapLayer>();
@@ -227,13 +238,14 @@ public class HistoryMapProcessor extends AbstractBaseProcessor {
 
     var legendTitle = dateString + " Current Exercise Participants (" + exerciseDateCount + " total)";
 
-    var context = new MapContext(publishedPath, //
+    var context = new MapContext(outputPath, //
         dateString + "-map-current-participants", // file name
         dateString + " Current Exercise Participants", // map title
         null, legendTitle, layers, mapEntries);
     mapService.makeMap(context);
   }
 
+  @SuppressWarnings("unused")
   private void makeHistoricMap(PersistenceManager db) {
     var ret = db.getFilteredExercises(null, null); // all types, all dates
     if (ret.status() != ReturnStatus.OK) {
@@ -326,7 +338,7 @@ public class HistoryMapProcessor extends AbstractBaseProcessor {
 
     var legendTitle = dateString + " Historic Exercise Participants (" + joins.size() + " total)";
 
-    var context = new MapContext(publishedPath, //
+    var context = new MapContext(outputPath, //
         dateString + "-map-historic-participants", // file name
         dateString + " Historic Exercise Participants", // map title
         null, legendTitle, layers, mapEntries);

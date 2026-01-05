@@ -149,9 +149,8 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
     var exerciseMessageTypeString = cm.getAsString(Key.EXPECTED_MESSAGE_TYPES);
     exerciseMessageType = MessageType.fromString(exerciseMessageTypeString);
     if (exerciseMessageType != processorMessageType) {
-      logger
-          .debug("processor messageType (" + processorMessageType.name() + ") != exercise messageType("
-              + exerciseMessageType.name() + "), skipping");
+      logger.debug("processor messageType (" + processorMessageType.name() + ") != exercise messageType("
+          + exerciseMessageType.name() + "), skipping");
       return;
     }
 
@@ -206,9 +205,8 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
           var extraContent = String.join("\n", lines.stream().filter(s -> !s.trim().startsWith("#")).toList()).trim();
           if (extraContent != null && extraContent.length() > 0) {
             outboundMessageExtraContent = extraContent;
-            logger
-                .info("file: " + extraContentPathName + " provides the following extra content:\n"
-                    + outboundMessageExtraContent);
+            logger.info("file: " + extraContentPathName + " provides the following extra content:\n"
+                + outboundMessageExtraContent);
           }
         } catch (Exception e) {
           logger.warn("Could not get extra content for outbound messages. Using default");
@@ -397,9 +395,8 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
     logger.info(sb.toString());
 
     if (badLocationMessageIds.size() > 0) {
-      logger
-          .info("adjusting lat/long for " + badLocationMessageIds.size() + " messages: "
-              + String.join(",", badLocationMessageIds));
+      logger.info("adjusting lat/long for " + badLocationMessageIds.size() + " messages: "
+          + String.join(",", badLocationMessageIds));
       var newLocations = LocationUtils.jitter(badLocationMessageIds.size(), LatLongPair.ZERO_ZERO, 10_000);
       for (int i = 0; i < badLocationMessageIds.size(); ++i) {
         var messageId = badLocationMessageIds.get(i);
@@ -659,9 +656,8 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
 
     if (invalidLocationMapEntries.size() > 0) {
       var invalidSenders = invalidLocationMapEntries.stream().map(m -> m.label()).toList();
-      logger
-          .info("adjusting lat/long for " + badLocationMessageIds.size() + " messages: "
-              + String.join(",", invalidSenders));
+      logger.info(
+          "adjusting lat/long for " + badLocationMessageIds.size() + " messages: " + String.join(",", invalidSenders));
       var newLocations = LocationUtils.jitter(invalidLocationMapEntries.size(), LatLongPair.ZERO_ZERO, 10_000);
       for (int i = 0; i < invalidLocationMapEntries.size(); ++i) {
         var old = invalidLocationMapEntries.get(i);
@@ -673,13 +669,12 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
 
     var layers = new ArrayList<MapLayer>();
     layers.add(new MapLayer("Only " + exerciseMessageType.name() + " messages, count: " + expectedCount, colorGreen));
-    layers
-        .add(new MapLayer("Both " + exerciseMessageType.name() + " and other messages, count: " + mixedCount,
-            colorBlue));
+    layers.add(
+        new MapLayer("Both " + exerciseMessageType.name() + " and other messages, count: " + mixedCount, colorBlue));
     layers.add(new MapLayer("Only other messages, count: " + unexpectedCount, colorRed));
 
     var legendTitle = dateString + " Message Type Counts (" + mIdFeedbackMap.values().size() + " total)";
-    var context = new MapContext(publishedPath, //
+    var context = new MapContext(outputPath, //
         dateString + "-map-messageTypes", // file name
         dateString + " Message Type Counts", // map title
         null, legendTitle, layers, validLocationMapEntries);
@@ -687,12 +682,11 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
   }
 
   protected LocalDateTime parseDateTime(String dateString, String timeString) {
-    final var list = List
-        .of(//
-            "yyyy-MM-dd HH:mm", // default
-            "yyyy-MM-dd HH:mm 'Z'", // default, with Z
-            "yyyy/MM/dd HH:mm" // default with slashes
-        );
+    final var list = List.of(//
+        "yyyy-MM-dd HH:mm", // default
+        "yyyy-MM-dd HH:mm 'Z'", // default, with Z
+        "yyyy/MM/dd HH:mm" // default with slashes
+    );
     final var mdtp = new MultiDateTimeParser(list);
     return mdtp.parseDateTime(dateString + " " + timeString);
   }

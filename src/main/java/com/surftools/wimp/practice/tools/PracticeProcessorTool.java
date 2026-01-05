@@ -179,8 +179,6 @@ public class PracticeProcessorTool {
       cm.putString(Key.OUTBOUND_MESSAGE_SENDER, "ETO-PRACTICE");
       cm.putString(Key.OUTBOUND_MESSAGE_SUBJECT, "ETO Practice Exercise Feedback");
 
-      cm.putString(Key.PERSISTENCE_EPOCH_DATE, "2026-01-01");
-
       cm.putBoolean(Key.ENABLE_FINALIZE, enableFinalize);
 
       var mm = new MessageManager();
