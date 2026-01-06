@@ -44,6 +44,16 @@ public class LeafletMapEngine extends MapService {
   public LeafletMapEngine(IConfigurationManager cm, IMessageManager mm) {
   }
 
+  @Override
+  public Set<String> getValidIconColors() {
+    return VALID_ICON_COLORS;
+  }
+
+  @Override
+  public String getInvalidIconColor() {
+    return "black";
+  }
+
   public static String escapeForJavaScript(String input) {
     if (input == null) {
       return null;
@@ -201,7 +211,7 @@ public class LeafletMapEngine extends MapService {
 
           .legend-control {
             position: absolute;
-            bottom: 15px;
+            bottom: 5px;
             left: 10px;
             background: white;
             padding: 10px 12px;
@@ -289,8 +299,8 @@ public class LeafletMapEngine extends MapService {
         <div class="legend-control" id="legendControl">
           <div class="legend-title" id="legendTitle">
             #LEGEND_TITLE#
-      	  <!-- span id="legendClose">▁</span> -->
-      	  <span id="legendClose">_</span>
+          <!-- span id="legendClose">▁</span> -->
+          <span id="legendClose">_</span>
           </div>
           <div id="legendBody"></div>
         </div>
@@ -301,7 +311,6 @@ public class LeafletMapEngine extends MapService {
           // ------------------------------------------------------------
           // Initialize map
           // ------------------------------------------------------------
-
 
           const map = L.map("map").setView([40, -100], 4);
           // ------------------------------------------------------------
@@ -475,15 +484,5 @@ public class LeafletMapEngine extends MapService {
       </body>
       </html>
             """;
-
-  @Override
-  public Set<String> getValidIconColors() {
-    return VALID_ICON_COLORS;
-  }
-
-  @Override
-  public String getInvalidIconColor() {
-    return "black";
-  }
 
 }
