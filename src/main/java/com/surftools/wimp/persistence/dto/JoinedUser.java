@@ -25,7 +25,7 @@ SOFTWARE.
 
 */
 
-package com.surftools.wimp.persistence;
+package com.surftools.wimp.persistence.dto;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -33,9 +33,6 @@ import java.util.Collections;
 import java.util.List;
 
 import com.surftools.utils.location.LatLongPair;
-import com.surftools.wimp.persistence.dto.Event;
-import com.surftools.wimp.persistence.dto.Exercise;
-import com.surftools.wimp.persistence.dto.User;
 
 public class JoinedUser {
   public User user;

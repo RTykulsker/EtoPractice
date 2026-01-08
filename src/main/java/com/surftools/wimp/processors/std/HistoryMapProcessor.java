@@ -35,10 +35,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.surftools.wimp.core.IMessageManager;
+import com.surftools.wimp.core.IWritableTable;
 import com.surftools.wimp.persistence.IPersistenceManager;
-import com.surftools.wimp.persistence.JoinedUser;
 import com.surftools.wimp.persistence.PersistenceManager;
 import com.surftools.wimp.persistence.dto.Exercise;
+import com.surftools.wimp.persistence.dto.JoinedUser;
+import com.surftools.wimp.persistence.dto.OneAndDone;
 import com.surftools.wimp.persistence.dto.ReturnStatus;
 import com.surftools.wimp.service.map.MapContext;
 import com.surftools.wimp.service.map.MapEntry;
@@ -245,7 +247,6 @@ public class HistoryMapProcessor extends AbstractBaseProcessor {
     mapService.makeMap(context);
   }
 
-  @SuppressWarnings("unused")
   private void makeHistoricMap(PersistenceManager db) {
     var ret = db.getFilteredExercises(null, null); // all types, all dates
     if (ret.status() != ReturnStatus.OK) {
@@ -281,6 +282,7 @@ public class HistoryMapProcessor extends AbstractBaseProcessor {
     var bucketCounts = new int[nBuckets];
     var exerciseDate = LocalDate.parse(dateString);
     var mapEntries = new ArrayList<MapEntry>();
+    var oneAndDones = new ArrayList<OneAndDone>();
     for (var join : joins) {
       if (join.exercises.size() == 1) {
         if (join.exercises.get(0).date().equals(exerciseDate)) {
@@ -294,6 +296,9 @@ public class HistoryMapProcessor extends AbstractBaseProcessor {
               + join.exercises.get(0).date().toString();
           var mapEntry = new MapEntry(join.user.call(), "", join.location, content, oneAndDoneColor);
           mapEntries.add(mapEntry);
+
+          var oneAndDoneEntry = OneAndDone.FromJoinedUser(join);
+          oneAndDones.add(oneAndDoneEntry);
         }
       } else {
         var exerciseCount = join.exercises.size();
@@ -343,6 +348,8 @@ public class HistoryMapProcessor extends AbstractBaseProcessor {
         dateString + " Historic Exercise Participants", // map title
         null, legendTitle, layers, mapEntries);
     mapService.makeMap(context);
+
+    WriteProcessor.writeTable(new ArrayList<IWritableTable>(oneAndDones), dateString + "-table-oneAndDone.csv");
   }
 
 }

@@ -44,6 +44,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.function.Predicate;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -449,8 +450,9 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
 
     var mapEntries = makeFeedbackMap();
     makeMessageTypeMap();
-    makeExerciseIdMap(mapEntries);
-    makeStartDateMap(mapEntries);
+    makeBinaryMap(mapEntries, me -> me.message().contains("Exercise Id"), "Exercise Id", null);
+    makeBinaryMap(mapEntries, me -> me.message().contains("Message should be posted on or after"), "Start Date", null);
+    makeBinaryMap(mapEntries, me -> me.message().contains("Subject should be"), "Subject", null);
 
     WriteProcessor.writeTable(new ArrayList<IWritableTable>(practiceSummaries), "practice-summary.csv");
 
@@ -525,66 +527,42 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
     return mapEntries;
   }
 
-  private void makeExerciseIdMap(List<MapEntry> mapEntries) {
+  private void makeBinaryMap(List<MapEntry> mapEntries, Predicate<MapEntry> predicate, String attributeName,
+      String fileName) {
     var mapService = new MapService(cm, mm);
-    var colorGreen = IMapService.rgbMap.get("green");
-    var colorRed = IMapService.rgbMap.get("red");
-    var exerciseIdCountGood = 0;
-    var exerciseIdCountBad = 0;
+    var colorGood = IMapService.rgbMap.get("green");
+    var colorBad = IMapService.rgbMap.get("red");
+    var countGood = 0;
+    var countBad = 0;
 
     var newMapEntries = new ArrayList<MapEntry>();
     for (var old : mapEntries) {
       var color = "";
-      if (old.message().contains("Exercise Id")) {
-        color = colorRed;
-        ++exerciseIdCountBad;
+      var isGood = predicate.test(old);
+      if (isGood) {
+        color = colorBad;
+        ++countBad;
       } else {
-        color = colorGreen;
-        ++exerciseIdCountGood;
+        color = colorGood;
+        ++countGood;
       }
       newMapEntries.add(new MapEntry(old.label(), old.to(), old.location(), old.message(), color));
     }
 
     var layers = new ArrayList<MapLayer>();
-    layers.add(new MapLayer("Correct Exercise Id messages, count: " + exerciseIdCountGood, colorGreen));
-    layers.add(new MapLayer("Incorrect Exercise Id messages, count: " + exerciseIdCountBad, colorRed));
+    layers.add(new MapLayer("Correct " + attributeName + " messages, count: " + countGood, colorGood));
+    layers.add(new MapLayer("Incorrect " + attributeName + " messages, count: " + countBad, colorBad));
 
-    var legendTitle = dateString + " ExerciseId Counts (" + mIdFeedbackMap.values().size() + " total)";
-    var context = new MapContext(outputPath, //
-        dateString + "-map-exerciseId", // file name
-        dateString + " Exercise Id correct", // map title
-        null, legendTitle, layers, newMapEntries);
-    mapService.makeMap(context);
-  }
+    var legendTitle = dateString + " " + attributeName + " Counts (" + mIdFeedbackMap.values().size() + " total)";
 
-  private void makeStartDateMap(List<MapEntry> mapEntries) {
-    var mapService = new MapService(cm, mm);
-    var colorGreen = IMapService.rgbMap.get("green");
-    var colorRed = IMapService.rgbMap.get("red");
-    var startDateCountGood = 0;
-    var startDateCountBad = 0;
-
-    var newMapEntries = new ArrayList<MapEntry>();
-    for (var old : mapEntries) {
-      var color = "";
-      if (old.message().contains("Message should be posted on or after")) {
-        color = colorRed;
-        ++startDateCountBad;
-      } else {
-        color = colorGreen;
-        ++startDateCountGood;
-      }
-      newMapEntries.add(new MapEntry(old.label(), old.to(), old.location(), old.message(), color));
+    if (fileName == null || fileName.isBlank()) {
+      var fields = attributeName.split(" ");
+      fields[0] = fields[0].toLowerCase();
+      fileName = String.join("", fields);
     }
-
-    var layers = new ArrayList<MapLayer>();
-    layers.add(new MapLayer("Mssages sent on-time, count: " + startDateCountGood, colorGreen));
-    layers.add(new MapLayer("Messages sent early, count: " + startDateCountBad, colorRed));
-
-    var legendTitle = dateString + " Messages sent on-time Counts (" + mIdFeedbackMap.values().size() + " total)";
     var context = new MapContext(outputPath, //
-        dateString + "-map-startDate", // file name
-        dateString + " Messages Sent On-time Counts", // map title
+        dateString + "-map-" + fileName, // file name
+        dateString + " " + attributeName + "  correct", // map title
         null, legendTitle, layers, newMapEntries);
     mapService.makeMap(context);
   }

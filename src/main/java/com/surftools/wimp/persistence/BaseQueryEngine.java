@@ -44,6 +44,7 @@ import org.slf4j.LoggerFactory;
 import com.surftools.wimp.configuration.Key;
 import com.surftools.wimp.persistence.dto.Event;
 import com.surftools.wimp.persistence.dto.Exercise;
+import com.surftools.wimp.persistence.dto.JoinedUser;
 import com.surftools.wimp.persistence.dto.ReturnRecord;
 import com.surftools.wimp.persistence.dto.ReturnStatus;
 import com.surftools.wimp.persistence.dto.User;

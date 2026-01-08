@@ -44,6 +44,8 @@ public enum Key implements IConfigurationKey {
   PATH_NAG_CONTENT("path.nagContent"), // path to FILE where end-of-year nag is
   PATH_UPLOAD_FTP_LOCAL("path.upload.ftp.local"), // path where local FTP dir is
 
+  MAP_TEMPLATE_METHOD("map.template.method"), // "fast" or "slow", default "fast"
+
   GENERATOR_RNG_SEED("generator.rngSeed"), // to get consistent results
   GENERATOR_N_YEARS("generator.nYears"), // number of years to generate
   GENERATOR_INSTRUCTION_URL("generator.instruction.url"), // url at the bottom of each instruction
