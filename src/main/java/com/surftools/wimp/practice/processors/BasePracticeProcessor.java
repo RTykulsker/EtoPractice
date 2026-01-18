@@ -581,7 +581,7 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
     var invalidLocationMapEntries = new ArrayList<MapEntry>();
 
     var maxBadLocations = 12; // assume no more than 12 messages with no location
-    var newLocations = LocationUtils.jitter(maxBadLocations, LatLongPair.ZERO_ZERO, 10_000);
+    var tmpLocations = LocationUtils.jitter(maxBadLocations, LatLongPair.ZERO_ZERO, 10_000);
     var badLocationIndex = 0;
 
     var it = mm.getSenderIterator();
@@ -612,7 +612,7 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
               location = m.mapLocation;
               break;
             } else {
-              location = newLocations.get(badLocationIndex);
+              location = tmpLocations.get(badLocationIndex);
               ++badLocationIndex;
               if (badLocationIndex == maxBadLocations) {
                 logger.warn("### bad location wrap-around");
