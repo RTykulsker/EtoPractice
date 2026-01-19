@@ -127,7 +127,7 @@ public class HistoryMapProcessor extends AbstractBaseProcessor {
     var legendTitle = dateString + " First Time Participants (" + exerciseDateCount + " total)";
 
     var mapService = new MapService(cm, mm);
-    var context = new MapContext(publishedPath, //
+    var context = new MapContext(outputPath, //
         dateString + "-map-First-Timers", // file name
         dateString + " First Timer Participants", // map title
         null, legendTitle, layers, mapEntries);
