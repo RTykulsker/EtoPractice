@@ -46,6 +46,7 @@ import com.surftools.wimp.utils.config.IConfigurationManager;
 /**
  * upload results, via FTP or whatever to shared drive
  */
+@Deprecated
 public class UploadProcessor extends AbstractBaseProcessor {
   private static final Logger logger = LoggerFactory.getLogger(UploadProcessor.class);
   private String dateString = null;
@@ -54,6 +55,7 @@ public class UploadProcessor extends AbstractBaseProcessor {
   private Path ftpLocalPath;
   private boolean isInitialized = false;
 
+  @Deprecated
   @Override
   public void initialize(IConfigurationManager cm, IMessageManager mm) {
     dateString = cm.getAsString(Key.EXERCISE_DATE);
@@ -81,10 +83,12 @@ public class UploadProcessor extends AbstractBaseProcessor {
     isInitialized = true;
   }
 
+  @Deprecated
   @Override
   public void process() {
   }
 
+  @Deprecated
   @Override
   public void postProcess() {
     if (!isInitialized) {
@@ -109,9 +113,8 @@ public class UploadProcessor extends AbstractBaseProcessor {
         Files.copy(sourcePath, targetPath, StandardCopyOption.REPLACE_EXISTING);
         logger.info("copied " + baseName + " to " + targetPath);
       } catch (Exception e) {
-        logger
-            .error("Exception copying " + baseName + " to ftp content dir: " + contentPath.toString() + ", "
-                + e.getLocalizedMessage());
+        logger.error("Exception copying " + baseName + " to ftp content dir: " + contentPath.toString() + ", "
+            + e.getLocalizedMessage());
       }
     } // end loop over files
 

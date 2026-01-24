@@ -43,6 +43,7 @@ public enum Key implements IConfigurationKey {
   PATH_RESOUCE_CONTENT("path.resourceContent"), // FILE for ICS-213 RR generation
   PATH_NAG_CONTENT("path.nagContent"), // path to FILE where end-of-year nag is
   PATH_UPLOAD_FTP_LOCAL("path.upload.ftp.local"), // path where local FTP dir is
+  PATH_PUBLICATION("path.publication"), // path to remote folder for publishing results
 
   MAP_TEMPLATE_METHOD("map.template.method"), // "fast" or "slow", default "fast"
 

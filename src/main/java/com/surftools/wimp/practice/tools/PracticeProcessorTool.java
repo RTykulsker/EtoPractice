@@ -169,7 +169,7 @@ public class PracticeProcessorTool {
       cm.putString(Key.PIPELINE_MAIN, "Ics213,Ics213RR,Ics205,Hics259,FieldSituation");
       // cm.putString(Key.PIPELINE_STDOUT,
       // "Write,MissedExercise,HistoryMap,Cleanup,Upload,EmailNotification");
-      cm.putString(Key.PIPELINE_STDOUT, "Write,HistoryMap,Cleanup,EmailNotification");
+      cm.putString(Key.PIPELINE_STDOUT, "Write,HistoryMap,Cleanup,Publication,EmailNotification");
 
       var edPrefix = "com.surftools.wimp.practice.misc.Practice";
       cm.putString(Key.ALL_FEEDBACK_TEXT_EDITOR, edPrefix + "AllFeedbackTextEditor");
