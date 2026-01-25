@@ -58,8 +58,8 @@ public class FieldSituationPracticeProcessor extends BasePracticeProcessor {
     count(sts.test("City should be #EV", ref.city, m.city));
     count(sts.test("County should be #EV", ref.county, m.county));
     count(sts.testIfEmpty("Territory should be empty", m.territory));
-    count(sts.test("LAT should be #EV", ref.formLocation.getLatitude(), m.formLocation.getLatitude()));
-    count(sts.test("LON should be #EV", ref.formLocation.getLongitude(), m.formLocation.getLongitude()));
+    count(sts.testAsDouble("LAT should be #EV", ref.formLocation.getLatitude(), m.formLocation.getLatitude()));
+    count(sts.testAsDouble("LON should be #EV", ref.formLocation.getLongitude(), m.formLocation.getLongitude()));
 
     count(sts.test("POTS landlines functioning should be #EV", ref.landlineStatus, m.landlineStatus));
     if (ref.landlineStatus.equals("NO")) {

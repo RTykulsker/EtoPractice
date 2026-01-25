@@ -244,7 +244,8 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
     ++ppCount;
     sts.reset(sender);
 
-    feedbackLocation = message.mapLocation;
+    feedbackLocation = (message.getMessageType() == MessageType.FIELD_SITUATION) ? message.msgLocation
+        : message.mapLocation;
 
     if (secondaryDestinations.size() > 0) {
       if (messageTypesRequiringSecondaryAddress.size() == 0
@@ -508,7 +509,7 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
       final var lastColorMapIndex = gradientMap.size() - 1;
       final var lastColor = gradientMap.get(lastColorMapIndex);
 
-      var location = m.mapLocation;
+      var location = (m.getMessageType() == MessageType.FIELD_SITUATION) ? m.msgLocation : m.mapLocation;
       var color = gradientMap.getOrDefault(count, lastColor);
       var prefix = "<b>" + m.from + "</b><hr>";
       var content = prefix + "Feedback Count: " + r.feedbackCount() + "\n" + "Feedback: " + r.feedback();
@@ -604,7 +605,10 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
         popupText.append("Type: " + type.name() + ", count: " + count + ", " + mIdPrefix + mIdString + "\n");
         if (type == exerciseMessageType) {
           hasExpected = true;
-          location = messageList.get(0).mapLocation.isValid() ? messageList.get(0).mapLocation : null;
+          var m = messageList.get(0);
+          var isFsr = m.getMessageType() == MessageType.FIELD_SITUATION;
+          location = isFsr ? m.msgLocation : m.mapLocation;
+          location = location.isValid() ? location : null;
         } else {
           hasUnexpected = true;
           for (var m : messageList) {
