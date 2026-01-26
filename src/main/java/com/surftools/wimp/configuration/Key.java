@@ -42,8 +42,8 @@ public enum Key implements IConfigurationKey {
   PATH_EXERCISES("path.exercises"), // dir where we find input/, output/ and published/
   PATH_RESOUCE_CONTENT("path.resourceContent"), // FILE for ICS-213 RR generation
   PATH_NAG_CONTENT("path.nagContent"), // path to FILE where end-of-year nag is
-  PATH_UPLOAD_FTP_LOCAL("path.upload.ftp.local"), // path where local FTP dir is
   PATH_PUBLICATION("path.publication"), // path to remote folder for publishing results
+  PATH_ARCHIVE("path.archive"), // path to remote folder for archiving entire exercise
 
   MAP_TEMPLATE_METHOD("map.template.method"), // "fast" or "slow", default "fast"
 
@@ -52,7 +52,15 @@ public enum Key implements IConfigurationKey {
   GENERATOR_INSTRUCTION_URL("generator.instruction.url"), // url at the bottom of each instruction
 
   ENABLE_LEGACY("enable.legacy"), // allows for 3rd week practice, instead of monthly training
-  ENABLE_FINALIZE("enable.finalize"), // set to true to enable, renames output, sends email
+
+  ENABLE_FINALIZE("enable.finalize"), // set to true to enable, published, archive, snapshot to cloud, sends email,
+                                      // set on command line
+  ENABLE_FINALIZE_PUBLISHED("enable.finalize.published"), // transfer only published folder to cloud
+  ENABLE_FINALIZE_ARCHIVE("enable.finalize.archive"), // transfer all folders (input, output, published, winlink) to
+                                                      // cloud
+  ENABLE_FINALIZE_EMAIL("enable.finalize.email"), // send email to interested parties
+  ENABLE_FINALIZE_SNAPSHOT("enable.finalize.snapshot"), // create a local copy final-yyyy-mm-dd-hh-mm-ss of entire
+                                                        // exercise
 
   PERSISTENCE_SQLITE_URL("persistence.sqlite.url"), //
   PERSISTENCE_ALLOW_FUTURE("persistence.allow.future"), // allow/disallow future exercises into db
