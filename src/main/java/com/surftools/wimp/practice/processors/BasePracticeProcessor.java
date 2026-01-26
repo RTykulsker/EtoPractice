@@ -513,6 +513,7 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
       var color = gradientMap.getOrDefault(count, lastColor);
       var prefix = "<b>" + m.from + "</b><hr>";
       var content = prefix + "Feedback Count: " + r.feedbackCount() + "\n" + "Feedback: " + r.feedback();
+      content = content.replaceAll("\"", "&quot;");
       var mapEntry = new MapEntry(m.from, m.to, location, content, color);
       mapEntries.add(mapEntry);
       feedbackCounter.increment(r.feedbackCount());
