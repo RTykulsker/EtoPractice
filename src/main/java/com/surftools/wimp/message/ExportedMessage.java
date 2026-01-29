@@ -61,7 +61,7 @@ public class ExportedMessage implements IMessage, IWritableTable {
   public final String subject;
 
   public final LocalDateTime msgDateTime; // date/time (UTC) from message meta-data
-  public final LatLongPair msgLocation; // location from message meta-data; may or may not be present
+  public LatLongPair msgLocation; // location from message meta-data; may or may not be present
   public final String msgLocationSource;
 
   public final String mime;

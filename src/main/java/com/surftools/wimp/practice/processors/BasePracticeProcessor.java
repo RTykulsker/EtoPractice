@@ -499,9 +499,39 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
       layers.add(layer);
     }
 
-    var mapEntries = new ArrayList<MapEntry>(mIdFeedbackMap.values().size());
+    var feedbackMessages = new ArrayList<FeedbackMessage>(mIdFeedbackMap.values().size());
+    var badLocationMessages = new ArrayList<FeedbackMessage>();
     for (var s : mIdFeedbackMap.values()) {
       var feedbackMessage = (FeedbackMessage) s;
+      var m = feedbackMessage.message();
+      var location = (m.getMessageType() == MessageType.FIELD_SITUATION) ? m.msgLocation : m.mapLocation;
+
+      if (location.isValid()) {
+        feedbackMessages.add(feedbackMessage);
+      } else {
+        badLocationMessages.add(feedbackMessage);
+      }
+    } // end loop over messages to find bad locations
+
+    if (badLocationMessages.size() > 0) {
+      var badMessageIds = badLocationMessages.stream().map(mm -> mm.message().messageId).toList();
+      logger.info(
+          "adjusting lat/long for " + badLocationMessages.size() + " messages: " + String.join(",", badMessageIds));
+      var newLocations = LocationUtils.jitter(badLocationMessageIds.size(), LatLongPair.ZERO_ZERO, 10_000);
+      for (int i = 0; i < badLocationMessages.size(); ++i) {
+        var feedbackMessage = badLocationMessages.get(i);
+        var newLocation = newLocations.get(i);
+        feedbackMessage.message().mapLocation = newLocation;
+        var newFeedbackMessage = feedbackMessage.updateLocation(newLocation);
+        if (!newFeedbackMessage.message().msgLocation.isValid()) {
+          newFeedbackMessage.message().msgLocation = newLocation;
+        }
+        feedbackMessages.add(newFeedbackMessage);
+      } // end loop over badLocationMessages
+    } // end if backLocationMessages.size() > 0
+
+    var mapEntries = new ArrayList<MapEntry>(mIdFeedbackMap.values().size());
+    for (var feedbackMessage : feedbackMessages) {
       var m = feedbackMessage.message();
       var r = feedbackMessage.feedbackResult();
       var count = r.feedbackCount();
@@ -718,7 +748,7 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
     List<Event> events = new ArrayList<>();
     for (var summary : summaries) {
       var event = new Event(-1, -1, -1, summary.from, summary.location, //
-          summary.feedbackCount, summary.getFeedback(), //
+          summary.getFeedbackCount(), summary.getFeedback(), //
           "{\"messageId\":\"" + summary.messageId + "\"}");
       events.add(event);
     }

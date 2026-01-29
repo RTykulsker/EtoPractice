@@ -42,7 +42,6 @@ public class PracticeSummary implements IWritableTable {
   public String to;
   public LatLongPair location;
   public LocalDateTime dateTime;
-  public int feedbackCount;
   public List<String> explanations;
   public String messageId;
   public String messageType;
@@ -95,8 +94,8 @@ public class PracticeSummary implements IWritableTable {
 
     var nsTo = to == null ? "(null)" : to;
 
-    var list = new ArrayList<String>(List
-        .of(from, nsTo, latitude, longitude, date, time, String.valueOf(getFeedbackCount()), getFeedback(), messageId));
+    var list = new ArrayList<String>(List.of(from, nsTo, latitude, longitude, date, time,
+        String.valueOf(getFeedbackCount()), getFeedback(), messageId));
     return list.toArray(new String[list.size()]);
   }
 }

@@ -125,8 +125,9 @@ public class SQLIteNativeEngine extends BaseQueryEngine {
     var sql = "SELECT eventIdx, userIdx, exerciseIdx, latitude, longitude, feedbackCount, FeedbackText, Context FROM Events";
 
     /**
-     * public record Event(long id, // long userId, // foreign key to User long exerciseId, // foreign key to Exercise
-     * String call, // alternative to userId LatLongPair location, int feedbackCount, String feedback, String context) {
+     * public record Event(long id, // long userId, // foreign key to User long
+     * exerciseId, // foreign key to Exercise String call, // alternative to userId
+     * LatLongPair location, int feedbackCount, String feedback, String context) {
      */
     Connection connection = null;
     try {
@@ -214,11 +215,13 @@ public class SQLIteNativeEngine extends BaseQueryEngine {
           FeedbackCount=excluded.FeedbackCount, FeedbackText = excluded.feedbackText, Context=excluded.Context
         """;
 
+    var location = event.location() != null && event.location().isValid() ? event.location() : LatLongPair.ZERO_ZERO;
+
     var ps1 = connection.prepareStatement(sql);
     ps1.setLong(1, event.userId());
     ps1.setLong(2, event.exerciseId());
-    ps1.setDouble(3, event.location().getLatitudeAsDouble());
-    ps1.setDouble(4, event.location().getLongitudeAsDouble());
+    ps1.setDouble(3, location.getLatitudeAsDouble());
+    ps1.setDouble(4, location.getLongitudeAsDouble());
     ps1.setInt(5, event.feedbackCount());
     ps1.setString(6, event.feedback());
     ps1.setString(7, event.context());
@@ -349,9 +352,8 @@ public class SQLIteNativeEngine extends BaseQueryEngine {
         var firstExercise = entry.exercises.get(lastExerciseIndex);
         var firstExerciseDate = firstExercise.date();
         if (firstExerciseDate.isBefore(entry.dateJoined)) {
-          logger
-              .info("found candidate: call: " + user.call() + ", dateJoined: " + user.dateJoined() + ", firstExercise: "
-                  + firstExerciseDate);
+          logger.info("found candidate: call: " + user.call() + ", dateJoined: " + user.dateJoined()
+              + ", firstExercise: " + firstExerciseDate);
         }
 
         var sql = "UPDATE Users SET DateJoined = ? WHERE UserIdx = ?";
