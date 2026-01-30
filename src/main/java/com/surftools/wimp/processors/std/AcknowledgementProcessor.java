@@ -33,7 +33,6 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
@@ -52,7 +51,8 @@ import com.surftools.wimp.practice.tools.PracticeGeneratorTool;
 import com.surftools.wimp.utils.config.IConfigurationManager;
 
 /**
- * Processor to send Acknowledgement messages via Winlink and map to every message sender
+ * Processor to send Acknowledgement messages via Winlink and map to every
+ * message sender
  *
  *
  * @author bobt
@@ -69,7 +69,7 @@ public class AcknowledgementProcessor extends AbstractBaseProcessor {
 
   private MessageType expectedMessageType;
   static private Map<String, AckEntry> ackMap; // sender -> AckEntry;
-  private List<String> badLocationSenders;
+  private int relocationIndex = 0;
 
   private static Map<String, ReferenceEntry> referenceMap;
   private static String currentExerciseId;
@@ -84,7 +84,6 @@ public class AcknowledgementProcessor extends AbstractBaseProcessor {
       throw new IllegalArgumentException("unknown messageType: " + messageTypeString);
     }
 
-    badLocationSenders = new ArrayList<>();
     ackMap = new HashMap<>();
     mm.putContextObject(ACK_MAP, ackMap);
 
@@ -102,7 +101,8 @@ public class AcknowledgementProcessor extends AbstractBaseProcessor {
       } // end loop over messages for sender
       ackMap.put(ackEntry.from, ackEntry);
       if (ackEntry.location == null || !ackEntry.location.isValid()) {
-        badLocationSenders.add(ackEntry.from);
+        var location = LocationUtils.binaryAngularSubdivision(relocationIndex, LatLongPair.ZERO_ZERO, 10_000d);
+        ackEntry.location = location;
       }
     } // end loop over senders
   }
@@ -158,19 +158,6 @@ public class AcknowledgementProcessor extends AbstractBaseProcessor {
 
   @Override
   public void postProcess() {
-    if (badLocationSenders.size() > 0) {
-      logger
-          .info("adjusting lat/long for " + badLocationSenders.size() + " messages from: "
-              + String.join(",", badLocationSenders));
-      var newLocations = LocationUtils.jitter(badLocationSenders.size(), LatLongPair.ZERO_ZERO, 10_000);
-      for (int i = 0; i < badLocationSenders.size(); ++i) {
-        var from = badLocationSenders.get(i);
-        var ackEntry = ackMap.get(from);
-        var newLocation = newLocations.get(i);
-        ackEntry.update(newLocation);
-        ackMap.put(from, ackEntry);
-      }
-    }
     mm.putContextObject("ackMap", ackMap);
 
     var acknowledgments = new ArrayList<AckEntry>(ackMap.values().stream().toList());
@@ -276,14 +263,13 @@ public class AcknowledgementProcessor extends AbstractBaseProcessor {
     }
 
     private String format(AckType ackType, int formatStyle) {
-      final Map<Integer, String> formatMap = Map
-          .of(//
-              1, "%s,%s,%s", //
-              2, "%s %s %s", //
-              3, "Date: %s\nMessageId: %s\nType: %s\n", //
-              4, "Date: %s, MessageId: %s, Type: %s", //
-              5, "Date: %s, MessageId: %s, Type: %s\n" //
-          );
+      final Map<Integer, String> formatMap = Map.of(//
+          1, "%s,%s,%s", //
+          2, "%s %s %s", //
+          3, "Date: %s\nMessageId: %s\nType: %s\n", //
+          4, "Date: %s, MessageId: %s, Type: %s", //
+          5, "Date: %s, MessageId: %s, Type: %s\n" //
+      );
 
       var formatString = formatMap.get(formatStyle);
       Map<AckKey, ExportedMessage> map = null;
@@ -301,8 +287,8 @@ public class AcknowledgementProcessor extends AbstractBaseProcessor {
       Collections.sort(values); // by sort time!
       var resultList = new ArrayList<String>();
       for (var m : values) {
-        var aResult = String
-            .format(formatString, DTF.format(m.msgDateTime), m.messageId, m.getMessageType().toString());
+        var aResult = String.format(formatString, DTF.format(m.msgDateTime), m.messageId,
+            m.getMessageType().toString());
         resultList.add(aResult);
       }
       var results = String.join("\n", resultList);

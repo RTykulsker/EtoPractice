@@ -27,10 +27,8 @@ SOFTWARE.
 
 package com.surftools.wimp.processors.std;
 
-import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -80,82 +78,6 @@ public class HistoryMapProcessor extends AbstractBaseProcessor {
     makeFirstTimeMap(db);
     makeCurrentMap(db);
     makeHistoricMap(db);
-
-    makeExerciseSummary(db);
-  }
-
-  private void makeExerciseSummary(PersistenceManager db) {
-    record CountEntry(int userCount, int feedbackCount) {
-    }
-    var exerciseCountMap = new HashMap<Long, CountEntry>();
-
-    var ret = db.getFilteredExercises(null, null); // all types
-    if (ret.status() != ReturnStatus.OK) {
-      logger.error("Could not get filteredExercises from database: " + ret.content());
-      return;
-    }
-    @SuppressWarnings("unchecked")
-    var filteredExercises = (List<Exercise>) ret.data();
-    for (var exercise : filteredExercises) {
-      exerciseCountMap.put(exercise.id(), new CountEntry(0, 0));
-    }
-
-    ret = db.getUsersHistory(filteredExercises);
-    if (ret.status() != ReturnStatus.OK) {
-      logger.error("Could not get userHistory from database: " + ret.content());
-      return;
-    }
-
-    @SuppressWarnings("unchecked")
-    var joins = (List<JoinedUser>) ret.data();
-
-    for (var join : joins) {
-      for (var event : join.events) {
-        var exerciseId = event.exerciseId();
-        if (!exerciseCountMap.containsKey(exerciseId)) {
-          continue; // not a filteredExercise
-        }
-        var oldCountEntry = exerciseCountMap.get(exerciseId);
-        var newCountEntry = new CountEntry(oldCountEntry.userCount + 1,
-            oldCountEntry.feedbackCount + event.feedbackCount());
-        exerciseCountMap.put(exerciseId, newCountEntry);
-      }
-    }
-
-    record ExerciseSummary(Exercise exercise, CountEntry counts) implements IWritableTable {
-      @Override
-      public int compareTo(IWritableTable other) {
-        var o = (ExerciseSummary) other;
-        return o.exercise.date().compareTo(date);
-      }
-
-      @Override
-      public String[] getHeaders() {
-        return new String[] { "Date", "Type", "Name", "Description", "# Participants", "Feedback (tot)",
-            "Feedback (avg)" };
-      }
-
-      @Override
-      public String[] getValues() {
-        var e = this.exercise;
-        var c = this.counts;
-        var dAvg = (double) c.feedbackCount / (double) c.userCount;
-        var n = String.valueOf(c.userCount);
-        var m = String.valueOf(c.feedbackCount);
-        var avg = String.format("%.2f", dAvg);
-        return new String[] { e.date().toString(), e.type(), e.name(), e.description(), n, m, avg };
-      }
-    }
-
-    var summaries = new ArrayList<ExerciseSummary>(filteredExercises.size());
-    for (var exercise : filteredExercises) {
-      var countEntry = exerciseCountMap.get(exercise.id());
-      var summary = new ExerciseSummary(exercise, countEntry);
-      summaries.add(summary);
-    }
-    WriteProcessor.writeTable(new ArrayList<IWritableTable>(summaries),
-        Path.of(outputPathName, dateString + "-exerciseSummary.csv"));
-
   }
 
   private void makeFirstTimeMap(IPersistenceManager db) {

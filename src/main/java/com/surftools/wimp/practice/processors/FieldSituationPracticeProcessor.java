@@ -35,6 +35,7 @@ import com.surftools.wimp.practice.misc.PracticeSummary;
 import com.surftools.wimp.utils.config.IConfigurationManager;
 
 public class FieldSituationPracticeProcessor extends BasePracticeProcessor {
+
   @Override
   public void initialize(IConfigurationManager cm, IMessageManager mm) {
     super.initialize(cm, mm, MessageType.FIELD_SITUATION);
