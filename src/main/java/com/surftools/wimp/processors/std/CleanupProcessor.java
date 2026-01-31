@@ -67,7 +67,7 @@ public class CleanupProcessor extends AbstractBaseProcessor {
           Files.move(file.toPath(), Path.of(publishedPathName, dateString + "-standard-summary.csv"));
           logger.info("renamed practice-summary.csv to: " + dateString + "-standard-summary.csv");
         } catch (Exception e) {
-          logger.error("Exception renaming file: " + file.toString(), e.getMessage());
+          logger.error("Exception renaming file: " + file.toString() + ", " + e.getMessage());
         }
       }
     } // end loop over output files
@@ -79,7 +79,7 @@ public class CleanupProcessor extends AbstractBaseProcessor {
       Files.copy(allFeedbackSource, allFeedbackDestination);
       logger.info("copied allFeedback.txt to output/");
     } catch (Exception e) {
-      logger.error("Exception copying file: " + allFeedbackSource.toString(), e.getMessage());
+      logger.error("Exception copying file: " + allFeedbackSource.toString() + ", " + e.getMessage());
     }
 
     // copy configurationFile to input
@@ -89,7 +89,7 @@ public class CleanupProcessor extends AbstractBaseProcessor {
       Files.copy(configurationFileSource, configurationFileDestination, StandardCopyOption.REPLACE_EXISTING);
       logger.info("copied configuration to input/");
     } catch (Exception e) {
-      logger.error("Exception copying file: " + configurationFileSource.toString(), e.getMessage());
+      logger.error("Exception copying file: " + configurationFileSource.toString() + ", " + e.getMessage());
     }
 
     // rename published files chart, map and Winlink import files
@@ -118,7 +118,7 @@ public class CleanupProcessor extends AbstractBaseProcessor {
           publishedFile.renameTo(newFile);
           logger.info("renamed map file to: " + newFile);
         } catch (Exception e) {
-          logger.error("Exception renaming file: " + name, e.getMessage());
+          logger.error("Exception renaming file: " + name + ", " + e.getMessage());
         }
       }
 
@@ -126,9 +126,7 @@ public class CleanupProcessor extends AbstractBaseProcessor {
 
     // because I'd rather write 50 lines of code than point and click to import two
     // files into Winlink Express ...
-    try
-
-    {
+    try {
       outputFiles = outputDir.listFiles();
       var messageLines = new StringBuffer();
       for (var outputFile : outputFiles) {

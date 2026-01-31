@@ -115,7 +115,7 @@ public class WriteProcessor extends AbstractBaseProcessor {
   @Override
   public void postProcess() {
     var typedMessages = new ArrayList<IWritableTable>();
-    var badLocationMessages = new ArrayList<ExportedMessage>();
+    int relocationIndex = 0;
     var it = mm.getMessageTypeIteror();
     while (it.hasNext()) {
       var messageType = it.next();
@@ -125,7 +125,8 @@ public class WriteProcessor extends AbstractBaseProcessor {
         for (var message : messages) {
           if (message.mapLocation == null || message.mapLocation.equals(LatLongPair.ZERO_ZERO)
               || !message.mapLocation.isValid()) {
-            badLocationMessages.add(message);
+            var location = LocationUtils.binaryAngularSubdivision(relocationIndex++, LatLongPair.ZERO_ZERO, 10_000d);
+            typedMessages.add(new TypedMessage(message, location));
           } else {
             typedMessages.add(new TypedMessage(message));
           }
@@ -133,14 +134,6 @@ public class WriteProcessor extends AbstractBaseProcessor {
       }
     }
     writeOutput(new ArrayList<ExportedMessage>(mm.getOriginalMessages()), MessageType.EXPORTED);
-
-    if (badLocationMessages.size() > 0) {
-      var newLocations = LocationUtils.jitter(badLocationMessages.size(), LatLongPair.ZERO_ZERO, 10_000);
-      for (int i = 0; i < badLocationMessages.size(); ++i) {
-        var message = badLocationMessages.get(i);
-        typedMessages.add(new TypedMessage(message, newLocations.get(i)));
-      }
-    }
     writeTable(typedMessages, Path.of(outputPathName, "typedMessages.csv"));
   }
 

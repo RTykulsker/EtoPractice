@@ -31,18 +31,25 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.surftools.utils.location.LatLongPair;
+import com.surftools.utils.location.LocationUtils;
 import com.surftools.wimp.core.IWritableTable;
 import com.surftools.wimp.core.MessageType;
 import com.surftools.wimp.message.ExportedMessage;
 import com.surftools.wimp.service.simpleTestService.SimpleTestService;
 
 public class PracticeSummary implements IWritableTable {
+  protected static final Logger logger = LoggerFactory.getLogger(PracticeSummary.class);
+
+  static int relocationIndex = 0;
+
   public String from;
   public String to;
   public LatLongPair location;
   public LocalDateTime dateTime;
-  public int feedbackCount;
   public List<String> explanations;
   public String messageId;
   public String messageType;
@@ -59,6 +66,11 @@ public class PracticeSummary implements IWritableTable {
     this.messageId = m.messageId;
     this.explanations = sts.getExplanations();
     this.m = m;
+
+    if (this.location == null || !this.location.isValid()) {
+      this.location = LocationUtils.binaryAngularSubdivision(relocationIndex++, LatLongPair.ZERO_ZERO, 10_000);
+      logger.info("from: " + m.from + ", replacementLocation: " + this.location.toString());
+    }
   }
 
   @Override
@@ -95,8 +107,8 @@ public class PracticeSummary implements IWritableTable {
 
     var nsTo = to == null ? "(null)" : to;
 
-    var list = new ArrayList<String>(List
-        .of(from, nsTo, latitude, longitude, date, time, String.valueOf(getFeedbackCount()), getFeedback(), messageId));
+    var list = new ArrayList<String>(List.of(from, nsTo, latitude, longitude, date, time,
+        String.valueOf(getFeedbackCount()), getFeedback(), messageId));
     return list.toArray(new String[list.size()]);
   }
 }

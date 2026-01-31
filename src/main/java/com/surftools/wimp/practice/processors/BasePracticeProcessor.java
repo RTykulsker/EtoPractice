@@ -110,7 +110,7 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
 
   protected LatLongPair feedbackLocation = null;
   protected Map<String, IWritableTable> mIdFeedbackMap = new HashMap<String, IWritableTable>();
-  protected List<String> badLocationMessageIds = new ArrayList<String>();
+  protected int relocationIndex;
 
   protected String outboundMessagePrefixContent = "";
   protected String outboundMessagePostfixContent = "";
@@ -287,13 +287,12 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
     var ackText = AcknowledgementProcessor.makeText(m.from);
 
     if (feedbackLocation == null || feedbackLocation.equals(LatLongPair.ZERO_ZERO)) {
-      feedbackLocation = LatLongPair.ZERO_ZERO;
-      badLocationMessageIds.add(m.messageId);
+      feedbackLocation = LocationUtils.binaryAngularSubdivision(relocationIndex++, null, 10_000d);
       sts.test("LAT/LON should be provided", false, "missing");
     } else if (!feedbackLocation.isValid()) {
       sts.test("LAT/LON should be provided", false, "invalid " + feedbackLocation.toString());
       feedbackLocation = LatLongPair.ZERO_ZERO;
-      badLocationMessageIds.add(m.messageId);
+      feedbackLocation = LocationUtils.binaryAngularSubdivision(relocationIndex++, null, 10_000d);
     } else {
       sts.test("LAT/LON should be provided", true, null);
     }
@@ -396,20 +395,6 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
 
     logger.info(sb.toString());
 
-    if (badLocationMessageIds.size() > 0) {
-      logger.info("adjusting lat/long for " + badLocationMessageIds.size() + " messages: "
-          + String.join(",", badLocationMessageIds));
-      var newLocations = LocationUtils.jitter(badLocationMessageIds.size(), LatLongPair.ZERO_ZERO, 10_000);
-      for (int i = 0; i < badLocationMessageIds.size(); ++i) {
-        var messageId = badLocationMessageIds.get(i);
-        var feedbackMessage = (FeedbackMessage) mIdFeedbackMap.get(messageId);
-        var newLocation = newLocations.get(i);
-        feedbackMessage.message().mapLocation = newLocation;
-        var newFeedbackMessage = feedbackMessage.updateLocation(newLocation);
-        mIdFeedbackMap.put(messageId, newFeedbackMessage);
-      }
-    }
-
     // // this is how we get feedback to folks who only send unexpected messages,
     // // back-port?
     var enableFeedbackForOnlyUnexpected = true;
@@ -499,9 +484,25 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
       layers.add(layer);
     }
 
-    var mapEntries = new ArrayList<MapEntry>(mIdFeedbackMap.values().size());
+    var feedbackMessages = new ArrayList<FeedbackMessage>(mIdFeedbackMap.values().size());
+    relocationIndex = 0;
     for (var s : mIdFeedbackMap.values()) {
       var feedbackMessage = (FeedbackMessage) s;
+      var m = feedbackMessage.message();
+      var location = (m.getMessageType() == MessageType.FIELD_SITUATION) ? m.msgLocation : m.mapLocation;
+
+      if (location.isValid()) {
+        feedbackMessages.add(feedbackMessage);
+      } else {
+        var newLocation = LocationUtils.binaryAngularSubdivision(relocationIndex++, LatLongPair.ZERO_ZERO, 10_000);
+        var newFeedbackMessage = feedbackMessage.updateLocation(newLocation);
+        feedbackMessages.add(newFeedbackMessage);
+      }
+    } // end loop over messages to find bad locations
+
+    relocationIndex = 0;
+    var mapEntries = new ArrayList<MapEntry>(mIdFeedbackMap.values().size());
+    for (var feedbackMessage : feedbackMessages) {
       var m = feedbackMessage.message();
       var r = feedbackMessage.feedbackResult();
       var count = r.feedbackCount();
@@ -510,6 +511,9 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
       final var lastColor = gradientMap.get(lastColorMapIndex);
 
       var location = (m.getMessageType() == MessageType.FIELD_SITUATION) ? m.msgLocation : m.mapLocation;
+      if (location == null || !location.isValid()) {
+        location = LocationUtils.binaryAngularSubdivision(relocationIndex++, LatLongPair.ZERO_ZERO, 10_000d);
+      }
       var color = gradientMap.getOrDefault(count, lastColor);
       var prefix = "<b>" + m.from + "</b><hr>";
       var content = prefix + "Feedback Count: " + r.feedbackCount() + "\n" + "Feedback: " + r.feedback();
@@ -579,12 +583,8 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
     var expectedCount = 0; // expected only
     var mixedCount = 0; // both expected and unexpected messageTypes
     var unexpectedCount = 0; // unexpected only
-    var validLocationMapEntries = new ArrayList<MapEntry>();
-    var invalidLocationMapEntries = new ArrayList<MapEntry>();
-
-    var maxBadLocations = 12; // assume no more than 12 messages with no location
-    var tmpLocations = LocationUtils.jitter(maxBadLocations, LatLongPair.ZERO_ZERO, 10_000);
-    var badLocationIndex = 0;
+    var mapEntries = new ArrayList<MapEntry>();
+    var relocationIndex = 0;
 
     var it = mm.getSenderIterator();
     while (it.hasNext()) {
@@ -617,12 +617,7 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
               location = m.mapLocation;
               break;
             } else {
-              location = tmpLocations.get(badLocationIndex);
-              ++badLocationIndex;
-              if (badLocationIndex == maxBadLocations) {
-                logger.warn("### bad location wrap-around");
-                badLocationIndex = 0;
-              }
+              location = LocationUtils.binaryAngularSubdivision(relocationIndex++, LatLongPair.ZERO_ZERO, 10_000);
             }
           }
         }
@@ -641,26 +636,13 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
         ++unexpectedCount;
         colorName = colorRed;
       }
-      var mapEntry = new MapEntry(sender, "", location, popupText.toString(), colorName);
-      if (location.isValid()) {
-        validLocationMapEntries.add(mapEntry);
-      } else {
-        invalidLocationMapEntries.add(mapEntry);
-      }
-    } // end loop over senders
 
-    if (invalidLocationMapEntries.size() > 0) {
-      var invalidSenders = invalidLocationMapEntries.stream().map(m -> m.label()).toList();
-      logger.info(
-          "adjusting lat/long for " + badLocationMessageIds.size() + " messages: " + String.join(",", invalidSenders));
-      var newLocations = LocationUtils.jitter(invalidLocationMapEntries.size(), LatLongPair.ZERO_ZERO, 10_000);
-      for (int i = 0; i < invalidLocationMapEntries.size(); ++i) {
-        var old = invalidLocationMapEntries.get(i);
-        var newLocation = newLocations.get(i);
-        var newMapEntry = new MapEntry(old.label(), old.to(), newLocation, old.message(), old.iconColor());
-        validLocationMapEntries.add(newMapEntry);
+      if (location == null || !location.isValid()) {
+        location = LocationUtils.binaryAngularSubdivision(relocationIndex++, LatLongPair.ZERO_ZERO, 10_000d);
       }
-    }
+      var mapEntry = new MapEntry(sender, "", location, popupText.toString(), colorName);
+      mapEntries.add(mapEntry);
+    } // end loop over senders
 
     var layers = new ArrayList<MapLayer>();
     layers.add(new MapLayer("Only " + exerciseMessageType.name() + " messages, count: " + expectedCount, colorGreen));
@@ -672,7 +654,7 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
     var context = new MapContext(outputPath, //
         dateString + "-map-messageTypes", // file name
         dateString + " Message Type Counts", // map title
-        null, legendTitle, layers, validLocationMapEntries);
+        null, legendTitle, layers, mapEntries);
     mapService.makeMap(context);
   }
 
@@ -718,7 +700,7 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
     List<Event> events = new ArrayList<>();
     for (var summary : summaries) {
       var event = new Event(-1, -1, -1, summary.from, summary.location, //
-          summary.feedbackCount, summary.getFeedback(), //
+          summary.getFeedbackCount(), summary.getFeedback(), //
           "{\"messageId\":\"" + summary.messageId + "\"}");
       events.add(event);
     }
