@@ -66,6 +66,7 @@ import com.surftools.wimp.message.Hics259Message;
 import com.surftools.wimp.message.Ics205Message;
 import com.surftools.wimp.message.Ics213Message;
 import com.surftools.wimp.message.Ics213RRMessage;
+import com.surftools.wimp.message.PracticeMessage;
 import com.surftools.wimp.persistence.PersistenceManager;
 import com.surftools.wimp.persistence.dto.BulkInsertEntry;
 import com.surftools.wimp.persistence.dto.Event;
@@ -277,6 +278,10 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
   }
 
   protected void endCommonProcessing(ExportedMessage m) {
+    var practiceMessage = new PracticeMessage(m);
+    getCounter("Senders Form Version").increment(practiceMessage.getFormVersion());
+    getCounter("Senders Express Version").increment(practiceMessage.getExpressVersion());
+
     var ackEntry = ackMap.get(m.from);
     var ackKey = new AckKey(m.from, m.messageId, m.getMessageType());
     var unexpectedMessage = ackEntry.unexpectedMessageMap.get(ackKey);

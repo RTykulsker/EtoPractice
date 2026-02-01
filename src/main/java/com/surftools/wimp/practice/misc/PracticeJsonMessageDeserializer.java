@@ -54,8 +54,8 @@ import com.surftools.wimp.message.Ics213RRMessage;
 import com.surftools.wimp.message.Ics213RRMessage.LineItem;
 
 /**
- * between LocalDates, LatLongPairs and so many final members, it'll be easier to deserialize by hand rather than using
- * Jackson
+ * between LocalDates, LatLongPairs and so many final members, it'll be easier
+ * to deserialize by hand rather than using Jackson
  */
 public class PracticeJsonMessageDeserializer {
   private static final Logger logger = LoggerFactory.getLogger(PracticeJsonMessageDeserializer.class);
@@ -88,9 +88,8 @@ public class PracticeJsonMessageDeserializer {
         throw new RuntimeException("unsupported messageType: " + messageType.toString());
       }
     } catch (Exception e) {
-      logger
-          .error("Exception deserializing messageType: " + messageType.toString() + ", json: " + jsonString
-              + ", error: " + e.getMessage());
+      logger.error("Exception deserializing messageType: " + messageType.toString() + ", json: " + jsonString
+          + ", error: " + e.getMessage());
       throw new RuntimeException(e);
     }
   }
@@ -154,12 +153,13 @@ public class PracticeJsonMessageDeserializer {
     var isExercise = json.get("isExercise").asBoolean();
     var formLocation = deserialize_LatLongPair(json.get("formLocation"));
     var version = json.get("version").asText();
+    var expressVersion = "n/a";
     var dataSource = json.get("dataSource").asText();
 
     var m = new Ics213Message(exportedMessage, organization, incidentName, //
         formFrom, formTo, formSubject, formDate, formTime, //
         formMessage, approvedBy, position, //
-        isExercise, formLocation, version, dataSource);
+        isExercise, formLocation, version, expressVersion, dataSource);
     return m;
   }
 

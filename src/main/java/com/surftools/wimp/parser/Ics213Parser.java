@@ -76,10 +76,23 @@ public class Ics213Parser extends AbstractBaseParser {
           }
         }
 
+        var expressVersion = getValueFromMime(message.getMimeLines(), "Senders Express Version: ");
+        if (expressVersion == null || expressVersion.length() == 0) {
+          var newLines = message.mime.split("=0A");
+          for (var newLine : newLines) {
+            if (newLine.contains("Senders Express Version:")) {
+              var newFields = newLine.split("=");
+              if (newFields.length >= 2) {
+                expressVersion = newFields[1].trim();
+              }
+            }
+          }
+        }
+
         var m = new Ics213Message(message, organization, incidentName, //
             formFrom, formTo, formSubject, formDate, formTime, //
             formMessage, approvedBy, position, //
-            isExercise, formLocation, version, DATA_SOURCE_RMS_VIEWER);
+            isExercise, formLocation, version, expressVersion, DATA_SOURCE_RMS_VIEWER);
         return m;
       } else {
         @SuppressWarnings("unchecked")
@@ -111,11 +124,12 @@ public class Ics213Parser extends AbstractBaseParser {
         var formLocation = new LatLongPair(valueMap.get("Latitude"), valueMap.get("Longitude"));
 
         var version = "(unknown)";
+        var expressVersion = "(unknown)";
 
         var m = new Ics213Message(message, organization, incidentName, //
             formFrom, formTo, formSubject, formDate, formTime, //
             formMessage, approvedBy, position, //
-            isExercise, formLocation, version, DATA_SOURCE_FORM_DATA);
+            isExercise, formLocation, version, expressVersion, DATA_SOURCE_FORM_DATA);
         return m;
       }
     } catch (Exception e) {
