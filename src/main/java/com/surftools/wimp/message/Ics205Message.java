@@ -38,12 +38,13 @@ import com.surftools.wimp.core.MessageType;
 /**
  * the ICS 205 Radio Plan
  *
- * NOTE WELL that dateTimePrepared, dateTimeApproved can and should be of type LocalDateTime
+ * NOTE WELL that dateTimePrepared, dateTimeApproved can and should be of type
+ * LocalDateTime
  *
  * NOTE WELL that iapPage can and should be of type int
  *
- * they are NOT because I don't want failures in the message parser to reject the message, I'll leave that to the
- * grader, if any
+ * they are NOT because I don't want failures in the message parser to reject
+ * the message, I'll leave that to the grader, if any
  *
  * @author bobt
  *
@@ -62,6 +63,7 @@ public class Ics205Message extends ExportedMessage {
   public final String approvedDateTime;
   public final String iapPage;
   public final String version;
+  public final String expressVersion;
 
   public final List<RadioEntry> radioEntries;
 
@@ -77,7 +79,7 @@ public class Ics205Message extends ExportedMessage {
   public Ics205Message(ExportedMessage exportedMessage, String organization, String incidentName,
       String dateTimePrepared, String dateFrom, String dateTo, String timeFrom, String timeTo,
       String specialInstructions, String approvedBy, String approvedDateTime, String iapPage,
-      List<RadioEntry> radioEntries, String version) {
+      List<RadioEntry> radioEntries, String version, String expressVersion) {
     super(exportedMessage);
 
     this.organization = organization;
@@ -93,6 +95,7 @@ public class Ics205Message extends ExportedMessage {
     this.iapPage = iapPage;
     this.radioEntries = radioEntries;
     this.version = version;
+    this.expressVersion = expressVersion;
   }
 
   public static String[] getStaticHeaders() {
@@ -102,7 +105,7 @@ public class Ics205Message extends ExportedMessage {
         "OP Date From", "OP Date To", "OP Time From", "OP Time To", //
         "Special Instructions", "Approved By", //
         "Approved Date/Time", "IAP Page", //
-        "Version", "File Name" };
+        "Form Version", "Express Version", "File Name" };
 
     var radioHeaders = new ArrayList<String>();
     for (int i = 1; i <= radioEntriesToDisplay; i++) {
@@ -143,7 +146,7 @@ public class Ics205Message extends ExportedMessage {
         organization, incidentName, dateTimePrepared, //
         dateFrom, dateTo, timeFrom, timeTo, //
         specialInstructions, approvedBy, approvedDateTime, //
-        iapPage, version, fileName };
+        iapPage, version, expressVersion, fileName };
 
     var radioValues = new ArrayList<String>();
     for (int i = 0; i < radioEntriesToDisplay; i++) {

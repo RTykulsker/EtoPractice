@@ -19,6 +19,13 @@ public class PracticeMessage {
       break;
     }
 
+    case ICS_205: {
+      var m = (Ics205Message) message;
+      formVersion = m.version;
+      expressVersion = m.expressVersion;
+      break;
+    }
+
     case FIELD_SITUATION: {
       var m = (FieldSituationMessage) message;
       formVersion = m.version;

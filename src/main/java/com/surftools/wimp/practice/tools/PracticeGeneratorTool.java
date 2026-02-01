@@ -558,7 +558,7 @@ public class PracticeGeneratorTool {
     var m = new Ics205Message(exportedMessage, organization, incidentName, NA, //
         dateFrom, dateTo, timeFrom, timeTo, //
         specialInstructions, approvedBy, NA, iapPage, //
-        radioItems, NA);
+        radioItems, NA, NA);
 
     var objectMapper = JsonMapper.builder().addModule(new JavaTimeModule()).build();
     try {

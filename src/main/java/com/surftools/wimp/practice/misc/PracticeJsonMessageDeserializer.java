@@ -238,6 +238,7 @@ public class PracticeJsonMessageDeserializer {
     var dateTimeApprovedString = json.get("approvedDateTime").asText();
     var iapPageString = json.get("iapPage").asText();
     var version = json.get("version").asText();
+    var expressVersion = "n/a";
 
     var radioEntries = new ArrayList<RadioEntry>();
     var jsonRadioEntries = json.get("radioEntries");
@@ -269,7 +270,7 @@ public class PracticeJsonMessageDeserializer {
     var m = new Ics205Message(exportedMessage, organization, incidentName, //
         dateTimePreparedString, dateFrom, dateTo, timeFrom, timeTo, //
         specialInstructions, approvedBy, dateTimeApprovedString, iapPageString, //
-        radioEntries, version);
+        radioEntries, version, expressVersion);
 
     return m;
   }
