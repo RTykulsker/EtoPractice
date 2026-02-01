@@ -34,6 +34,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.surftools.wimp.configuration.Key;
 import com.surftools.wimp.core.IMessageManager;
 import com.surftools.wimp.core.IWritableTable;
 import com.surftools.wimp.persistence.IPersistenceManager;
@@ -81,7 +82,10 @@ public class HistoryMapProcessor extends AbstractBaseProcessor {
   }
 
   private void makeFirstTimeMap(IPersistenceManager db) {
-    var ret = db.getFilteredExercises(null, date); // all types
+    var epochDateString = cm.getAsString(Key.PERSISTENCE_EPOCH_DATE);
+    var epochDate = LocalDate.parse(epochDateString);
+    logger.info("Epoch Date: " + epochDate.toString());
+    var ret = db.getFilteredExercises(null, epochDate); // all types, all dates
     if (ret.status() != ReturnStatus.OK) {
       logger.error("Could not get filteredExercises from database: " + ret.content());
       return;
@@ -248,7 +252,10 @@ public class HistoryMapProcessor extends AbstractBaseProcessor {
   }
 
   private void makeHistoricMap(PersistenceManager db) {
-    var ret = db.getFilteredExercises(null, null); // all types, all dates
+    var epochDateString = cm.getAsString(Key.PERSISTENCE_EPOCH_DATE);
+    var epochDate = LocalDate.parse(epochDateString);
+    logger.info("Epoch Date: " + epochDate.toString());
+    var ret = db.getFilteredExercises(null, epochDate); // all types, all dates
     if (ret.status() != ReturnStatus.OK) {
       logger.error("Could not get filteredExercises from database: " + ret.content());
       return;
@@ -283,7 +290,15 @@ public class HistoryMapProcessor extends AbstractBaseProcessor {
     var exerciseDate = LocalDate.parse(dateString);
     var mapEntries = new ArrayList<MapEntry>();
     var oneAndDones = new ArrayList<OneAndDone>();
+    var oneAndDoneMapEntries = new ArrayList<MapEntry>();
     for (var join : joins) {
+
+      @SuppressWarnings("unused")
+      var debug = false;
+      if (join.user.call().equals("KM6SO")) {
+        debug = true;
+      }
+
       if (join.exercises.size() == 1) {
         if (join.exercises.get(0).date().equals(exerciseDate)) {
           ++firstTimeCount;
@@ -296,6 +311,7 @@ public class HistoryMapProcessor extends AbstractBaseProcessor {
               + join.exercises.get(0).date().toString();
           var mapEntry = new MapEntry(join.user.call(), "", join.location, content, oneAndDoneColor);
           mapEntries.add(mapEntry);
+          oneAndDoneMapEntries.add(mapEntry);
 
           var oneAndDoneEntry = OneAndDone.FromJoinedUser(join);
           oneAndDones.add(oneAndDoneEntry);
@@ -331,6 +347,7 @@ public class HistoryMapProcessor extends AbstractBaseProcessor {
     } // end loop over joins
 
     var layers = new ArrayList<MapLayer>();
+    var oneAndDoneLayers = new ArrayList<MapLayer>();
     var layer = new MapLayer("First Time Participants (" + firstTimeCount + ")", firstTimeColor);
     layers.add(layer);
     for (var i = 0; i < nBuckets; ++i) {
@@ -340,6 +357,7 @@ public class HistoryMapProcessor extends AbstractBaseProcessor {
     }
     layer = new MapLayer("One Time Only Participants (" + oneAndDoneCount + ")", oneAndDoneColor);
     layers.add(layer);
+    oneAndDoneLayers.add(layer);
 
     var legendTitle = dateString + " Historic Exercise Participants (" + joins.size() + " total)";
 
@@ -347,6 +365,12 @@ public class HistoryMapProcessor extends AbstractBaseProcessor {
         dateString + "-map-historic-participants", // file name
         dateString + " Historic Exercise Participants", // map title
         null, legendTitle, layers, mapEntries);
+    mapService.makeMap(context);
+
+    context = new MapContext(outputPath, //
+        dateString + "-map-oneAndDone", // file name
+        dateString + " One Time Only Participants", // map title
+        null, "One Time Only Participants", oneAndDoneLayers, oneAndDoneMapEntries);
     mapService.makeMap(context);
 
     WriteProcessor.writeTable(new ArrayList<IWritableTable>(oneAndDones), dateString + "-table-oneAndDone.csv");
