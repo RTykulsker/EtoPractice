@@ -37,9 +37,8 @@ import com.surftools.wimp.core.MessageType;
 
 public class Hics259Message extends ExportedMessage {
 
-  public static final List<String> CASUALTY_KEYS = List
-      .of("Patients seen", "Waiting to be seen", "Admitted", "Critical care bed", "Medical/surgical bed",
-          "Pediatric Bed", "Discharged", "Transferred", "Expired");
+  public static final List<String> CASUALTY_KEYS = List.of("Patients seen", "Waiting to be seen", "Admitted",
+      "Critical care bed", "Medical/surgical bed", "Pediatric Bed", "Discharged", "Transferred", "Expired");
 
   public record CasualtyEntry(String adultCount, String childCount, String comment) {
   };
@@ -60,12 +59,13 @@ public class Hics259Message extends ExportedMessage {
   public final String facilityName;
 
   public final String version;
+  public final String expressVersion;
 
   public Hics259Message(ExportedMessage exportedMessage, //
       String incidentName, String formDate, String formTime, //
       String operationalPeriod, String opFromDate, String opFromTime, String opToDate, String opToTime, //
       Map<String, CasualtyEntry> casualtyMap, //
-      String patientTrackingManager, String facilityName, String version) {
+      String patientTrackingManager, String facilityName, String version, String expressVersion) {
 
     super(exportedMessage);
 
@@ -85,15 +85,15 @@ public class Hics259Message extends ExportedMessage {
     this.facilityName = facilityName;
 
     this.version = version;
+    this.expressVersion = expressVersion;
   }
 
   public static String[] getStaticHeaders() {
 
-    var firstList = List
-        .of("MessageId", "From", "To", "Subject", "Date", "Time", "Msg Location", //
-            "Incident Name", "Form Date/Time", //
-            "Op Period #", "Op From", "Op To" //
-        );
+    var firstList = List.of("MessageId", "From", "To", "Subject", "Date", "Time", "Msg Location", //
+        "Incident Name", "Form Date/Time", //
+        "Op Period #", "Op From", "Op To" //
+    );
 
     var casualtyList = new ArrayList<String>();
     for (var key : CASUALTY_KEYS) {
@@ -102,9 +102,8 @@ public class Hics259Message extends ExportedMessage {
       casualtyList.add(key + ": Comments");
     }
 
-    var lastList = List
-        .of("Patient Tracking Manager", "Facility Name", //
-            "Version", "File Name");
+    var lastList = List.of("Patient Tracking Manager", "Facility Name", //
+        "Form Version", "Express Version", "File Name");
 
     var resultList = new ArrayList<String>(firstList.size() + casualtyList.size() + lastList.size());
     resultList.addAll(firstList);
@@ -123,11 +122,10 @@ public class Hics259Message extends ExportedMessage {
     var date = sortDateTime == null ? "" : sortDateTime.toLocalDate().toString();
     var time = sortDateTime == null ? "" : sortDateTime.toLocalTime().toString();
 
-    var firstList = List
-        .of(messageId, from, to, subject, date, time, msgLocation == null ? "" : msgLocation.toString(), //
-            incidentName, formDate + " " + formTime, //
-            operationalPeriod, opFromDate + " " + opFromTime, //
-            opToDate + " " + opToTime);//
+    var firstList = List.of(messageId, from, to, subject, date, time, msgLocation == null ? "" : msgLocation.toString(), //
+        incidentName, formDate + " " + formTime, //
+        operationalPeriod, opFromDate + " " + opFromTime, //
+        opToDate + " " + opToTime);//
 
     var casualtyList = new ArrayList<String>();
     for (var key : CASUALTY_KEYS) {
@@ -137,9 +135,8 @@ public class Hics259Message extends ExportedMessage {
       casualtyList.add(entry.comment);
     }
 
-    var lastList = List
-        .of(patientTrackingManager, facilityName, //
-            version, fileName);
+    var lastList = List.of(patientTrackingManager, facilityName, //
+        version, expressVersion, fileName);
 
     var resultList = new ArrayList<String>(firstList.size() + casualtyList.size() + lastList.size());
     resultList.addAll(firstList);

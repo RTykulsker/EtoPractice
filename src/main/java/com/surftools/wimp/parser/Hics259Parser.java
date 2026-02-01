@@ -78,11 +78,24 @@ public class Hics259Parser extends AbstractBaseParser {
         }
       }
 
+      var expressVersion = getValueFromMime(message.getMimeLines(), "Senders Express Version:");
+      if (expressVersion == null || expressVersion.length() == 0) {
+        var newLines = message.mime.split("=0A");
+        for (var newLine : newLines) {
+          if (newLine.contains("Senders Express Version:")) {
+            var newFields = newLine.split("=");
+            if (newFields.length >= 2) {
+              expressVersion = newFields[1].trim();
+            }
+          }
+        }
+      }
+
       var m = new Hics259Message(message, //
           incidentName, formDate, formTime, //
           operationalPeriod, opFromDate, opFromTime, opToDate, opToTime, //
           casualtyMap, //
-          patientTrackingManager, facilityName, version);
+          patientTrackingManager, facilityName, version, expressVersion);
 
       return m;
     } catch (Exception e) {

@@ -459,7 +459,7 @@ public class PracticeGeneratorTool {
         incidentName, NA, NA, //
         operationalPeriod, opFromDate, opFromTime, opToDate, opToTime, //
         casualtyMap, //
-        patientTrackingManager, facilityName, NA);
+        patientTrackingManager, facilityName, NA, NA);
 
     var objectMapper = JsonMapper.builder().addModule(new JavaTimeModule()).build();
     try {

@@ -380,6 +380,7 @@ public class PracticeJsonMessageDeserializer {
     var patientTrackingManager = json.get("patientTrackingManager").asText();
     var facilityName = json.get("facilityName").asText();
     var version = json.get("version").asText();
+    var expressVersion = "n/a";
 
     var casualtyMap = new HashMap<String, CasualtyEntry>();
     var jsonCasualtyMap = json.get("casualtyMap");
@@ -396,7 +397,7 @@ public class PracticeJsonMessageDeserializer {
         incidentName, formDate, formTime, //
         operationalPeriod, opFromDate, opFromTime, opToDate, opToTime, //
         casualtyMap, //
-        patientTrackingManager, facilityName, version);
+        patientTrackingManager, facilityName, version, expressVersion);
 
     return m;
   }
