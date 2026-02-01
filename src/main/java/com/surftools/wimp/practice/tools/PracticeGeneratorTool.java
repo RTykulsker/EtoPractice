@@ -652,6 +652,7 @@ public class PracticeGeneratorTool {
     var additionalComments = "Exercise Id: " + pd.getExerciseId(ExerciseIdMethod.PHONE);
     var poc = names.get(0);
     var formVersion = NA;
+    var expressVersion = NA;
 
     var windowOpenDate = date.minusDays(5);
     var windowCloseDate = date.plusDays(1);
@@ -734,7 +735,7 @@ public class PracticeGeneratorTool {
         naturalGasStatus, naturalGasComments, //
         internetStatus, internetComments, //
         noaaStatus, noaaComments, noaaAudioDegraded, noaaAudioDegradedComments, //
-        additionalComments, poc, formVersion);
+        additionalComments, poc, formVersion, expressVersion);
 
     var objectMapper = JsonMapper.builder().addModule(new JavaTimeModule()).build();
     try {

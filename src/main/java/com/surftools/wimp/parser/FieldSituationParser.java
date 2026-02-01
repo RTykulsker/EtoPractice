@@ -37,7 +37,8 @@ import com.surftools.wimp.message.ExportedMessage;
 import com.surftools.wimp.message.FieldSituationMessage;
 
 /**
- * necessary because the WDT made FieldSituation, FieldSituation23, FieldSituation25, etc.
+ * necessary because the WDT made FieldSituation, FieldSituation23,
+ * FieldSituation25, etc.
  *
  * @author bobt
  *
@@ -141,6 +142,19 @@ public class FieldSituationParser extends AbstractBaseParser {
       String poc = getStringFromXml("poc");
       String formVersion = parseFormVersion(getStringFromXml("templateversion"));
 
+      var expressVersion = getValueFromMime(message.getMimeLines(), "Express Version: ");
+      if (expressVersion == null || expressVersion.length() == 0) {
+        var newLines = message.mime.split("=0A");
+        for (var newLine : newLines) {
+          if (newLine.contains("Express Version:")) {
+            var newFields = newLine.split(":");
+            if (newFields.length >= 2) {
+              expressVersion = newFields[1].trim();
+            }
+          }
+        }
+      }
+
       // TODO verify that I've identified base variables and variants
 
       FieldSituationMessage m = new FieldSituationMessage(//
@@ -156,7 +170,7 @@ public class FieldSituationParser extends AbstractBaseParser {
           naturalGasStatus, naturalGasComments, //
           internetStatus, internetComments, //
           noaaStatus, noaaComments, noaaAudioDegraded, noaaAudioDegradedComments, //
-          additionalComments, poc, formVersion);
+          additionalComments, poc, formVersion, expressVersion);
 
       return m;
     } catch (Exception e) {

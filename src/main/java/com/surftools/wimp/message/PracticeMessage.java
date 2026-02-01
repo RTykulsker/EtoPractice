@@ -11,11 +11,21 @@ public class PracticeMessage {
   public PracticeMessage(ExportedMessage message) {
     var type = message.getMessageType();
     switch (type) {
-    case ICS_213:
+
+    case ICS_213: {
       var m = (Ics213Message) message;
       formVersion = m.version;
       expressVersion = m.expressVersion;
       break;
+    }
+
+    case FIELD_SITUATION: {
+      var m = (FieldSituationMessage) message;
+      formVersion = m.version;
+      expressVersion = m.expressVersion;
+      break;
+    }
+
     default:
       break;
     }

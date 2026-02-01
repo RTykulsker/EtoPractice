@@ -34,7 +34,8 @@ import com.surftools.utils.location.LatLongPair;
 import com.surftools.wimp.core.MessageType;
 
 /**
- * necessary because the WDT made FieldSituation, FieldSituation23, FieldSituation25, etc.
+ * necessary because the WDT made FieldSituation, FieldSituation23,
+ * FieldSituation25, etc.
  *
  * @author bobt
  *
@@ -119,6 +120,7 @@ public class FieldSituationMessage extends ExportedMessage {
   public final String additionalComments;
   public final String poc;
   public final String version;
+  public final String expressVersion;
 
   public final Map<ResourceType, Resource> resourceMap;
 
@@ -141,7 +143,7 @@ public class FieldSituationMessage extends ExportedMessage {
       String internetStatus, String internetComments, //
       String noaaStatus, String noaaComments, //
       String noaaAudioDegraded, String noaaAudioDegradedComments, //
-      String additionalComments, String poc, String formVersion) {
+      String additionalComments, String poc, String version, String expressVersion) {
     super(exportedMessage);
     this.organization = organization;
     this.formLocation = formLocation;
@@ -188,7 +190,8 @@ public class FieldSituationMessage extends ExportedMessage {
     this.noaaAudioDegraded = noaaAudioDegraded;
     this.noaaAudioDegradedComments = noaaAudioDegradedComments;
     this.poc = poc;
-    this.version = formVersion;
+    this.version = version;
+    this.expressVersion = expressVersion;
 
     if (formLocation.isValid()) {
       setMapLocation(formLocation);
@@ -233,7 +236,7 @@ public class FieldSituationMessage extends ExportedMessage {
         "Natural Gas Status", "Natural Gas Comments", //
         "Internet Status", "Internet Comments", //
         "NOAA Status", "NOAA Comments", "NOAA audio degraded", "NOAA audio degraded Comments", //
-        "Additional Comments", "POC", "FormVersion", "File Name" };
+        "Additional Comments", "POC", "FormVersion", "ExpressVersion", "File Name" };
   }
 
   @Override
@@ -251,7 +254,7 @@ public class FieldSituationMessage extends ExportedMessage {
         naturalGasStatus, naturalGasComments, //
         internetStatus, internetComments, //
         noaaStatus, noaaComments, noaaAudioDegraded, noaaAudioDegradedComments, //
-        additionalComments, poc, version, fileName };
+        additionalComments, poc, version, expressVersion, fileName };
   }
 
   @Override
