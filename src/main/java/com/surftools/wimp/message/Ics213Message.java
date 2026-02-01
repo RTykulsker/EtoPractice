@@ -67,7 +67,7 @@ public class Ics213Message extends ExportedMessage {
     this.position = position;
 
     this.isExercise = isExercise;
-    this.formLocation = formLocation;
+    this.formLocation = formLocation != null ? formLocation : LatLongPair.INVALID;
     this.version = version;
     this.dataSource = dataSource;
 
