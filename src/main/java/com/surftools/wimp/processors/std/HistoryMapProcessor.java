@@ -295,7 +295,8 @@ public class HistoryMapProcessor extends AbstractBaseProcessor {
 
       @SuppressWarnings("unused")
       var debug = false;
-      if (join.user.call().equals("KM6SO")) {
+      var debugList = List.of("KM6SO");
+      if (debugList.contains(join.user.call())) {
         debug = true;
       }
 
