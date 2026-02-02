@@ -304,7 +304,9 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
 
     var explanations = sts.getExplanations();
     var feedback = "";
-    getCounter("Feedback Count").increment(explanations.size());
+    var count = explanations.size();
+    var label = count >= 10 ? "10 or more" : String.valueOf(count);
+    getCounter("Feedback Count").increment(label);
     if (explanations.size() == 0) {
       ++ppMessageCorrectCount;
       feedback = "Perfect Message!";
@@ -434,6 +436,10 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
       outboundMessageList = service.sendAll(outboundMessageList);
       WriteProcessor.writeTable(new ArrayList<IWritableTable>(outboundMessageList), "outBoundMessages.csv");
     }
+
+    var counterKey = "Senders Express Version";
+    var counter = counterMap.get(counterKey).squeeze(10, "other");
+    counterMap.put(counterKey, counter);
 
     var chartService = ChartServiceFactory.getChartService(cm);
     chartService.initialize(cm, counterMap, exerciseMessageType);

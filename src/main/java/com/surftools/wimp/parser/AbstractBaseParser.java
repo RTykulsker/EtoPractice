@@ -400,6 +400,7 @@ public abstract class AbstractBaseParser implements IParser {
     if (expressVersion == null || expressVersion.length() == 0) {
       var newLines = message.mime.split("=0A");
       for (var newLine : newLines) {
+        newLine = newLine.replace("=\n", "");
         if (newLine.contains(key)) {
           var newFields = newLine.split("[:=]");
           if (newFields.length >= 2) {
@@ -411,6 +412,8 @@ public abstract class AbstractBaseParser implements IParser {
     }
     expressVersion = expressVersion.replace("=20", "");
     expressVersion = expressVersion.replace(":", "");
+    expressVersion = (expressVersion != null && expressVersion.length() > 0) ? expressVersion : "(unknown)";
+
     return expressVersion;
   }
 }
