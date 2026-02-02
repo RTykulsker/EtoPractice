@@ -228,6 +228,10 @@ public abstract class BaseQueryEngine implements IPersistenceEngine {
 
       join.exercises = selectedExercises;
       content.add(join);
+
+      var selectedExerciseIdSet = new HashSet<Long>(selectedExercises.stream().map(ex -> ex.id()).toList());
+      var selectedEvents = join.events.stream().filter(ev -> selectedExerciseIdSet.contains(ev.exerciseId())).toList();
+      join.events = selectedEvents;
     } // end for over all calls/joins
 
     return new ReturnRecord(ReturnStatus.OK, null, content);
