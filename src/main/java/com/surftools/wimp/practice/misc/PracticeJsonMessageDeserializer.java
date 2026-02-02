@@ -208,13 +208,16 @@ public class PracticeJsonMessageDeserializer {
     var financeName = json.get("financeName").asText();
     var financeDateTime = json.get("financeDateTime").asText();
 
+    var version = "n/a";
+    var expressVersion = "n/a";
+
     var m = new Ics213RRMessage(exportedMessage, organization, incidentName, activityDateTime, requestNumber, //
         lineItems, //
         delivery, substitutes, requestedBy, priority, approvedBy, //
         logisticsOrderNumber, supplierInfo, supplierName, //
         supplierPointOfContact, supplyNotes, logisticsAuthorizer, //
         logisticsDateTime, orderedBy, //
-        financeComments, financeName, financeDateTime);
+        financeComments, financeName, financeDateTime, version, expressVersion);
 
     return m;
   }

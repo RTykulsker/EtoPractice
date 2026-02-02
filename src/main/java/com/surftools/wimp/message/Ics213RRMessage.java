@@ -57,7 +57,7 @@ public class Ics213RRMessage extends ExportedMessage {
       "Requested By", "Priority", "Approved By", //
       "Log Order Number", "SupplierInfo", "SupplierName", //
       "POC", "Notes", "Auth Log Rep", "Log Date/Time", "Ordered By", //
-      "Finance Comments", "Finance Chief", "Finance Date/Time", "File Name" };
+      "Finance Comments", "Finance Chief", "Finance Date/Time", "Form Version", "Express Version", "File Name" };
 
   public static final int MAX_LINE_ITEMS = 8;
   public static int lineItemsToDisplay = MAX_LINE_ITEMS;
@@ -88,6 +88,9 @@ public class Ics213RRMessage extends ExportedMessage {
   public final String financeName;
   public final String financeDateTime;
 
+  public final String version;
+  public final String expressVersion;
+
   public Ics213RRMessage(ExportedMessage xmlMessage, String organization, String incidentName, //
       String activityDateTime, String requestNumber, //
       List<LineItem> lineItems, String delivery, String substitutes, //
@@ -97,7 +100,8 @@ public class Ics213RRMessage extends ExportedMessage {
       String supplierPointOfContact, String supplyNotes, String logisticsAuthorizer, //
       String logisticsDateTime, String orderedBy, //
 
-      String financeComments, String financeName, String financeDateTime) {
+      String financeComments, String financeName, String financeDateTime, //
+      String version, String expressVersion) {
     super(xmlMessage);
 
     this.organization = organization;
@@ -125,6 +129,9 @@ public class Ics213RRMessage extends ExportedMessage {
     this.financeComments = financeComments;
     this.financeName = financeName;
     this.financeDateTime = financeDateTime;
+
+    this.version = version;
+    this.expressVersion = expressVersion;
   }
 
   @Override
@@ -163,7 +170,7 @@ public class Ics213RRMessage extends ExportedMessage {
         logisticsOrderNumber, supplierInfo, supplierName, //
         supplierPointOfContact, supplyNotes, logisticsAuthorizer, //
         logisticsDateTime, orderedBy, //
-        financeComments, financeName, financeDateTime, fileName };
+        financeComments, financeName, financeDateTime, version, expressVersion, fileName };
 
     Collections.addAll(resultList, preValues);
     for (int i = 1; i <= lineItemsToDisplay; ++i) {

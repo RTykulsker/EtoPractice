@@ -332,6 +332,9 @@ public class PracticeGeneratorTool {
     var priority = (String) pd.priorityChooser.next();
     var approvedBy = names.get(1);
 
+    var version = NA;
+    var expressVersion = NA;
+
     var sb = new StringBuilder(); // exercise instructions
     sb.append("ETO Exercise Instructions for Thursday, " + dtf.format(date) + NL + NL);
     sb.append("Task: Complete an ICS-213 Resource Request Message" + NL + NL);
@@ -381,8 +384,8 @@ public class PracticeGeneratorTool {
         "", "", "", // logisticsOrderNumber, supplierInfo, supplierName, //
         "", "", "", // supplierPointOfContact, supplyNotes, logisticsAuthorizer, //
         "", "", // logisticsDateTime, orderedBy, //
-        "", "", "" // financeComments, financeName, financeDateTime//
-    );
+        "", "", "", // financeComments, financeName, financeDateTime//
+        version, expressVersion);
 
     var objectMapper = JsonMapper.builder().addModule(new JavaTimeModule()).build();
     try {

@@ -496,7 +496,7 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
       var m = feedbackMessage.message();
       var location = (m.getMessageType() == MessageType.FIELD_SITUATION) ? m.msgLocation : m.mapLocation;
 
-      if (location.isValid()) {
+      if (location != null && location.isValid()) {
         feedbackMessages.add(feedbackMessage);
       } else {
         var newLocation = LocationUtils.binaryAngularSubdivision(relocationIndex++, LatLongPair.ZERO_ZERO, 10_000);
@@ -614,7 +614,7 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
           var m = messageList.get(0);
           var isFsr = m.getMessageType() == MessageType.FIELD_SITUATION;
           location = isFsr ? m.msgLocation : m.mapLocation;
-          location = location.isValid() ? location : null;
+          location = location != null && location.isValid() ? location : null;
         } else {
           hasUnexpected = true;
           for (var m : messageList) {

@@ -167,9 +167,8 @@ public abstract class AbstractBaseParser implements IParser {
         var bytes = bads.getInputStream().readAllBytes();
         attachments.put(attachmentName, bytes);
       } catch (Exception e) {
-        logger
-            .error("could not read attachment #: " + attachmentIndex + ", name: " + attachmentName + ", "
-                + e.getLocalizedMessage());
+        logger.error("could not read attachment #: " + attachmentIndex + ", name: " + attachmentName + ", "
+            + e.getLocalizedMessage());
       }
     }
     return attachments;
@@ -266,7 +265,8 @@ public abstract class AbstractBaseParser implements IParser {
   }
 
   /**
-   * return string with content between start of beginString and end of endString removed
+   * return string with content between start of beginString and end of endString
+   * removed
    *
    * @param source
    * @param beginString
@@ -324,8 +324,7 @@ public abstract class AbstractBaseParser implements IParser {
   /**
    * get first line from a multi-line string
    *
-   * @param first
-   *          (possibly empty) line
+   * @param first (possibly empty) line
    */
   public String getFirstLineOf(String multiLine) {
     if (multiLine == null) {
@@ -394,5 +393,24 @@ public abstract class AbstractBaseParser implements IParser {
     }
 
     return version;
+  }
+
+  protected String getExpressVersion(ExportedMessage message, String key) {
+    var expressVersion = getValueFromMime(message.getMimeLines(), key);
+    if (expressVersion == null || expressVersion.length() == 0) {
+      var newLines = message.mime.split("=0A");
+      for (var newLine : newLines) {
+        if (newLine.contains(key)) {
+          var newFields = newLine.split("[:=]");
+          if (newFields.length >= 2) {
+            expressVersion = newFields[newFields.length - 1].trim();
+            break;
+          }
+        }
+      }
+    }
+    expressVersion = expressVersion.replace("=20", "");
+    expressVersion = expressVersion.replace(":", "");
+    return expressVersion;
   }
 }

@@ -75,19 +75,7 @@ public class Ics213Parser extends AbstractBaseParser {
             version = fields[2];
           }
         }
-
-        var expressVersion = getValueFromMime(message.getMimeLines(), "Senders Express Version: ");
-        if (expressVersion == null || expressVersion.length() == 0) {
-          var newLines = message.mime.split("=0A");
-          for (var newLine : newLines) {
-            if (newLine.contains("Senders Express Version:")) {
-              var newFields = newLine.split("=");
-              if (newFields.length >= 2) {
-                expressVersion = newFields[1].trim();
-              }
-            }
-          }
-        }
+        var expressVersion = getExpressVersion(message, "Senders Express Version:");
 
         var m = new Ics213Message(message, organization, incidentName, //
             formFrom, formTo, formSubject, formDate, formTime, //

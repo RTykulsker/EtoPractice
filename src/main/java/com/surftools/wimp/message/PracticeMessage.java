@@ -19,6 +19,13 @@ public class PracticeMessage {
       break;
     }
 
+    case ICS_213_RR: {
+      var m = (Ics213RRMessage) message;
+      formVersion = m.version;
+      expressVersion = m.expressVersion;
+      break;
+    }
+
     case HICS_259: {
       var m = (Hics259Message) message;
       formVersion = m.version;

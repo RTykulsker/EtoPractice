@@ -83,13 +83,17 @@ public class Ics213RrParser extends AbstractBaseParser {
       var financeName = getStringFromXml("finrepname");
       var financeDateTime = getStringFromXml("activitydatetime3");
 
+      var version = getStringFromXml("templateversion");
+      var expressVersion = getExpressVersion(message, "Senders Express Version:");
+
       var m = new Ics213RRMessage(message, organization, incidentName, activityDateTime, requestNumber, //
           lineItems, //
           delivery, substitutes, requestedBy, priority, approvedBy, //
           logisticsOrderNumber, supplierInfo, supplierName, //
           supplierPointOfContact, supplyNotes, logisticsAuthorizer, //
           logisticsDateTime, orderedBy, //
-          financeComments, financeName, financeDateTime);
+          financeComments, financeName, financeDateTime, //
+          version, expressVersion);
 
       return m;
 

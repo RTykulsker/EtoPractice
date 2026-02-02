@@ -141,19 +141,7 @@ public class FieldSituationParser extends AbstractBaseParser {
       String additionalComments = getStringFromXml("message");
       String poc = getStringFromXml("poc");
       String formVersion = parseFormVersion(getStringFromXml("templateversion"));
-
-      var expressVersion = getValueFromMime(message.getMimeLines(), "Express Version: ");
-      if (expressVersion == null || expressVersion.length() == 0) {
-        var newLines = message.mime.split("=0A");
-        for (var newLine : newLines) {
-          if (newLine.contains("Express Version:")) {
-            var newFields = newLine.split(":");
-            if (newFields.length >= 2) {
-              expressVersion = newFields[1].trim();
-            }
-          }
-        }
-      }
+      var expressVersion = getExpressVersion(message, "Express Version:");
 
       // TODO verify that I've identified base variables and variants
 
