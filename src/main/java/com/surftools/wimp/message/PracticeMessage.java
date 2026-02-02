@@ -1,6 +1,7 @@
 package com.surftools.wimp.message;
 
 public class PracticeMessage {
+  public ExportedMessage message;
   private String formVersion = "";
   private String expressVersion = "";
 
@@ -9,6 +10,7 @@ public class PracticeMessage {
   }
 
   public PracticeMessage(ExportedMessage message) {
+    this.message = message;
     var type = message.getMessageType();
     switch (type) {
 
