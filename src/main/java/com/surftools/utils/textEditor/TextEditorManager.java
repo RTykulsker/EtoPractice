@@ -36,6 +36,10 @@ public class TextEditorManager {
   private static final Logger logger = LoggerFactory.getLogger(TextEditorManager.class);
 
   public ITextEditor getTextEditor(String editorName) {
+    if (editorName == null || editorName.isBlank()) {
+      logger.debug("null editor name");
+      return null;
+    }
     final var PREFIXES = List.of("", "com.surftools.utils.textEditor.");
     final var SUFFIXES = List.of("TextEditor", "");
 
