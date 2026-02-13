@@ -120,7 +120,7 @@ public class Ics213RRPracticeProcessor extends BasePracticeProcessor {
     count(sts.testIfEmpty("Logistics Date/Time should be empty", m.logisticsDateTime));
     count(sts.testIfEmpty("Logistics Ordered by should be empty", m.orderedBy));
     count(sts.testIfEmpty("inance Comments should be empty", m.financeComments));
-    count(sts.testIfEmpty("Finance Section Chief Name should be #EV", m.financeName));
+    count(sts.testIfEmpty("Finance Section Chief Name should be empty", m.financeName));
     count(sts.testIfEmpty("Finance Date/Time should be empty", m.financeDateTime));
 
     var practiceSummary = new PracticeSummary(m, sts);

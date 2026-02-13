@@ -56,12 +56,11 @@ public enum Key implements IConfigurationKey {
   ENABLE_FINALIZE("enable.finalize"), // set to true to enable, published, archive, snapshot to cloud, sends email,
                                       // set on command line
   ENABLE_FINALIZE_PUBLISHED("enable.finalize.published"), // transfer only published folder to cloud
-  ENABLE_FINALIZE_ARCHIVE("enable.finalize.archive"), // transfer all folders (input, output, published, winlink) to
-                                                      // cloud
-  ENABLE_FINALIZE_EMAIL("enable.finalize.email"), // send email to interested parties
+  ENABLE_FINALIZE_ARCHIVE("enable.finalize.archive"), // transfer all folders to cloud
+  ENABLE_FINALIZE_EMAIL_INTERNET("enable.finalize.email.internet"), // send email to interested parties via Internet
+  ENABLE_FINALIZE_EMAIL_WINLINK("enable.finalize.email.winlink"), // send email to interested parties via Winlink
   ENABLE_FINALIZE_SNAPSHOT("enable.finalize.snapshot"), // create a local copy final-yyyy-mm-dd-hh-mm-ss of entire
                                                         // exercise
-
   PERSISTENCE_SQLITE_URL("persistence.sqlite.url"), //
   PERSISTENCE_ALLOW_FUTURE("persistence.allow.future"), // allow/disallow future exercises into db
   PERSISTENCE_ONLY_USE_ACTIVE("persistence.only.use.active"), // true -> only active; false -> active & inactive
@@ -100,6 +99,9 @@ public enum Key implements IConfigurationKey {
   EMAIL_NOTIFICATION_PASSWORD_FILEPATH("email.notification.password.filePath"), // no password in config
   EMAIL_NOTIFICATION_SUBJECT("email.notification.subject"), // with #DATE# substitution
   EMAIL_NOTIFICATION_BODY("email.notification.body"), // with #DATE# substitution
+
+  WINLINK_NOTIFICATION_SOURCE("winlink.notification.source"), // mbo address
+  WINLINK_NOTIFICATION_SENDER("winlink.notification..sender"), // from address
 
   OUTBOUND_MESSAGE_SOURCE("outboundMessage.source"), // mbo address
   OUTBOUND_MESSAGE_SENDER("outboundMessage.sender"), // from address

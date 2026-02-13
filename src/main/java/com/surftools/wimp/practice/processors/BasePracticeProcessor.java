@@ -438,8 +438,11 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
     }
 
     var counterKey = "Senders Express Version";
-    var counter = counterMap.get(counterKey).squeeze(10, "other");
-    counterMap.put(counterKey, counter);
+    var counter = counterMap.get(counterKey);
+    if (counter != null) {
+      counter = counter.squeeze(10, "other");
+      counterMap.put(counterKey, counter);
+    }
 
     var chartService = ChartServiceFactory.getChartService(cm);
     chartService.initialize(cm, counterMap, exerciseMessageType);
