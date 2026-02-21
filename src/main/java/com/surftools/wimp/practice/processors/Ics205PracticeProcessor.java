@@ -135,7 +135,7 @@ public class Ics205PracticeProcessor extends BasePracticeProcessor {
     }
 
     sts.setExplanationPrefix("");
-    count(sts.testIfPresent("Date/Time approved should be on or after #EV", m.approvedDateTime));
+    count(sts.testIfPresent("Date/Time approved should be present", m.approvedDateTime));
     count(sts.test("IAP Page should be #EV", ref.iapPage, m.iapPage));
     var practiceSummary = new PracticeSummary(m, sts);
     practiceSummaries.add(practiceSummary);
