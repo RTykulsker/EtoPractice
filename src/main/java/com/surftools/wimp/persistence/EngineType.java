@@ -28,5 +28,5 @@ SOFTWARE.
 package com.surftools.wimp.persistence;
 
 public enum EngineType {
-  SQLITE_NATIVE
+  SQLITE_NATIVE, POSTGRES
 }

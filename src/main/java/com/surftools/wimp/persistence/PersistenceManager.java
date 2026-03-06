@@ -51,6 +51,8 @@ public class PersistenceManager implements IPersistenceManager {
     this.cm = cm;
     this.engineType = EngineType.SQLITE_NATIVE;
     this.engine = new SQLIteNativeEngine(cm);
+//    this.engineType = EngineType.POSTGRES;
+//    this.engine = new PostgresEngine(cm);
   }
 
   @Override

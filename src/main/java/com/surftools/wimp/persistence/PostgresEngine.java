@@ -2,7 +2,7 @@
 
 The MIT License (MIT)
 
-Copyright (c) 2025, Robert Tykulsker
+Copyright (c) 2026, Robert Tykulsker
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -36,23 +36,22 @@ import org.slf4j.LoggerFactory;
 import com.surftools.wimp.configuration.Key;
 import com.surftools.wimp.utils.config.IConfigurationManager;
 
-public class SQLIteNativeEngine extends AbstractBaseJdbcEngine {
-  private static final Logger logger = LoggerFactory.getLogger(SQLIteNativeEngine.class);
+public class PostgresEngine extends AbstractBaseJdbcEngine {
+  private static final Logger logger = LoggerFactory.getLogger(PostgresEngine.class);
 
   private String url;
 
-  public SQLIteNativeEngine(IConfigurationManager cm) {
+  public PostgresEngine(IConfigurationManager cm) {
     super(cm);
-    url = cm.getAsString(Key.PERSISTENCE_SQLITE_URL);
-    dateAsString = true; // true for sqlite, false for postgres
+    url = cm.getAsString(Key.PERSISTENCE_POSTGRES_UTL);
+    dateAsString = false; // true for sqlite, false for postgres
   }
 
   @Override
   protected Connection getConnection() {
     Connection connection = null;
     try {
-      Class.forName("org.sqlite.JDBC");
-      connection = DriverManager.getConnection("jdbc:sqlite:" + url);
+      connection = DriverManager.getConnection(url);
     } catch (Exception e) {
       logger.error("SQL Exception: " + e.getMessage());
     }

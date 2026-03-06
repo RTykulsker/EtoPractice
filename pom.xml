@@ -92,6 +92,12 @@
 		    <artifactId>sqlite-jdbc</artifactId>
 		    <version>3.50.3.0</version>
 		</dependency>
+		
+		<dependency>
+		    <groupId>org.postgresql</groupId>
+		    <artifactId>postgresql</artifactId>
+		    <version>42.7.10</version> <!-- Replace with the desired version -->
+		</dependency>		
 
 		<dependency>
 			<groupId>junit</groupId>

@@ -61,6 +61,7 @@ public enum Key implements IConfigurationKey {
   ENABLE_FINALIZE_EMAIL_WINLINK("enable.finalize.email.winlink"), // send email to interested parties via Winlink
   ENABLE_FINALIZE_SNAPSHOT("enable.finalize.snapshot"), // create a local copy final-yyyy-mm-dd-hh-mm-ss of entire
                                                         // exercise
+  PERSISTENCE_POSTGRES_UTL("persistence.postgres.url"), //
   PERSISTENCE_SQLITE_URL("persistence.sqlite.url"), //
   PERSISTENCE_ALLOW_FUTURE("persistence.allow.future"), // allow/disallow future exercises into db
   PERSISTENCE_ONLY_USE_ACTIVE("persistence.only.use.active"), // true -> only active; false -> active & inactive
