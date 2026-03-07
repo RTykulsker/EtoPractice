@@ -29,6 +29,7 @@ package com.surftools.wimp.processors.std;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -95,6 +96,7 @@ public class ParticipantHistoryProcessor extends AbstractBaseProcessor {
     @SuppressWarnings("unchecked")
     var joins = (List<JoinedUser>) ret.data();
     var histories = new ArrayList<ParticipantHistory>(joins.size());
+    var summaries = new HashMap<Integer, ParticipantSummary>(filteredExercises.size());
     for (var join : joins) {
       if (join.exercises.size() > 0) {
         var count = 0;
@@ -106,13 +108,15 @@ public class ParticipantHistoryProcessor extends AbstractBaseProcessor {
           lastDate = (exercise.date().isAfter(lastDate)) ? exercise.date() : lastDate;
         } // end loop over exercises;
         var ph = new ParticipantHistory(join.user.call(), count, firstDate, lastDate);
-
         histories.add(ph);
+        summaries.put(count, summaries.getOrDefault(count, new ParticipantSummary(count, 0)).increment());
       } // end if join has exercises
     }
     logger.info("Got " + histories.size() + " particpant Histories");
 
     WriteProcessor.writeTable(new ArrayList<IWritableTable>(histories), dateString + "-participantHistory.csv");
+    WriteProcessor.writeTable(new ArrayList<IWritableTable>(summaries.values()),
+        dateString + "-participantSummary.csv");
   }
 
   static record ParticipantHistory(String call, int count, LocalDate firstDate, LocalDate lastDate)
@@ -132,6 +136,29 @@ public class ParticipantHistoryProcessor extends AbstractBaseProcessor {
     @Override
     public String[] getValues() {
       return new String[] { call, String.valueOf(count), firstDate.toString(), lastDate.toString() };
+    }
+  }
+
+  static record ParticipantSummary(int nEvents, int nParticipants) implements IWritableTable {
+
+    @Override
+    public int compareTo(IWritableTable other) {
+      var o = (ParticipantSummary) other;
+      return o.nEvents - nEvents;
+    }
+
+    public ParticipantSummary increment() {
+      return new ParticipantSummary(nEvents, nParticipants + 1);
+    }
+
+    @Override
+    public String[] getHeaders() {
+      return new String[] { "Events", "Participants" };
+    }
+
+    @Override
+    public String[] getValues() {
+      return new String[] { String.valueOf(nEvents), String.valueOf(nParticipants) };
     }
   }
 
