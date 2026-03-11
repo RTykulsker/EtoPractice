@@ -73,4 +73,8 @@ public record MapEntry(String label, String to, LatLongPair location, String mes
     return new MapEntry(feedbackResult.call(), to, location, content, color);
   }
 
+  public MapEntry update(String color) {
+    return new MapEntry(this.label, this.to, this.location, this.message, color);
+  }
+
 }

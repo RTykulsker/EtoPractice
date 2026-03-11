@@ -44,6 +44,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 import org.slf4j.Logger;
@@ -448,13 +449,37 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
     chartService.initialize(cm, counterMap, exerciseMessageType);
     chartService.makeCharts();
 
-    var mapEntries = makeFeedbackMap();
-    makeMessageTypeMap();
-    makeBinaryMap(mapEntries, me -> me.message().contains("Exercise Id"), "Exercise Id", null);
-    makeBinaryMap(mapEntries, me -> me.message().contains("Message should be posted on or after"), "Start Date", null);
-    makeBinaryMap(mapEntries, me -> me.message().contains("Subject should be"), "Subject", null);
-
     WriteProcessor.writeTable(new ArrayList<IWritableTable>(practiceSummaries), "practice-summary.csv");
+
+    var mapEntries = makeMapeEntries();
+
+    var mapService = new MapService(cm, mm);
+    var gradientMap = mapService.makeGradientMap(120, 0, 6);
+    makeMakeViaLegends(mapEntries, "Feedback Counts", "feedbackCountMap", publishedPath, List.of(//
+        new Legend("value: 0", gradientMap.get(0), (me -> me.message().contains("Count: 0")), null), //
+        new Legend("value: 1", gradientMap.get(1), (me -> me.message().contains("Count: 1")), null), //
+        new Legend("value: 2", gradientMap.get(2), (me -> me.message().contains("Count: 2")), null), //
+        new Legend("value: 3", gradientMap.get(3), (me -> me.message().contains("Count: 3")), null), //
+        new Legend("value: 4", gradientMap.get(4), (me -> me.message().contains("Count: 4")), null), //
+        new Legend("value: 5 or more", gradientMap.get(5), (me -> me != null), null)));
+
+    var colorGood = IMapService.rgbMap.get("green");
+    var colorBad = IMapService.rgbMap.get("red");
+
+    makeMakeViaLegends(mapEntries, "Start Date Counts", "StartDateMap", outputPath, List.of(//
+        new Legend("Correct", colorGood, (me -> !me.message().contains("Message should be posted on or after")), null), //
+        new Legend("Incorrect", colorBad, (me -> me.message().contains("Message should be posted on or after")),
+            null)));
+
+    makeMakeViaLegends(mapEntries, "Exercise Id Counts", "ExerciseId", outputPath, List.of(//
+        new Legend("Correct", colorGood, (me -> !me.message().contains("Exercise Id")), null), //
+        new Legend("Incorrect", colorBad, (me -> me.message().contains("Exercise Id")), null)));
+
+    makeMakeViaLegends(mapEntries, "Subject Counts", "Subject", outputPath, List.of(//
+        new Legend("Correct", colorGood, (me -> !me.message().contains("Subject")), null), //
+        new Legend("Incorrect", colorBad, (me -> me.message().contains("Subject")), null)));
+
+    makeMessageTypeMap();
 
     var db = new PersistenceManager(cm);
     var input = makeDbInput(practiceSummaries);
@@ -464,127 +489,69 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
     }
   }
 
-  private List<MapEntry> makeFeedbackMap() {
-    var dateString = cm.getAsString(Key.EXERCISE_DATE);
-    var mapService = new MapService(cm, mm);
+  record Legend(String label, String color, Predicate<MapEntry> predicate, Function<MapEntry, String> popupGenerator) {
+  };
 
-    // feedback map
-    var feedbackCounter = new Counter();
-    final int nLayers = 6;
-    var truncatedCountMap = new HashMap<Integer, Integer>(); // 9 -> 9 or more
-    for (var summary : mIdFeedbackMap.values()) {
-      var feedbackMessage = (FeedbackMessage) summary;
-      var count = feedbackMessage.feedbackResult().feedbackCount();
-      var key = Math.min(nLayers - 1, count);
-      var value = truncatedCountMap.getOrDefault(key, Integer.valueOf(0));
-      ++value;
-      truncatedCountMap.put(key, value);
-    }
+  private void makeMakeViaLegends(List<MapEntry> mapEntries, String legendTitle, String fileName, Path path,
+      List<Legend> legends) {
+    var colorCountMap = new HashMap<String, Integer>();
 
-    var gradientMap = mapService.makeGradientMap(120, 0, nLayers);
-    var layers = new ArrayList<MapLayer>();
-    var countLayerNameMap = new HashMap<Integer, String>();
-    for (var i = 0; i < nLayers; ++i) {
-      var value = String.valueOf(i);
-      var count = truncatedCountMap.getOrDefault(i, Integer.valueOf(0));
-      if (i == nLayers - 1) {
-        value = i + " or more";
+    var newMapEntries = new ArrayList<MapEntry>(mapEntries.size());
+    for (var mapEntry : mapEntries) {
+      var found = false;
+      for (var legend : legends) {
+        if (legend.predicate.test(mapEntry)) {
+          var count = colorCountMap.getOrDefault(legend.color, Integer.valueOf(0));
+          ++count;
+          colorCountMap.put(legend.color, count);
+          mapEntry = mapEntry.update(legend.color);
+          newMapEntries.add(mapEntry);
+          found = true;
+          break;
+        } // endif predicate matches
+      } // end loop over legend entries
+      if (!found) {
+        logger.debug("not found");
       }
-      var layerName = "value: " + value + ", count: " + count;
-      countLayerNameMap.put(i, layerName);
+    } // end loop of mapEntries
 
-      var color = gradientMap.get(i);
-      var layer = new MapLayer(layerName, color);
-      layers.add(layer);
+    var layers = new ArrayList<MapLayer>();
+    for (var legend : legends) {
+      var color = legend.color;
+      var label = legend.label;
+      var count = colorCountMap.getOrDefault(color, Integer.valueOf(0));
+      layers.add(new MapLayer(label + ", count: " + count, color));
     }
 
-    var feedbackMessages = new ArrayList<FeedbackMessage>(mIdFeedbackMap.values().size());
+    legendTitle = dateString + " " + legendTitle + " (" + mIdFeedbackMap.values().size() + " total)";
+    var context = new MapContext(path, //
+        dateString + "-map-" + fileName, // file name
+        dateString + legendTitle, // map title
+        null, legendTitle, layers, newMapEntries);
+    var mapService = new MapService(cm, mm);
+    mapService.makeMap(context);
+  }
+
+  private List<MapEntry> makeMapeEntries() {
+    var mapEntries = new ArrayList<MapEntry>(mIdFeedbackMap.values().size());
     relocationIndex = 0;
     for (var s : mIdFeedbackMap.values()) {
       var feedbackMessage = (FeedbackMessage) s;
       var m = feedbackMessage.message();
-      var location = (m.getMessageType() == MessageType.FIELD_SITUATION) ? m.msgLocation : m.mapLocation;
-
-      if (location != null && location.isValid()) {
-        feedbackMessages.add(feedbackMessage);
-      } else {
-        var newLocation = LocationUtils.binaryAngularSubdivision(relocationIndex++, LatLongPair.ZERO_ZERO, 10_000);
-        var newFeedbackMessage = feedbackMessage.updateLocation(newLocation);
-        feedbackMessages.add(newFeedbackMessage);
-      }
-    } // end loop over messages to find bad locations
-
-    relocationIndex = 0;
-    var mapEntries = new ArrayList<MapEntry>(mIdFeedbackMap.values().size());
-    for (var feedbackMessage : feedbackMessages) {
-      var m = feedbackMessage.message();
       var r = feedbackMessage.feedbackResult();
-      var count = r.feedbackCount();
-
-      final var lastColorMapIndex = gradientMap.size() - 1;
-      final var lastColor = gradientMap.get(lastColorMapIndex);
-
       var location = (m.getMessageType() == MessageType.FIELD_SITUATION) ? m.msgLocation : m.mapLocation;
       if (location == null || !location.isValid()) {
         location = LocationUtils.binaryAngularSubdivision(relocationIndex++, LatLongPair.ZERO_ZERO, 10_000d);
       }
-      var color = gradientMap.getOrDefault(count, lastColor);
+      var color = "";
       var prefix = "<b>" + m.from + "</b><hr>";
       var content = prefix + "Feedback Count: " + r.feedbackCount() + "\n" + "Feedback: " + r.feedback();
       content = content.replaceAll("\"", "&quot;");
       var mapEntry = new MapEntry(m.from, m.to, location, content, color);
       mapEntries.add(mapEntry);
-      feedbackCounter.increment(r.feedbackCount());
     }
-
-    var legendTitle = dateString + " Feedback Counts (" + mIdFeedbackMap.values().size() + " total)";
-    var context = new MapContext(publishedPath, //
-        dateString + "-map-feedbackCount", // file name
-        dateString + " Feedback Counts", // map title
-        null, legendTitle, layers, mapEntries);
-    mapService.makeMap(context);
 
     return mapEntries;
-  }
-
-  private void makeBinaryMap(List<MapEntry> mapEntries, Predicate<MapEntry> predicate, String attributeName,
-      String fileName) {
-    var mapService = new MapService(cm, mm);
-    var colorGood = IMapService.rgbMap.get("green");
-    var colorBad = IMapService.rgbMap.get("red");
-    var countGood = 0;
-    var countBad = 0;
-
-    var newMapEntries = new ArrayList<MapEntry>();
-    for (var old : mapEntries) {
-      var color = "";
-      var isGood = predicate.test(old);
-      if (isGood) {
-        color = colorBad;
-        ++countBad;
-      } else {
-        color = colorGood;
-        ++countGood;
-      }
-      newMapEntries.add(new MapEntry(old.label(), old.to(), old.location(), old.message(), color));
-    }
-
-    var layers = new ArrayList<MapLayer>();
-    layers.add(new MapLayer("Correct " + attributeName + " messages, count: " + countGood, colorGood));
-    layers.add(new MapLayer("Incorrect " + attributeName + " messages, count: " + countBad, colorBad));
-
-    var legendTitle = dateString + " " + attributeName + " Counts (" + mIdFeedbackMap.values().size() + " total)";
-
-    if (fileName == null || fileName.isBlank()) {
-      var fields = attributeName.split(" ");
-      fields[0] = fields[0].toLowerCase();
-      fileName = String.join("", fields);
-    }
-    var context = new MapContext(outputPath, //
-        dateString + "-map-" + fileName, // file name
-        dateString + " " + attributeName + "  correct", // map title
-        null, legendTitle, layers, newMapEntries);
-    mapService.makeMap(context);
   }
 
   private void makeMessageTypeMap() {
