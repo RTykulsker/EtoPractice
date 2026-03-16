@@ -451,7 +451,7 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
 
     WriteProcessor.writeTable(new ArrayList<IWritableTable>(practiceSummaries), "practice-summary.csv");
 
-    var mapEntries = makeMapeEntries();
+    var mapEntries = makeMapEntries();
 
     var mapService = new MapService(cm, mm);
     var gradientMap = mapService.makeGradientMap(120, 0, 6);
@@ -532,7 +532,7 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
     mapService.makeMap(context);
   }
 
-  private List<MapEntry> makeMapeEntries() {
+  private List<MapEntry> makeMapEntries() {
     var mapEntries = new ArrayList<MapEntry>(mIdFeedbackMap.values().size());
     relocationIndex = 0;
     for (var s : mIdFeedbackMap.values()) {
