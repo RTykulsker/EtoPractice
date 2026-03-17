@@ -455,7 +455,7 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
 
     var mapService = new MapService(cm, mm);
     var gradientMap = mapService.makeGradientMap(120, 0, 6);
-    makeMakeViaLegends(mapEntries, "Feedback Counts", "feedbackCountMap", publishedPath, List.of(//
+    makeMakeViaLegends(mapEntries, "Feedback Counts", "FeedbackCount", publishedPath, List.of(//
         new Legend("value: 0", gradientMap.get(0), (me -> me.message().contains("Count: 0")), null), //
         new Legend("value: 1", gradientMap.get(1), (me -> me.message().contains("Count: 1")), null), //
         new Legend("value: 2", gradientMap.get(2), (me -> me.message().contains("Count: 2")), null), //
@@ -466,7 +466,7 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
     var colorGood = IMapService.rgbMap.get("green");
     var colorBad = IMapService.rgbMap.get("red");
 
-    makeMakeViaLegends(mapEntries, "Start Date Counts", "StartDateMap", outputPath, List.of(//
+    makeMakeViaLegends(mapEntries, "Start Date Counts", "StartDate", outputPath, List.of(//
         new Legend("Correct", colorGood, (me -> !me.message().contains("Message should be posted on or after")), null), //
         new Legend("Incorrect", colorBad, (me -> me.message().contains("Message should be posted on or after")),
             null)));
