@@ -157,15 +157,15 @@ public class LeafletMapEngine extends MapService {
 
   private static String SLOW_FILE_TEMPLATE = """
       <!DOCTYPE html>
-      <html>
+      <html lang="en">
       <head>
-        <meta charset="utf-8" />
+        <meta charset="utf-8">
         <title>#MAP_TITLE#</title>
 
         <link
           rel="stylesheet"
           href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-        />
+        >
 
         <style>
           #map {
@@ -534,15 +534,15 @@ public class LeafletMapEngine extends MapService {
 
   private static String FAST_FILE_TEMPLATE = """
       <!DOCTYPE html>
-      <html>
+      <html lang="en">
       <head>
-        <meta charset="utf-8" />
-        <title#MAP_TITLE#</title>
+        <meta charset="utf-8">
+        <title>#MAP_TITLE#</title>
 
         <link
           rel="stylesheet"
           href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-        />
+        >
 
         <style>
           #map {
