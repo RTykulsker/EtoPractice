@@ -80,7 +80,7 @@ public class Ics205PracticeProcessor extends BasePracticeProcessor {
       if (refEntry.isEmpty()) {
         count(sts.testIfEmpty("Zone/Group should be empty", entry.zoneGroup()));
         count(sts.testIfEmpty("Channel # should be empty", entry.channelNumber()));
-        count(sts.testIfEmpty("Function be empty", entry.function()));
+        count(sts.testIfEmpty("Function should be empty", entry.function()));
         count(sts.testIfEmpty("Channel Name should be empty", entry.channelName()));
         count(sts.testIfEmpty("Assignment should be empty", entry.assignment()));
         count(sts.testIfEmpty("RX Freq should be empty", entry.rxFrequency()));
