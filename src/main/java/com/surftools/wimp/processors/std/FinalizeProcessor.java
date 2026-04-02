@@ -311,7 +311,7 @@ public class FinalizeProcessor extends AbstractBaseProcessor {
 
     var lastWord = (String) mm.getContextObject(IMessageManager.LAST_WORD);
     if (lastWord != null && !lastWord.strip().isEmpty()) {
-      body += " " + lastWord;
+      body += "\n" + lastWord;
     }
 
     winlinkContext = new WinlinkContext(subject, sender, source, toListString, body);

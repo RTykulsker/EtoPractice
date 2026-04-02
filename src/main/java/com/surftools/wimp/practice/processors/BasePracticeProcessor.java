@@ -503,7 +503,6 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
     lines.add(" ");
     lines.add("Total messages received: " + originalMessages.size());
     lines.add("Total participants: " + originalSenderSize);
-    lines.add("Exercise message type: " + exerciseMessageType.toString());
     lines.add("On-type participants: " + practiceSummaries.size());
     lines.add("Average feedback: " + String.format("%.02f", avgFeedbackCount));
     var lastWord = String.join("\n", lines);
