@@ -36,6 +36,8 @@ import com.surftools.wimp.message.ExportedMessage;
 
 public interface IMessageManager {
 
+  String LAST_WORD = "LAST_WORD";
+
   /**
    * retrieve arbitrary inter-process data
    *
@@ -60,7 +62,8 @@ public interface IMessageManager {
   public void load(List<ExportedMessage> messages);
 
   /**
-   * return all messages, without explicit rejection or de-duplication, useful for classifier
+   * return all messages, without explicit rejection or de-duplication, useful for
+   * classifier
    *
    * @return
    */

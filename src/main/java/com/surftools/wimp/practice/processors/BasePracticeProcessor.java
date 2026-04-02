@@ -487,6 +487,30 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
     if (dbResult.status() == ReturnStatus.ERROR) {
       logger.error("### database update failed: " + dbResult.content());
     }
+
+    doLastWord(practiceSummaries);
+  }
+
+  private void doLastWord(List<PracticeSummary> practiceSummaries) {
+    var originalMessages = mm.getOriginalMessages();
+    var originalSenderSize = new HashSet<String>(originalMessages.stream().map(s -> s.from).toList()).size();
+    var totalFeedbackCount = practiceSummaries.stream().mapToInt(PracticeSummary::getFeedbackCount).sum();
+    var avgFeedbackCount = (double) totalFeedbackCount / (double) practiceSummaries.size();
+    var exerciseDate = cm.getAsString(Key.EXERCISE_DATE);
+    var lines = new ArrayList<String>();
+    lines.add("Exercise date: " + exerciseDate);
+    lines.add("Exercise message type: " + exerciseMessageType.toString());
+    lines.add(" ");
+    lines.add("Total messages received: " + originalMessages.size());
+    lines.add("Total participants: " + originalSenderSize);
+    lines.add("Exercise message type: " + exerciseMessageType.toString());
+    lines.add("On-type participants: " + practiceSummaries.size());
+    lines.add("Average feedback: " + String.format("%.02f", avgFeedbackCount));
+    var lastWord = String.join("\n", lines);
+
+    WriteProcessor.writeString(lastWord, Path.of(outputPathName, exerciseDate + "-lastWord.txt"));
+    logger.info("adding lastWord: \n" + lastWord);
+    mm.putContextObject(IMessageManager.LAST_WORD, lastWord);
   }
 
   record Legend(String label, String color, Predicate<MapEntry> predicate, Function<MapEntry, String> popupGenerator) {

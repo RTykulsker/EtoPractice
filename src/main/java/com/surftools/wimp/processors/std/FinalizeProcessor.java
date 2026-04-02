@@ -309,6 +309,11 @@ public class FinalizeProcessor extends AbstractBaseProcessor {
     var body = cm.getAsString(Key.EMAIL_NOTIFICATION_BODY, "Ready for you to send groups.io message to all");
     body = body.replaceAll("#DATE#", dateString);
 
+    var lastWord = (String) mm.getContextObject(IMessageManager.LAST_WORD);
+    if (lastWord != null && !lastWord.strip().isEmpty()) {
+      body += " " + lastWord;
+    }
+
     winlinkContext = new WinlinkContext(subject, sender, source, toListString, body);
 
     logger.info("Winlink notification source: " + winlinkContext.source());
