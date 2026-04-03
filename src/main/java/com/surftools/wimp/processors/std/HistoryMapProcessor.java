@@ -140,7 +140,8 @@ public class HistoryMapProcessor extends AbstractBaseProcessor {
 
     var firstTimeCalls = mapEntries.stream().map(e -> e.label()).sorted().toList();
     mm.putContextObject(IMessageManager.FIRST_TIME_CALLS, firstTimeCalls);
-    WriteProcessor.writeString(String.join("\n", firstTimeCalls), Path.of(exerciseDate + "-firstTimeCalls.txt"));
+    WriteProcessor.writeString(String.join("\n", firstTimeCalls),
+        Path.of(outputPathName, exerciseDate + "-firstTimeCalls.txt"));
   }
 
   String intToSuffix(int i) {
