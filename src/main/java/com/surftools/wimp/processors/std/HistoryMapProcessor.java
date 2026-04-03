@@ -27,6 +27,7 @@ SOFTWARE.
 
 package com.surftools.wimp.processors.std;
 
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -136,6 +137,10 @@ public class HistoryMapProcessor extends AbstractBaseProcessor {
         dateString + " First Timer Participants", // map title
         null, legendTitle, layers, mapEntries);
     mapService.makeMap(context);
+
+    var firstTimeCalls = mapEntries.stream().map(e -> e.label()).sorted().toList();
+    mm.putContextObject(IMessageManager.FIRST_TIME_CALLS, firstTimeCalls);
+    WriteProcessor.writeString(String.join("\n", firstTimeCalls), Path.of(exerciseDate + "-firstTimeCalls.txt"));
   }
 
   String intToSuffix(int i) {
