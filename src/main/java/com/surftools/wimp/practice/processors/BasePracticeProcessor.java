@@ -276,6 +276,8 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
     var intersection = String.join(",", result);
     var pred = intersection.length() == 0;
     count(sts.test("To and Cc list should not contain monthly/training/clearinghouse addresses", pred, intersection));
+
+    getCounter("Location source").increment(message.msgLocationSource);
   }
 
   protected void endCommonProcessing(ExportedMessage m) {
