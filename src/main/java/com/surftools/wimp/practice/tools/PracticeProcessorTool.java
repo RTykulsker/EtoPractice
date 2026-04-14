@@ -144,11 +144,16 @@ public class PracticeProcessorTool {
       var sb = new StringBuilder();
       sb.append("\n\n");
       if (ord == 2 && !enableLegacy) {
-        sb.append("INSTRUCTIONS for next week:" + "\n");
-        sb.append("Next Thursday is a \"Third Thursday Training Exercise\"," + "\n");
-        sb.append(
-            "so look for instructions on our web site at https://emcomm-training.org/Winlink_Thursdays.html" + "\n");
-        sb.append("However, here are the " + instructionText + "\n");
+        var text = """
+            --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+            INSTRUCTIONS for next week:
+            Next Thursday is a \"Third Thursday Training Exercise\".
+            These instructions are simply too large for a Winlink messages,
+            so look for instructions on our web site at https://emcomm-training.org/Winlink_Thursdays.html
+                        """;
+        sb.append(text);
+
       } else {
         sb.append("INSTRUCTIONS for " + instructionText + "\n");
       }
