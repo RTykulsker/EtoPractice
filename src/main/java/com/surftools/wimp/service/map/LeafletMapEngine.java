@@ -729,7 +729,7 @@ public class LeafletMapEngine extends MapService {
 
           const usgs = L.tileLayer(
             "https://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/tile/{z}/{y}/{x}",
-            { maxZoom: 20, attribution: "USGS The National Map" }
+            { maxZoom: 16, attribution: "USGS The National Map" }
           );
 
           const openTopo = L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",{
