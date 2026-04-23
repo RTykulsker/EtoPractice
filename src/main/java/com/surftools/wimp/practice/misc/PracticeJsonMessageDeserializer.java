@@ -345,7 +345,7 @@ public class PracticeJsonMessageDeserializer {
 
     var additionalComments = json.get("additionalComments").asText();
     var poc = json.get("poc").asText();
-    var formVersion = json.get("formVersion").asText();
+    var formVersion = "n/a";
     var expressVersion = "n/a";
 
     var m = new FieldSituationMessage(//
