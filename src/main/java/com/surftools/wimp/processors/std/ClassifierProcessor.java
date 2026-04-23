@@ -154,6 +154,15 @@ public class ClassifierProcessor extends AbstractBaseProcessor {
           return messageType;
         }
 
+        // I don't know how, but somehow attachment name is not as expected ...
+        if (attachmentName.startsWith(messageType.rmsViewerName().replaceAll(" ", "_"))) {
+          // oh what a tangled web we weave ...
+          var bytes = message.attachments.get(attachmentName);
+          message.attachments.remove(attachmentName);
+          message.attachments.put(messageType.rmsViewerName(), bytes);
+          return messageType;
+        }
+
       } // end loop over messageTypes
     } // end loop over attachment names
 
