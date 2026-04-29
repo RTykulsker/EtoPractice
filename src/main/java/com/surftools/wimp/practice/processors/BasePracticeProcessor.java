@@ -458,11 +458,11 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
     var mapService = new MapService(cm, mm);
     var gradientMap = mapService.makeGradientMap(120, 0, 6);
     makeMakeViaLegends(mapEntries, "Feedback Counts", "FeedbackCount", publishedPath, List.of(//
-        new Legend("value: 0", gradientMap.get(0), (me -> me.message().contains("Count: 0")), null), //
-        new Legend("value: 1", gradientMap.get(1), (me -> me.message().contains("Count: 1")), null), //
-        new Legend("value: 2", gradientMap.get(2), (me -> me.message().contains("Count: 2")), null), //
-        new Legend("value: 3", gradientMap.get(3), (me -> me.message().contains("Count: 3")), null), //
-        new Legend("value: 4", gradientMap.get(4), (me -> me.message().contains("Count: 4")), null), //
+        new Legend("value: 0", gradientMap.get(0), (me -> me.message().contains("Count: 0\n")), null), //
+        new Legend("value: 1", gradientMap.get(1), (me -> me.message().contains("Count: 1\n")), null), //
+        new Legend("value: 2", gradientMap.get(2), (me -> me.message().contains("Count: 2\n")), null), //
+        new Legend("value: 3", gradientMap.get(3), (me -> me.message().contains("Count: 3\n")), null), //
+        new Legend("value: 4", gradientMap.get(4), (me -> me.message().contains("Count: 4\n")), null), //
         new Legend("value: 5 or more", gradientMap.get(5), (me -> me != null), null)));
 
     var colorGood = IMapService.rgbMap.get("green");
