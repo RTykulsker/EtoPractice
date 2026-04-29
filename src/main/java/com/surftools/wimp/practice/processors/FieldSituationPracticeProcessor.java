@@ -139,28 +139,28 @@ public class FieldSituationPracticeProcessor extends BasePracticeProcessor {
       count(sts.testIfEmpty("Commercial Power Stable provider should be empty", m.powerStableComments));
     }
 
-    count(sts.test("Natural Gas supply functioning be #EV", ref.naturalGasStatus, m.naturalGasStatus));
+    count(sts.test("Natural Gas supply functioning should be #EV", ref.naturalGasStatus, m.naturalGasStatus));
     if (ref.naturalGasStatus.equals("NO")) {
       count(sts.test("Natural Gas provider should be #EV", ref.naturalGasComments, m.naturalGasComments));
     } else {
       count(sts.testIfEmpty("Natural Gas provider should be empty", m.naturalGasComments));
     }
 
-    count(sts.test("Internet functioning be #EV", ref.internetStatus, m.internetStatus));
+    count(sts.test("Internet functioning should be #EV", ref.internetStatus, m.internetStatus));
     if (ref.internetStatus.equals("NO")) {
       count(sts.test("Internet provider should be #EV", ref.internetComments, m.internetComments));
     } else {
       count(sts.testIfEmpty("Internet provider should be empty", m.internetComments));
     }
 
-    count(sts.test("NOAA Weather Radio functioning be #EV", ref.noaaStatus, m.noaaStatus));
+    count(sts.test("NOAA Weather Radio functioning should be #EV", ref.noaaStatus, m.noaaStatus));
     if (ref.noaaStatus.equals("NO")) {
       count(sts.test("NOAA Weather Radio station should be #EV", ref.noaaComments, m.noaaComments));
     } else {
       count(sts.testIfEmpty("NOAA Weather Radio station provider should be empty", m.noaaComments));
     }
 
-    count(sts.test("NOAA Weather audio degraded be #EV", ref.noaaAudioDegraded, m.noaaAudioDegraded));
+    count(sts.test("NOAA Weather audio degraded should be #EV", ref.noaaAudioDegraded, m.noaaAudioDegraded));
     if (ref.noaaAudioDegraded.equals("YES")) {
       count(sts.test("NOAA Weather Radio degraded station should be #EV", ref.noaaAudioDegradedComments,
           m.noaaAudioDegradedComments));
