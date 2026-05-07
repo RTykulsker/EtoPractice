@@ -278,6 +278,7 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
     count(sts.test("To and Cc list should not contain monthly/training/clearinghouse addresses", pred, intersection));
 
     getCounter("Location source").increment(message.msgLocationSource);
+    getCounter("Message Sender == Message Source").increment(message.source.equals(message.from));
   }
 
   protected void endCommonProcessing(ExportedMessage m) {
