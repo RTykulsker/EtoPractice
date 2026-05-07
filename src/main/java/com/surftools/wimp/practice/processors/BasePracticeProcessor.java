@@ -142,6 +142,7 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
   protected int ppMessageCorrectCount = 0;
 
   public Map<String, Counter> counterMap = new LinkedHashMap<String, Counter>();
+  private List<IWritableTable> sourceSenderEntries = new ArrayList<>();
 
   @SuppressWarnings("unchecked")
   public void initialize(IConfigurationManager cm, IMessageManager mm, MessageType _processorMessageType) {
@@ -279,6 +280,7 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
 
     getCounter("Location source").increment(message.msgLocationSource);
     getCounter("Message Sender == Message Source").increment(message.source.equals(message.from));
+    sourceSenderEntries.add(SourceSenderEntry.newEntry(message));
   }
 
   protected void endCommonProcessing(ExportedMessage m) {
@@ -434,6 +436,7 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
     }
     var results = new ArrayList<>(mIdFeedbackMap.values());
     WriteProcessor.writeTable(results, "feedback-" + exerciseMessageType.toString() + ".csv");
+    WriteProcessor.writeTable(sourceSenderEntries, "sourceSenderEntries.csv");
 
     if (doOutboundMessaging) {
       var service = new OutboundMessageService(cm, mm, outboundMessageExtraContent, "allFeedback.txt");
@@ -747,5 +750,35 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
     } else {
       return null;
     }
+  }
+
+  public record SourceSenderEntry(String source, String sender, String messageId, String isMatch)
+      implements IWritableTable {
+
+    static public SourceSenderEntry newEntry(ExportedMessage m) {
+      return new SourceSenderEntry(m.source, m.from, m.messageId, String.valueOf(m.source.equals(m.from)));
+    }
+
+    @Override
+    public int compareTo(IWritableTable other) {
+      var o = (SourceSenderEntry) other;
+      var cmp = isMatch.compareTo(o.isMatch);
+      if (cmp != 0) {
+        return cmp;
+      }
+
+      return sender.compareTo(o.sender);
+    }
+
+    @Override
+    public String[] getHeaders() {
+      return new String[] { "Source", "Sender", "MessageId", "IsMatch" };
+    }
+
+    @Override
+    public String[] getValues() {
+      return new String[] { source, sender, messageId, isMatch };
+    }
+
   }
 }
