@@ -51,7 +51,7 @@ import com.surftools.wimp.utils.config.IWritableConfigurationManager;
  */
 public class ParticipantHistoryProcessor extends AbstractBaseProcessor {
   private static final Logger logger = LoggerFactory.getLogger(ParticipantHistoryProcessor.class);
-
+  protected static LocalDate epochDate;
   private IWritableConfigurationManager cm;
 
   @Override
@@ -77,7 +77,7 @@ public class ParticipantHistoryProcessor extends AbstractBaseProcessor {
 
   private void makeParticipantHistory(IPersistenceManager db) {
     var epochDateString = cm.getAsString(Key.PERSISTENCE_EPOCH_DATE);
-    var epochDate = LocalDate.parse(epochDateString);
+    epochDate = LocalDate.parse(epochDateString);
     logger.info("Epoch Date: " + epochDate.toString());
     var ret = db.getFilteredExercises(null, epochDate); // all types, all dates
     if (ret.status() != ReturnStatus.OK) {
@@ -96,6 +96,7 @@ public class ParticipantHistoryProcessor extends AbstractBaseProcessor {
     @SuppressWarnings("unchecked")
     var joins = (List<JoinedUser>) ret.data();
     var histories = new ArrayList<ParticipantHistory>(joins.size());
+    var extendedHistories = new ArrayList<ExtendedParticipantHistory>(joins.size());
     var summaries = new HashMap<Integer, ParticipantSummary>(filteredExercises.size());
     for (var join : joins) {
       if (join.exercises.size() > 0) {
@@ -110,11 +111,15 @@ public class ParticipantHistoryProcessor extends AbstractBaseProcessor {
         var ph = new ParticipantHistory(join.user.call(), count, firstDate, lastDate);
         histories.add(ph);
         summaries.put(count, summaries.getOrDefault(count, new ParticipantSummary(count, 0)).increment());
+        var eph = ExtendedParticipantHistory.fromJoinedUser(join, filteredExercises);
+        extendedHistories.add(eph);
       } // end if join has exercises
     }
     logger.info("Got " + histories.size() + " particpant Histories");
 
     WriteProcessor.writeTable(new ArrayList<IWritableTable>(histories), dateString + "-participantHistory.csv");
+    WriteProcessor.writeTable(new ArrayList<IWritableTable>(extendedHistories),
+        dateString + "-extendedParticipantHistory.csv");
     WriteProcessor.writeTable(new ArrayList<IWritableTable>(summaries.values()),
         dateString + "-participantSummary.csv");
   }
@@ -162,4 +167,62 @@ public class ParticipantHistoryProcessor extends AbstractBaseProcessor {
     }
   }
 
+  static record ExtendedParticipantHistory(String call, String latitude, String longitude, //
+      String firstDate, String lastDate, String isFirstTime, String isOneAndDone, String isCurrent, //
+      String exerciseCount, String totalExercises, String exercisesSinceJoin, //
+      String percentAllExercises, String percentExercisesSinceJoined) implements IWritableTable {
+
+    @Override
+    public int compareTo(IWritableTable other) {
+      var o = (ExtendedParticipantHistory) other;
+      return call.compareTo(o.call);
+    }
+
+    @Override
+    public String[] getHeaders() {
+      return new String[] { "Call", "Latitude", "Longitude", //
+          "First Date", "Last Date", "FirstTime?", "OneAndDone?", "Current?", //
+          "ExerciseCount", "TotalExercises", "ExercisesSinceJoin", //
+          "% All Exercises", "% Exercises Since Joined" };
+    }
+
+    @Override
+    public String[] getValues() {
+      return new String[] { call, latitude, longitude, //
+          firstDate, lastDate, isFirstTime, isOneAndDone, isCurrent, //
+          exerciseCount, totalExercises, exercisesSinceJoin, //
+          percentAllExercises, percentExercisesSinceJoined };
+    }
+
+    public static ExtendedParticipantHistory fromJoinedUser(JoinedUser j, List<Exercise> filteredExercises) {
+      var exerciseDate = date;
+      var firstDate = j.dateJoined.isBefore(epochDate) ? epochDate : j.dateJoined;
+      var lastDate = j.lastExerciseDate;
+      var isFirstTime = String.valueOf(false);
+      var isOneAndDone = String.valueOf(false);
+      var isCurrent = String.valueOf(exerciseDate.compareTo(lastDate) == 0);
+      var count = j.exercises.size();
+      var nExercises = filteredExercises.size();
+      var totalExercises = String.valueOf(nExercises);
+      var nExercisesSinceJoined = filteredExercises.stream().filter(ex -> !ex.date().isBefore(j.dateJoined)).toList()
+          .size();
+      var exercisesSinceJoined = String.valueOf(nExercisesSinceJoined);
+      var percentAllExercises = String.format("%.02f", 100d * count / nExercises);
+      var percentExercisesSinceJointed = String.format("%.02f", 100d * count / nExercisesSinceJoined);
+      if (j.exercises.size() == 1) {
+        if (lastDate.compareTo(exerciseDate) == 0) {
+          isFirstTime = String.valueOf(true);
+        } else {
+          isOneAndDone = String.valueOf(true);
+        }
+      }
+
+      return new ExtendedParticipantHistory(j.user.call(), j.location.getLatitude(), j.location.getLongitude(), //
+          firstDate.toString(), lastDate.toString(), isFirstTime, isOneAndDone, isCurrent, //
+          String.valueOf(count), totalExercises, exercisesSinceJoined, //
+          percentAllExercises, percentExercisesSinceJointed);
+
+    }
+
+  }
 }
