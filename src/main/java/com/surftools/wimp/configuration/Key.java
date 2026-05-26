@@ -102,7 +102,7 @@ public enum Key implements IConfigurationKey {
   EMAIL_NOTIFICATION_BODY("email.notification.body"), // with #DATE# substitution
 
   WINLINK_NOTIFICATION_SOURCE("winlink.notification.source"), // mbo address
-  WINLINK_NOTIFICATION_SENDER("winlink.notification..sender"), // from address
+  WINLINK_NOTIFICATION_SENDER("winlink.notification.sender"), // from address
 
   OUTBOUND_MESSAGE_SOURCE("outboundMessage.source"), // mbo address
   OUTBOUND_MESSAGE_SENDER("outboundMessage.sender"), // from address
