@@ -48,6 +48,7 @@ public abstract class AbstractBaseProcessor implements IProcessor {
   protected static final DateTimeFormatter ALT_DTF = DateTimeFormatter.ofPattern(DT_FORMAT_STRING.replaceAll("-", "/"));
   protected static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("MM/dd/yyyy");
   protected static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
+  protected static final DateTimeFormatter HHMMSS_FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss");
 
   protected static IConfigurationManager cm;
   protected static IMessageManager mm;
@@ -97,7 +98,8 @@ public abstract class AbstractBaseProcessor implements IProcessor {
     inputPathName = inputPath.toString();
 
     outputPath = Path.of(exercisePathName, "output");
-    // don't delete here, already deleted in PracticeProcessorTool, FileUtils.deleteDirectory(outputPath);
+    // don't delete here, already deleted in PracticeProcessorTool,
+    // FileUtils.deleteDirectory(outputPath);
     FileUtils.makeDirIfNeeded(outputPath.toString());
     outputPathName = outputPath.toString();
 
