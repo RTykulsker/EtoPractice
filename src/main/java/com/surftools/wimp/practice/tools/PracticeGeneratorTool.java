@@ -50,7 +50,7 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.surftools.utils.FileUtils;
-import com.surftools.utils.WeightedRandomChooser;
+import com.surftools.utils.WeightedChooser;
 import com.surftools.utils.location.LatLongPair;
 import com.surftools.wimp.configuration.Key;
 import com.surftools.wimp.core.MessageType;
@@ -325,11 +325,11 @@ public class PracticeGeneratorTool {
 
     var lineItems = prd.getRandomResources(date, nLineItems, null, null);
 
-    var delivery = (String) pd.deliveryChooser.next();
+    var delivery = pd.deliveryChooser.next();
     var substitutes = rng.nextBoolean() ? "substitute as appropriate" : "no substitutes allowed";
 
     var requestedBy = names.get(0) + " / " + positions.get(0);
-    var priority = (String) pd.priorityChooser.next();
+    var priority = pd.priorityChooser.next();
     var approvedBy = names.get(1);
 
     var version = NA;
@@ -605,42 +605,42 @@ public class PracticeGeneratorTool {
     final var YES = "YES";
     final var NO = "NO";
     final var UNK = "Unknown - N/A";
-    var chooser = new WeightedRandomChooser(List.of(YES, NO, UNK), rng);
+    var statusChooser = new WeightedChooser<String>(List.of(YES, NO, UNK), rng);
 
-    var landlineStatus = (String) chooser.next();
+    var landlineStatus = statusChooser.next();
     var landlineComments = landlineStatus.equals(NO) ? "CenturyLink" : "";
 
     var voipStatus = UNK;
     var voipComments = "";
 
-    var cellPhoneStatus = (String) chooser.next();
+    var cellPhoneStatus = statusChooser.next();
     var cellPhoneComments = cellPhoneStatus.equals(NO) ? "Verizon" : "";
 
     var cellTextStatus = cellPhoneStatus;
     var cellTextComments = cellPhoneComments;
 
-    var radioStatus = (String) chooser.next();
+    var radioStatus = statusChooser.next();
     var radioComments = radioStatus.equals(NO) ? "KFRC FM" : "";
 
-    var tvStatus = (String) chooser.next();
+    var tvStatus = statusChooser.next();
     var tvComments = tvStatus.equals(NO) ? "KUSA" : "";
 
     var satTvStatus = UNK;
     var satTvComments = "";
 
-    var cableTvStatus = (String) chooser.next();
+    var cableTvStatus = statusChooser.next();
     var cableTvComments = cableTvStatus.equals(NO) ? "Xfinity" : "";
 
-    var waterStatus = (String) chooser.next();
+    var waterStatus = statusChooser.next();
     var waterComments = waterStatus.equals(NO) ? "Fort Collins Utilities" : "";
 
-    var powerStatus = (String) chooser.next();
+    var powerStatus = statusChooser.next();
     var powerComments = powerStatus.equals(NO) ? "Fort Collins Utilities" : "";
 
-    var powerStable = (String) chooser.next();
+    var powerStable = statusChooser.next();
     var powerStableComments = powerStable.equals(NO) ? "Fort Collins Utilities" : "";
 
-    var naturalGasStatus = (String) chooser.next();
+    var naturalGasStatus = statusChooser.next();
     var naturalGasComments = naturalGasStatus.equals(NO) ? "Xcel Energy" : "";
 
     var internetStatus = cableTvStatus;
