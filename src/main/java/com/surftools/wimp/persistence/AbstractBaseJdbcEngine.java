@@ -40,7 +40,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.surftools.utils.location.LatLongPair;
-import com.surftools.wimp.configuration.Key;
 import com.surftools.wimp.persistence.dto.BulkInsertEntry;
 import com.surftools.wimp.persistence.dto.Event;
 import com.surftools.wimp.persistence.dto.Exercise;
@@ -52,12 +51,10 @@ import com.surftools.wimp.utils.config.IConfigurationManager;
 public abstract class AbstractBaseJdbcEngine extends BaseQueryEngine {
   private static final Logger logger = LoggerFactory.getLogger(AbstractBaseJdbcEngine.class);
 
-  protected String url;
   protected boolean dateAsString = true; // true for sqlite, false for postgres
 
   public AbstractBaseJdbcEngine(IConfigurationManager cm) {
     super(cm);
-    url = cm.getAsString(Key.PERSISTENCE_SQLITE_URL);
   }
 
   protected abstract Connection getConnection();
@@ -176,7 +173,7 @@ public abstract class AbstractBaseJdbcEngine extends BaseQueryEngine {
         bulkInsert_event(connection, event);
       }
 
-      logger.info("persisted exercise: " + exercise.toString() + ", plus " + events.size() + " events to: " + url);
+      logger.info("persisted exercise: " + exercise.toString() + ", plus " + events.size() + " events");
 
       connection.commit();
       connection.close();

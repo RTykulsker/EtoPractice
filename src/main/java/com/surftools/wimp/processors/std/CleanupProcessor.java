@@ -35,6 +35,7 @@ import java.nio.file.StandardCopyOption;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.surftools.wimp.configuration.Key;
 import com.surftools.wimp.core.IMessageManager;
 import com.surftools.wimp.practice.tools.PracticeProcessorTool;
 import com.surftools.wimp.utils.config.IConfigurationManager;
@@ -80,6 +81,20 @@ public class CleanupProcessor extends AbstractBaseProcessor {
       logger.info("copied allFeedback.txt to output/");
     } catch (Exception e) {
       logger.error("Exception copying file: " + allFeedbackSource.toString() + ", " + e.getMessage());
+    }
+
+    // copy sqlite db file to output
+    var sqliteFileName = cm.getAsString(Key.PERSISTENCE_SQLITE_URL);
+    try {
+      var sqlitePath = Path.of(sqliteFileName);
+      var sqliteFile = sqlitePath.toFile();
+      if (sqliteFile.exists()) {
+        var sqliteDestination = Path.of(outputPathName, dateString + "-" + sqlitePath.getFileName());
+        Files.copy(sqlitePath, sqliteDestination);
+        logger.info("copied sqlite database to " + sqliteDestination.toString());
+      }
+    } catch (Exception e) {
+      logger.error("Exception copying sqlite file: " + sqliteFileName.toString() + ", " + e.getMessage());
     }
 
     // copy configurationFile to input
