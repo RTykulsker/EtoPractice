@@ -64,15 +64,15 @@ public class ScheduleManager {
   protected List<ScheduleRecord> readSchedule(IConfigurationManager cm) {
     var list = new ArrayList<ScheduleRecord>();
 
-    var metaSchedulePathName = cm.getAsString(Key.PATH_META_SCHEDULE);
-    var metaSchedulePath = Path.of(metaSchedulePathName);
-    var fieldsList = ReadProcessor.readCsvFileIntoFieldsArray(metaSchedulePath, ',', true, 1);
+    var schedulePathName = cm.getAsString(Key.PATH_SCHEDULE);
+    var schedulePath = Path.of(schedulePathName);
+    var fieldsList = ReadProcessor.readCsvFileIntoFieldsArray(schedulePath, ',', true, 1);
     for (var fields : fieldsList) {
       var scheduleRecord = ScheduleRecord.from(fields);
       list.add(scheduleRecord);
     }
 
-    logger.info("read: " + list.size() + " entries from: " + metaSchedulePathName);
+    logger.info("read: " + list.size() + " entries from: " + schedulePathName);
     Collections.sort(list);
 
     return list;

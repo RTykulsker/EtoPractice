@@ -44,7 +44,7 @@ public enum Key implements IConfigurationKey {
   PATH_NAG_CONTENT("path.nagContent"), // path to FILE where end-of-year nag is
   PATH_PUBLICATION("path.publication"), // path to remote folder for publishing results
   PATH_ARCHIVE("path.archive"), // path to remote folder for archiving entire exercise
-  PATH_META_SCHEDULE("path.metaSchedule"), // path to meta-schedule
+  PATH_SCHEDULE("path.schedule"), // path to the expanded schedule.csv
 
   MAP_TEMPLATE_METHOD("map.template.method"), // "fast" or "slow", default "fast"
 

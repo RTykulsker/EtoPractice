@@ -101,26 +101,26 @@ public class PracticeScheduleTool {
     var legacyEnabled = cm.getAsBoolean(Key.ENABLE_LEGACY, Boolean.FALSE);
     var inputList = defaultIRList(rng, legacyEnabled);
     var outputList = generateSchedule(startDate, endDate, inputList);
-    var metaSchedulePathString = cm.getAsString(Key.PATH_META_SCHEDULE);
-    var metaSchedulePath = Path.of(metaSchedulePathString);
-    var metaScheduleFile = metaSchedulePath.toFile();
+    var schedulePathString = cm.getAsString(Key.PATH_SCHEDULE);
+    var schedulePath = Path.of(schedulePathString);
+    var scheduleFile = schedulePath.toFile();
 
-    if (metaScheduleFile.exists()) {
-      var scheduleParentPath = metaSchedulePath.getParent();
+    if (scheduleFile.exists()) {
+      var scheduleParentPath = schedulePath.getParent();
       var historyPath = Path.of(scheduleParentPath.toString(), "schedule-history");
       FileUtils.makeDirIfNeeded(historyPath);
-      var scheduleAttributes = Files.readAttributes(metaSchedulePath, BasicFileAttributes.class);
+      var scheduleAttributes = Files.readAttributes(schedulePath, BasicFileAttributes.class);
       FileTime creationTime = scheduleAttributes.lastModifiedTime();
       var instant = creationTime.toInstant();
       var dateTime = LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
       var timeStamp = String.format("%02d%02d%02d-%02d%02d%02d", //
           dateTime.getYear(), dateTime.getMonthValue(), dateTime.getDayOfMonth(), //
           dateTime.getHour(), dateTime.getMinute(), dateTime.getSecond());
-      var destinationPath = Path.of(historyPath.toString(), "meta-schedule-" + timeStamp + ".csv");
-      Files.move(metaSchedulePath, destinationPath, StandardCopyOption.ATOMIC_MOVE);
+      var destinationPath = Path.of(historyPath.toString(), "schedule-" + timeStamp + ".csv");
+      Files.move(schedulePath, destinationPath, StandardCopyOption.ATOMIC_MOVE);
     }
 
-    WriteProcessor.writeTable(new ArrayList<IWritableTable>(outputList), metaSchedulePath);
+    WriteProcessor.writeTable(new ArrayList<IWritableTable>(outputList), schedulePath);
 
     var today = LocalDate.now();
     var scheduleManager = new ScheduleManager(cm);

@@ -28,6 +28,7 @@ SOFTWARE.
 package com.surftools.wimp.core;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -62,6 +63,16 @@ public enum MessageType {
 
   private MessageType() {
     this(null, null);
+  }
+
+  public static final List<MessageType> getAllSupportedTypes() {
+    var list = new ArrayList<MessageType>();
+    for (var value : values()) {
+      if (value.rmsViewerName != null) {
+        list.add(value);
+      }
+    }
+    return list;
   }
 
   public static final String getAllNames() {
