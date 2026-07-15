@@ -25,14 +25,16 @@ SOFTWARE.
 
 */
 
-package com.surftools.wimp.practice.tools;
+package com.surftools.wimp.practice.tools.Legacy;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Set;
-import java.util.stream.Stream;
 
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
@@ -45,9 +47,6 @@ import com.surftools.wimp.core.MessageManager;
 import com.surftools.wimp.practice.generator.PracticeUtils;
 import com.surftools.wimp.practice.misc.PracticeJsonMessageDeserializer;
 import com.surftools.wimp.processors.std.PipelineProcessor;
-import com.surftools.wimp.schedule.ScheduleCheckResult;
-import com.surftools.wimp.schedule.ScheduleManager;
-import com.surftools.wimp.schedule.ScheduleRecord;
 import com.surftools.wimp.utils.config.IConfigurationManager;
 import com.surftools.wimp.utils.config.impl.PropertyFileConfigurationManager;
 
@@ -55,7 +54,7 @@ import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import ch.qos.logback.core.FileAppender;
 
-public class PracticeProcessorTool {
+public class LegacyPracticeProcessorTool {
   public static final String REFERENCE_MESSAGE_KEY = "referenceMessage";
   public static final String INSTRUCTIONS_KEY = "instructions";
   public static final String CONFIGURATION_FILE_KEY = "configurationFileName";
@@ -64,7 +63,7 @@ public class PracticeProcessorTool {
     System.setProperty("logback.configurationFile", "src/main/resources/logback.xml");
   }
 
-  private static final Logger logger = LoggerFactory.getLogger(PracticeProcessorTool.class);
+  private static final Logger logger = LoggerFactory.getLogger(LegacyPracticeProcessorTool.class);
 
   @Option(name = "--exerciseDate", usage = "date of practice exercise in yyyy-MM-dd format", required = true)
   private String exerciseDateString = null;
@@ -75,17 +74,14 @@ public class PracticeProcessorTool {
   @Option(name = "--config", usage = "practice onfiguration file name", required = true)
   private String configurationFileName;
 
-  private ScheduleCheckResult checkResult;
-  private ScheduleRecord scheduleRecord;
-
   public static void main(String[] args) {
-    var tool = new PracticeProcessorTool();
+    var tool = new LegacyPracticeProcessorTool();
     CmdLineParser parser = new CmdLineParser(tool);
     try {
       parser.parseArgument(args);
       tool.run();
     } catch (Exception e) {
-      e.printStackTrace(System.err);
+      System.err.println(e.getMessage());
       parser.printUsage(System.err);
     }
   }
@@ -98,12 +94,22 @@ public class PracticeProcessorTool {
 
       logger.info("begin run");
       var exerciseDate = LocalDate.parse(exerciseDateString);
+      if (exerciseDate.getDayOfWeek() != DayOfWeek.THURSDAY) {
+        throw new RuntimeException("Exercise Date: " + exerciseDateString + " must be a THURSDAY");
+      }
 
       var ord = PracticeUtils.getOrdinalDayOfWeek(exerciseDate);
-      var messageType = scheduleRecord.messageType();
-      var dayOfWeek = scheduleRecord.date().getDayOfWeek().toString();
-      logger.info("Exercise Date: " + exerciseDate.toString() + ", " + PracticeUtils.getOrdinalLabel(ord) + " "
-          + dayOfWeek + ",  exercise message type: " + messageType.toString());
+      var ordinalList = new ArrayList<Integer>(LegacyPracticeGeneratorTool.VALID_ORDINALS);
+      Collections.sort(ordinalList);
+      var ordinalLabels = ordinalList.stream().map(i -> PracticeUtils.getOrdinalLabel(i)).toList();
+      if (!LegacyPracticeGeneratorTool.VALID_ORDINALS.contains(ord)) {
+        throw new RuntimeException("Exercise Date: " + exerciseDate.toString() + " is NOT one of "
+            + String.join(",", ordinalLabels) + " THURSDAYS");
+      }
+
+      var messageType = LegacyPracticeGeneratorTool.MESSAGE_TYPE_MAP.get(ord);
+      logger.info("Exercise Date: " + exerciseDate.toString() + ", " + PracticeUtils.getOrdinalLabel(ord)
+          + " Thursday; exercise message type: " + messageType.toString());
 
       var exercisesPathName = cm.getAsString(Key.PATH_EXERCISES);
       logger.info("exercises home" + exercisesPathName);
@@ -114,7 +120,6 @@ public class PracticeProcessorTool {
       var exerciseYearString = String.valueOf(exerciseDate.getYear());
       var referencePath = Path.of(referencePathName, exerciseYearString, exerciseDateString,
           exerciseDateString + "-reference.json");
-      copyReferenceFilesToInputIfNeeded(referencePath, exerciseYearString, cm);
       var jsonString = Files.readString(referencePath);
       var deserializer = new PracticeJsonMessageDeserializer();
       var referenceMessage = deserializer.deserialize(jsonString, messageType);
@@ -130,36 +135,29 @@ public class PracticeProcessorTool {
       logger.info("enable Legacy (3rd week practice instructions send on 2nd week): " + enableLegacy);
 
       final var dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+      var nextExerciseDate = exerciseDate.plusDays((ord == 2 && !enableLegacy) ? 14 : 7);
+      var nextExerciseYear = nextExerciseDate.getYear();
+      var nextExerciseDateString = dtf.format(nextExerciseDate);
+      var instructionPath = Path.of(referencePathName, String.valueOf(nextExerciseYear), nextExerciseDateString,
+          nextExerciseDateString + "-instructions.txt");
+      var instructionText = Files.readString(instructionPath);
+      var sb = new StringBuilder();
+      sb.append("\n\n");
+      if (ord == 2 && !enableLegacy) {
+        var text = """
+            --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-      var nextExerciseDate = checkResult.nextOutput().date();
-      var instructionText = "";
-      if (nextExerciseDate != null) {
+            INSTRUCTIONS for next week:
+            Next Thursday is a \"Third Thursday Training Exercise\".
+            These instructions are simply too large for a Winlink messages,
+            so look for instructions on our web site at https://emcomm-training.org/Winlink_Thursdays.html
+                        """;
+        sb.append(text);
 
-        var nextExerciseYear = nextExerciseDate.getYear();
-        var nextExerciseDateString = dtf.format(nextExerciseDate);
-        var instructionPath = Path.of(referencePathName, String.valueOf(nextExerciseYear), nextExerciseDateString,
-            nextExerciseDateString + "-instructions.txt");
-        instructionText = Files.readString(instructionPath);
-        var sb = new StringBuilder();
-        sb.append("\n\n");
-        if (!scheduleRecord.canIncludeNextInstructions()) {
-          var text = """
-              --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-              INSTRUCTIONS for next week:
-              Next Thursday is a \"Third Thursday Training Exercise\".
-              These instructions are simply too large for a Winlink messages,
-              so look for instructions on our web site at https://emcomm-training.org/Winlink_Thursdays.html
-                          """;
-          sb.append(text);
-
-        } else {
-          sb.append("INSTRUCTIONS for " + instructionText + "\n");
-        }
-        instructionText = sb.toString();
       } else {
-        instructionText = "No instructions for next exercise are currently available";
+        sb.append("INSTRUCTIONS for " + instructionText + "\n");
       }
+      instructionText = sb.toString();
 
       // create the rest of our configuration on the fly
       cm.putString(Key.EXERCISE_DATE, exerciseDateString);
@@ -173,7 +171,7 @@ public class PracticeProcessorTool {
       cm.putString(Key.EXERCISE_WINDOW_CLOSE, dtf.format(windowCloseDate) + " 08:00");
 
       cm.putString(Key.PIPELINE_STDIN, "Read,Classifier,Acknowledgement,Deduplication");
-      cm.putString(Key.PIPELINE_MAIN, messageType.getPracticeProcessorName());
+      cm.putString(Key.PIPELINE_MAIN, "Ics213,Ics213RR,Ics205,Hics259,FieldSituation");
       cm.putString(Key.PIPELINE_STDOUT, "Write,HistoryMap,ExerciseSummary,ParticipantHistory,Cleanup,Finalize");
 
       var edPrefix = "com.surftools.wimp.practice.misc.Practice";
@@ -201,39 +199,6 @@ public class PracticeProcessorTool {
       e.printStackTrace();
     }
     logger.info("end run");
-  }
-
-  /**
-   * copy all files in the referencePath (for the given exerciseDate) to input
-   *
-   * this allows for a durable copy (after finalization) if reference is
-   * regenerated
-   *
-   * @param referenceFilePath
-   * @param exerciseYearString
-   * @param cm
-   */
-  private void copyReferenceFilesToInputIfNeeded(Path referenceFilePath, String exerciseYearString,
-      IConfigurationManager cm) {
-    var parentPath = referenceFilePath.getParent();
-    var inputPath = Path.of(cm.getAsString(Key.PATH_EXERCISES), exerciseYearString, exerciseDateString);
-    try (Stream<Path> stream = Files.list(parentPath)) {
-      var refFiles = stream.filter(Files::isRegularFile).toList();
-      for (var refFile : refFiles) {
-        var fileName = refFile.getFileName().toString();
-        var inputFilePath = Path.of(inputPath.toString(), fileName);
-        var inputFile = inputFilePath.toFile();
-        if (inputFile.exists()) {
-          logger.info("reference file: " + fileName + " already exists in input, skipping");
-        } else {
-          Files.copy(refFile, inputFilePath);
-          logger.info("reference file: " + fileName + " copied to input");
-        }
-      }
-    } catch (Exception e) {
-      logger.error(
-          "Exception copying reference files for: " + referenceFilePath.toString() + ", " + e.getLocalizedMessage());
-    }
   }
 
   @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -283,45 +248,48 @@ public class PracticeProcessorTool {
    */
   private String parse(String input, IConfigurationManager cm) {
     if (input == null) {
-      logger.error("Can not parse exerciseDate: " + input);
-      System.exit(1);
+      return input;
     }
-
-    var date = LocalDate.now();
 
     final var knownSet = Set.of("last", "current", "today", "this", "next");
     var s = input.toLowerCase();
     if (!knownSet.contains(s)) {
-      try {
-        date = LocalDate.parse(input);
-      } catch (Exception e) {
-        logger.error("Can not parse exerciseDate: " + input);
-        System.exit(1);
-      }
-    }
-    var scheduleManager = new ScheduleManager(cm);
-    checkResult = scheduleManager.check(date);
-
-    if (s.equals("last")) {
-      if (checkResult.lastOutput() == null) {
-        logger.error("No exercise scheduled for: " + input);
-        System.exit(1);
-      }
-      scheduleRecord = checkResult.lastOutput();
-    } else if (s.equals("next")) {
-      if (checkResult.nextOutput() == null) {
-        logger.error("No exercise scheduled for: " + input);
-        System.exit(1);
-      }
-      scheduleRecord = checkResult.nextOutput();
-    } else {
-      if (checkResult.thisOuput() == null) {
-        logger.error("No exercise scheduled for: " + input);
-        System.exit(1);
-      }
-      scheduleRecord = checkResult.thisOuput();
+      return s;
     }
 
-    return scheduleRecord.date().toString();
+    var legacyEnabled = cm.getAsBoolean(Key.ENABLE_LEGACY, Boolean.FALSE);
+
+    var date = LocalDate.now();
+    switch (s) {
+    case "last":
+      while (true) {
+        date = date.minusDays(1);
+        if (date.getDayOfWeek() == DayOfWeek.THURSDAY) {
+          if (PracticeUtils.getOrdinalDayOfWeek(date) == 3 && !legacyEnabled) {
+            date = date.minusWeeks(1);
+          }
+          return date.toString();
+        }
+      }
+
+    case "current":
+    case "today":
+    case "this":
+      return date.toString();
+
+    case "next":
+      while (true) {
+        date = date.plusDays(1);
+        if (date.getDayOfWeek() == DayOfWeek.THURSDAY) {
+          if (PracticeUtils.getOrdinalDayOfWeek(date) == 3 && !legacyEnabled) {
+            date = date.plusWeeks(1);
+          }
+          return date.toString();
+        }
+      }
+
+    default:
+      return s;
+    }
   }
 }

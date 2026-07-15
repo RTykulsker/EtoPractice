@@ -2,7 +2,7 @@
 
 The MIT License (MIT)
 
-Copyright (c) 2025, Robert Tykulsker
+Copyright (c) 2026, Robert Tykulsker
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,39 +22,10 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-
 */
 
-package com.surftools.wimp.practice.generator;
+package com.surftools.wimp.schedule;
 
-import java.time.LocalDate;
-
-public class PracticeUtils {
-
-  /**
-   * return the ordinal (1, 2, 3, 4 or 5) for the occurrence of this day's
-   * day-of-week within a month
-   *
-   * @param date
-   * @return
-   */
-  public static int getOrdinalDayOfWeek(LocalDate date) {
-    var day = date.getDayOfMonth(); // from 1 to 31
-    return (day / 7) + 1 + ((day % 7) == 0 ? -1 : 0);
-  }
-
-  public static String getOrdinalLabel(int ord) {
-    var s = String.valueOf(ord);
-    var unit = Integer.parseInt(s.substring(s.length() - 1));
-    switch (unit) {
-    case 1:
-      return ord + "st";
-    case 2:
-      return ord + "nd";
-    case 3:
-      return ord + "rd";
-    default:
-      return ord + "th";
-    }
-  }
+public record ScheduleCheckResult(ScheduleRecord lastOutput, ScheduleRecord thisOuput,
+    ScheduleRecord nextOutput) {
 }

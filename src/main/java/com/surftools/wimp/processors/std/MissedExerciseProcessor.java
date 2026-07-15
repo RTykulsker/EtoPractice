@@ -41,7 +41,7 @@ import com.surftools.wimp.persistence.PersistenceManager;
 import com.surftools.wimp.persistence.dto.Exercise;
 import com.surftools.wimp.persistence.dto.JoinedUser;
 import com.surftools.wimp.persistence.dto.ReturnStatus;
-import com.surftools.wimp.practice.tools.PracticeProcessorTool;
+import com.surftools.wimp.practice.tools.Legacy.LegacyPracticeProcessorTool;
 import com.surftools.wimp.service.outboundMessage.OutboundMessage;
 import com.surftools.wimp.service.outboundMessage.OutboundMessageService;
 import com.surftools.wimp.utils.config.IConfigurationManager;
@@ -106,7 +106,7 @@ public class MissedExerciseProcessor extends AbstractBaseProcessor {
     var outboundMessages = new ArrayList<OutboundMessage>();
     var from = cm.getAsString(Key.OUTBOUND_MESSAGE_SENDER);
     var subject = cm.getAsString(Key.PERSISTENCE_MISS_SUBJECT, "We missed you!");
-    var instructions = (String) mm.getContextObject(PracticeProcessorTool.INSTRUCTIONS_KEY);
+    var instructions = (String) mm.getContextObject(LegacyPracticeProcessorTool.INSTRUCTIONS_KEY);
     for (var joinedUser : joinedUsers) {
       var to = joinedUser.user.call();
       // inside loop, because we might want to show name, count of missed exercises, etc.

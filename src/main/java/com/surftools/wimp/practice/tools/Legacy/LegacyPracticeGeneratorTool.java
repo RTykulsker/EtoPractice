@@ -25,22 +25,22 @@ SOFTWARE.
 
 */
 
-package com.surftools.wimp.practice.tools;
+package com.surftools.wimp.practice.tools.Legacy;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.nio.file.attribute.FileTime;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
@@ -69,22 +69,34 @@ import com.surftools.wimp.practice.generator.PracticeHicsData.Types;
 import com.surftools.wimp.practice.generator.PracticeRadioData;
 import com.surftools.wimp.practice.generator.PracticeResourceData;
 import com.surftools.wimp.practice.generator.PracticeUtils;
-import com.surftools.wimp.schedule.ScheduleManager;
 import com.surftools.wimp.utils.config.IConfigurationManager;
 import com.surftools.wimp.utils.config.impl.PropertyFileConfigurationManager;
 
 /**
  * Program to generate many weeks work "data" for ETO weekly "practice"
  * semi-automatic exercises
+ *
+ * NOTE WELL: since this program will be run about once per year, there's no
+ * need for data-driven configuration
  */
-public class PracticeGeneratorTool {
-  private static final Logger logger = LoggerFactory.getLogger(PracticeGeneratorTool.class);
+public class LegacyPracticeGeneratorTool {
 
+  public final static Map<Integer, MessageType> MESSAGE_TYPE_MAP = Map.of(//
+      1, MessageType.ICS_213, //
+      2, MessageType.ICS_213_RR, //
+      3, MessageType.HICS_259, //
+      4, MessageType.ICS_205, //
+      5, MessageType.FIELD_SITUATION);
+
+  public final static Set<Integer> VALID_ORDINALS = MESSAGE_TYPE_MAP.keySet();
+  public final static Set<MessageType> VALID_MESSAGE_TYPES = new HashSet<MessageType>(MESSAGE_TYPE_MAP.values());
+
+  public static String practiceInstructionURL = "https://emcomm-training.org/Winlink_Thursdays.html";
+
+  private static final Logger logger = LoggerFactory.getLogger(LegacyPracticeGeneratorTool.class);
   static {
     System.setProperty("logback.configurationFile", "src/main/resources/logback.xml");
   }
-
-  public static String practiceInstructionURL = "https://emcomm-training.org/Winlink_Thursdays.html";
 
   @Option(name = "--config", usage = "practice configuration file name", required = true)
   private String configurationFileName;
@@ -92,6 +104,9 @@ public class PracticeGeneratorTool {
   private String referenceDirName = null;
   private String exerciseYear = null;
   private Long rngSeed = null;
+  private Integer nYears = null;
+
+  private final DayOfWeek TARGET_DOW = DayOfWeek.THURSDAY;
 
   private static final String NA = "n/a";
   private static final String NL = "\n";
@@ -100,13 +115,13 @@ public class PracticeGeneratorTool {
   private static final String INDENT3 = INDENT + INDENT2;
 
   public static void main(String[] args) {
-    var app = new PracticeGeneratorTool();
+    var app = new LegacyPracticeGeneratorTool();
     CmdLineParser parser = new CmdLineParser(app);
     try {
       parser.parseArgument(args);
       app.run();
     } catch (Exception e) {
-      e.printStackTrace(System.err);
+      System.err.println(e.getMessage());
       parser.printUsage(System.err);
     }
   }
@@ -119,21 +134,7 @@ public class PracticeGeneratorTool {
     logger.info("Using configuration file: " + configurationFileName);
 
     referenceDirName = cm.getAsString(Key.PATH_REFERENCE);
-    var referencePath = Path.of(referenceDirName);
-    var referenceDirAttributes = Files.readAttributes(referencePath, BasicFileAttributes.class);
-    FileTime referenceDirCreationTime = referenceDirAttributes.creationTime();
-    var instant = referenceDirCreationTime.toInstant();
-    var rdate = LocalDate.ofInstant(instant, ZoneId.systemDefault());
-    var time = LocalTime.ofInstant(instant, ZoneId.systemDefault());
-    var timeStamp = String.format("%02d%02d%02d-%02d%02d%02d", //
-        rdate.getYear(), rdate.getMonthValue(), rdate.getDayOfMonth(), //
-        time.getHour(), time.getMinute(), time.getSecond());
-
-    var refParentPath = referencePath.getParent();
-    var historyPath = Path.of(refParentPath.toString(), "reference-history");
-    FileUtils.makeDirIfNeeded(historyPath);
-    var destinationPath = Path.of(historyPath.toString(), "reference-" + timeStamp);
-    Files.move(referencePath, destinationPath);
+    FileUtils.deleteDirectory(Path.of(referenceDirName));
     FileUtils.createDirectory(Path.of(referenceDirName));
     logger.info("reference path: " + referenceDirName);
 
@@ -141,23 +142,39 @@ public class PracticeGeneratorTool {
     rngSeed = Long.valueOf(rngSeedString);
     logger.info("rngSeed: " + rngSeed);
 
-    var scheduleManager = new ScheduleManager(cm);
-    var scheduleRecords = scheduleManager.getSchedules();
-    for (var schedule : scheduleRecords) {
-      var date = schedule.date();
+    var nYearsString = cm.getAsString(Key.GENERATOR_N_YEARS, "5");
+    nYears = Integer.valueOf(nYearsString);
+    logger.info("nYears: " + nYears);
+
+    practiceInstructionURL = cm.getAsString(Key.GENERATOR_INSTRUCTION_URL,
+        "https://emcomm-training.org/Winlink_Thursdays.html");
+    logger.info("practiceInstructionURL: " + practiceInstructionURL);
+
+    // generate nYears worth, from 2025; this is for idempotency
+    var startDate = LocalDate.of(2025, 1, 1);
+    var date = startDate;
+    while (true) {
+      var ord = PracticeUtils.getOrdinalDayOfWeek(date);
+      if (date.getDayOfWeek() == TARGET_DOW && VALID_ORDINALS.contains(ord)) {
+        break;
+      }
+      date = date.plusDays(1);
+    }
+
+    while (date.getYear() <= startDate.getYear() + nYears - 1) {
       exerciseYear = String.valueOf(date.getYear());
       FileUtils.createDirectory(Path.of(referenceDirName, exerciseYear));
 
-      var messageType = schedule.messageType();
-      generate(date, messageType, cm);
+      var ord = PracticeUtils.getOrdinalDayOfWeek(date);
+      generate(date, ord, cm);
+      date = date.plusDays(7);
     }
     logger.info("end run");
   }
 
-  private void generate(LocalDate date, MessageType messageType, IConfigurationManager cm) {
-
+  private void generate(LocalDate date, int ord, IConfigurationManager cm) {
+    var messageType = MESSAGE_TYPE_MAP.get(ord);
     var path = Path.of(referenceDirName, exerciseYear, date.toString());
-    var ord = PracticeUtils.getOrdinalDayOfWeek(date);
     FileUtils.createDirectory(path);
     switch (messageType) {
     case ICS_213:

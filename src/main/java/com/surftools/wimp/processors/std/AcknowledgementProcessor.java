@@ -47,7 +47,7 @@ import com.surftools.wimp.core.IWritableTable;
 import com.surftools.wimp.core.MessageType;
 import com.surftools.wimp.message.ExportedMessage;
 import com.surftools.wimp.practice.generator.PracticeUtils;
-import com.surftools.wimp.practice.tools.PracticeGeneratorTool;
+import com.surftools.wimp.practice.tools.Legacy.LegacyPracticeGeneratorTool;
 import com.surftools.wimp.utils.config.IConfigurationManager;
 
 /**
@@ -322,7 +322,7 @@ public class AcknowledgementProcessor extends AbstractBaseProcessor {
       var anExerciseDateString = fileName.substring(0, 10);
       var anExerciseDate = LocalDate.parse(anExerciseDateString);
       var ord = PracticeUtils.getOrdinalDayOfWeek(anExerciseDate);
-      var messageType = PracticeGeneratorTool.MESSAGE_TYPE_MAP.get(ord);
+      var messageType = LegacyPracticeGeneratorTool.MESSAGE_TYPE_MAP.get(ord);
 
       var content = Files.readString(path).toLowerCase();
       var exerciseId = getExerciseId(content);

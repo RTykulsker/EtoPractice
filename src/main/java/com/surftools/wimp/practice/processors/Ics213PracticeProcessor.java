@@ -46,7 +46,7 @@ public class Ics213PracticeProcessor extends BasePracticeProcessor {
     var m = (Ics213Message) message;
     var ref = (Ics213Message) referenceMessage;
 
-    count(sts.testStartsWith("Message Subject should start with #EV", referenceMessage.subject, m.subject));
+    count(sts.testStartsWith("Message Subject should start with #EV", ref.subject, m.subject));
     count(sts.test("Message Location should be valid", m.msgLocation.isValid(), m.msgLocation.toString()));
     count(sts.test("Form Location should be valid", m.formLocation.isValid(), m.formLocation.toString()));
     count(sts.test("Organization Name should be #EV", ref.organization, m.organization));

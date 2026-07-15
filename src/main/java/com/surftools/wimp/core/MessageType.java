@@ -28,7 +28,6 @@ SOFTWARE.
 package com.surftools.wimp.core;
 
 import java.util.ArrayList;
-import java.util.function.Predicate;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -45,38 +44,24 @@ public enum MessageType {
   PLAIN(), // attempted to classify, but can't infer message type
   REJECTS(), //
 
-  FIELD_SITUATION("RMS_Express_Form_Field Situation Report"), //
-  ICS_205("RMS_Express_Form_ICS205 Radio Plan_Viewer.xml"), //
-  ICS_213("RMS_Express_Form_ICS213_Initial_Viewer.xml", "ICS-213"), //
-  ICS_213_RR("RMS_Express_Form_ICS213RR_Viewer.xml"), //
-  HICS_259("RMS_Express_Form_HICS 259_viewer.xml"), //
+  FIELD_SITUATION("RMS_Express_Form_Field Situation Report", "FieldSituation"), //
+  ICS_205("RMS_Express_Form_ICS205 Radio Plan_Viewer.xml", "Ics205"), //
+  ICS_213("RMS_Express_Form_ICS213_Initial_Viewer.xml", "Ics213"), //
+  ICS_213_RR("RMS_Express_Form_ICS213RR_Viewer.xml", "Ics213RR"), //
+  HICS_259("RMS_Express_Form_HICS 259_viewer.xml", "Hics259"), //
 
   ;
 
   private final String rmsViewerName;
-  private final String formDataName;
-  private final Predicate<String> subjectPredicate;
+  private final String practiceProcessorName;
 
-  private MessageType(String rmsViewerName, String formDataName, Predicate<String> subjectPredicate) {
+  private MessageType(String rmsViewerName, String practiceProcessorName) {
     this.rmsViewerName = rmsViewerName;
-    this.formDataName = formDataName;
-    this.subjectPredicate = subjectPredicate;
+    this.practiceProcessorName = practiceProcessorName;
   }
 
   private MessageType() {
-    this(null, null, null);
-  }
-
-  private MessageType(String attachmentName) {
-    this(attachmentName, null, null);
-  }
-
-  private MessageType(String attachmentName, String formDataName) {
-    this(attachmentName, formDataName, null);
-  }
-
-  private MessageType(Predicate<String> subjectPredicate) {
-    this(null, null, subjectPredicate);
+    this(null, null);
   }
 
   public static final String getAllNames() {
@@ -105,16 +90,8 @@ public enum MessageType {
     return rmsViewerName;
   }
 
-  public String formDataName() {
-    return formDataName;
-  }
-
-  public boolean testSubject(String subject) {
-    return subjectPredicate != null && subjectPredicate.test(subject);
-  }
-
-  public Predicate<String> getSubjectPredicate() {
-    return subjectPredicate;
+  public String getPracticeProcessorName() {
+    return practiceProcessorName;
   }
 
   public String makeParserName() {

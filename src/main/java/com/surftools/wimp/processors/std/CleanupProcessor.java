@@ -37,7 +37,7 @@ import org.slf4j.LoggerFactory;
 
 import com.surftools.wimp.configuration.Key;
 import com.surftools.wimp.core.IMessageManager;
-import com.surftools.wimp.practice.tools.PracticeProcessorTool;
+import com.surftools.wimp.practice.tools.Legacy.LegacyPracticeProcessorTool;
 import com.surftools.wimp.utils.config.IConfigurationManager;
 
 public class CleanupProcessor extends AbstractBaseProcessor {
@@ -98,7 +98,7 @@ public class CleanupProcessor extends AbstractBaseProcessor {
     }
 
     // copy configurationFile to input
-    var configurationFileSource = Path.of((String) mm.getContextObject(PracticeProcessorTool.CONFIGURATION_FILE_KEY));
+    var configurationFileSource = Path.of((String) mm.getContextObject(LegacyPracticeProcessorTool.CONFIGURATION_FILE_KEY));
     var configurationFileDestination = Path.of(inputPathName, "configuration.txt");
     try {
       Files.copy(configurationFileSource, configurationFileDestination, StandardCopyOption.REPLACE_EXISTING);
