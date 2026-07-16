@@ -95,8 +95,12 @@ public class ScheduleManager {
    */
   public ScheduleCheckResult check(LocalDate date) {
     var thisOutput = dateScheduleMap.get(date);
-    var lastOutput = dateScheduleMap.lowerEntry(date).getValue();
-    var nextOutput = dateScheduleMap.higherEntry(date).getValue();
+
+    var lowerEntry = dateScheduleMap.lowerEntry(date);
+    var lastOutput = lowerEntry == null ? null : dateScheduleMap.lowerEntry(date).getValue();
+
+    var higherEntry = dateScheduleMap.higherEntry(date);
+    var nextOutput = higherEntry == null ? null : dateScheduleMap.higherEntry(date).getValue();
     return new ScheduleCheckResult(lastOutput, thisOutput, nextOutput);
   }
 }

@@ -101,6 +101,12 @@ public class PracticeProcessorTool {
 
       var ord = PracticeUtils.getOrdinalDayOfWeek(exerciseDate);
       var messageType = scheduleRecord.messageType();
+      if (messageType == null) {
+        logger.error("null type for: " + scheduleRecord.date() + ", name: " + scheduleRecord.name() + ", extra: "
+            + scheduleRecord.extraData());
+        System.exit(1);
+      }
+
       var dayOfWeek = scheduleRecord.date().getDayOfWeek().toString();
       logger.info("Exercise Date: " + exerciseDate.toString() + ", " + PracticeUtils.getOrdinalLabel(ord) + " "
           + dayOfWeek + ",  exercise message type: " + messageType.toString());
