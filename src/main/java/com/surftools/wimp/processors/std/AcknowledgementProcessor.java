@@ -46,8 +46,7 @@ import com.surftools.wimp.core.IMessageManager;
 import com.surftools.wimp.core.IWritableTable;
 import com.surftools.wimp.core.MessageType;
 import com.surftools.wimp.message.ExportedMessage;
-import com.surftools.wimp.practice.generator.PracticeUtils;
-import com.surftools.wimp.practice.tools.Legacy.LegacyPracticeGeneratorTool;
+import com.surftools.wimp.schedule.ScheduleManager;
 import com.surftools.wimp.utils.config.IConfigurationManager;
 
 /**
@@ -74,6 +73,8 @@ public class AcknowledgementProcessor extends AbstractBaseProcessor {
   private static Map<String, ReferenceEntry> referenceMap;
   private static String currentExerciseId;
 
+  private static ScheduleManager scheduleManager;
+
   @Override
   public void initialize(IConfigurationManager cm, IMessageManager mm) {
     super.initialize(cm, mm);
@@ -87,6 +88,7 @@ public class AcknowledgementProcessor extends AbstractBaseProcessor {
     ackMap = new HashMap<>();
     mm.putContextObject(ACK_MAP, ackMap);
 
+    scheduleManager = new ScheduleManager(cm);
     createReferenceMap();
   }
 
@@ -321,17 +323,22 @@ public class AcknowledgementProcessor extends AbstractBaseProcessor {
     try {
       var anExerciseDateString = fileName.substring(0, 10);
       var anExerciseDate = LocalDate.parse(anExerciseDateString);
-      var ord = PracticeUtils.getOrdinalDayOfWeek(anExerciseDate);
-      var messageType = LegacyPracticeGeneratorTool.MESSAGE_TYPE_MAP.get(ord);
 
-      var content = Files.readString(path).toLowerCase();
-      var exerciseId = getExerciseId(content);
+      var scheduleResult = scheduleManager.check(anExerciseDate);
+      var schedule = scheduleResult.thisOuput();
 
-      var referenceEntry = new ReferenceEntry(anExerciseDate, messageType);
-      referenceMap.put(exerciseId, referenceEntry);
+      if (schedule != null && schedule.isPractice()) {
+        var messageType = schedule.messageType();
 
-      if (anExerciseDateString.equals(dateString)) {
-        currentExerciseId = exerciseId;
+        var content = Files.readString(path).toLowerCase();
+        var exerciseId = getExerciseId(content);
+
+        var referenceEntry = new ReferenceEntry(anExerciseDate, messageType);
+        referenceMap.put(exerciseId, referenceEntry);
+
+        if (anExerciseDateString.equals(dateString)) {
+          currentExerciseId = exerciseId;
+        }
       }
     } catch (Exception e) {
       logger.error("Exception reading reference file: " + fileName + ", " + e.getMessage());

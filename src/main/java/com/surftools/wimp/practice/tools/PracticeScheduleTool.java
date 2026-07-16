@@ -26,6 +26,7 @@ SOFTWARE.
 
 package com.surftools.wimp.practice.tools;
 
+import java.io.FileInputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -37,9 +38,17 @@ import java.time.LocalDateTime;
 import java.time.Month;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 import org.slf4j.Logger;
@@ -61,6 +70,13 @@ public class PracticeScheduleTool {
   static {
     System.setProperty("logback.configurationFile", "src/main/resources/logback.xml");
   }
+
+  private static final LocalDate startDate = LocalDate.of(2025, 1, 1);
+  private static LocalDate endDate;
+  private static final String SHEET_SCHEDULE = "schedule";
+  private static final String SHEET_OVERRIDE = "override";
+  private static final String SHEET_PROHIBITED = "prohibited";
+  private static final List<String> REQUIRED_SHEET_NAMES = List.of(SHEET_SCHEDULE, SHEET_OVERRIDE, SHEET_PROHIBITED);
 
   @Option(name = "--config", usage = "practice configuration file name", required = true)
   private String configurationFileName;
@@ -93,14 +109,15 @@ public class PracticeScheduleTool {
     var nYearsString = cm.getAsString(Key.GENERATOR_N_YEARS, "5");
     var nYears = Integer.valueOf(nYearsString);
     logger.info("nYears: " + nYears);
-    final var startDate = LocalDate.of(2025, 1, 1);
     logger.info("startDate: " + startDate.toString());
-    final var endDate = LocalDate.of(startDate.getYear() + nYears, 12, 31);
+    endDate = LocalDate.of(startDate.getYear() + nYears, 12, 31);
     logger.info("endDate: " + endDate.toString());
 
-    var legacyEnabled = cm.getAsBoolean(Key.ENABLE_LEGACY, Boolean.FALSE);
-    var inputList = defaultIRList(rng, legacyEnabled);
-    var outputList = generateSchedule(startDate, endDate, inputList);
+    var metaScheduleFileName = cm.getAsString(Key.PATH_META_SCHEDULE);
+
+    var sheetMap = processExcelFile(metaScheduleFileName, rng);
+    var outputList = generateSchedule(startDate, endDate, sheetMap);
+
     var schedulePathString = cm.getAsString(Key.PATH_SCHEDULE);
     var schedulePath = Path.of(schedulePathString);
     var scheduleFile = schedulePath.toFile();
@@ -129,92 +146,238 @@ public class PracticeScheduleTool {
     logger.info("end run");
   }
 
-  @Deprecated
-  private List<InternalRecord> defaultIRList(Random rng, boolean legacyEnabled) {
-    var ics213Chooser = new BucketChooser<MessageType>(List.of(MessageType.ICS_213), rng);
-    var ics213IR = new InternalRecord("1st THU", 1, DayOfWeek.THURSDAY, null, null, ics213Chooser, true, null);
+  private Map<String, List<InternalRecord>> processExcelFile(String metaScheduleFileName, Random rng) {
+    logger.info("processing Excel file: " + metaScheduleFileName);
+    var map = new HashMap<String, List<InternalRecord>>();
+    var path = Path.of(metaScheduleFileName);
+    var file = path.toFile();
+    var startYear = startDate.getYear();
+    var endYear = endDate.getYear();
 
-    var ics213RRChooser = new BucketChooser<MessageType>(List.of(MessageType.ICS_213_RR), rng);
-    var ics213RRIR = new InternalRecord("2nd THU", 2, DayOfWeek.THURSDAY, null, null, ics213RRChooser, false, null);
+    var messageTypeListChooserMap = new HashMap<ArrayList<MessageType>, BucketChooser<MessageType>>();
 
-    var hics259Chooser = new BucketChooser<MessageType>(List.of(MessageType.HICS_259), rng);
-    var hics259IR = new InternalRecord("3rd THU", 3, DayOfWeek.THURSDAY, null, null, hics259Chooser, true, null);
+    try (var fis = new FileInputStream(file);
+        var workbook = file.getName().endsWith(".xlsx") ? new XSSFWorkbook(fis) : new HSSFWorkbook(fis)) {
 
-    var ics205Chooser = new BucketChooser<MessageType>(List.of(MessageType.ICS_205), rng);
-    var ics205IR = new InternalRecord("4th THU", 4, DayOfWeek.THURSDAY, null, null, ics205Chooser, true, null);
+      for (var sheetName : REQUIRED_SHEET_NAMES) {
+        var list = new ArrayList<InternalRecord>();
+        var sheet = workbook.getSheet(sheetName);
+        if (sheet == null) {
+          logger.error("sheet: " + sheetName + " not found in file: " + metaScheduleFileName);
+          System.exit(1);
+        }
 
-    var fsrChooser = new BucketChooser<MessageType>(List.of(MessageType.FIELD_SITUATION), rng);
-    var fsrIR = new InternalRecord("5th THU", 5, DayOfWeek.THURSDAY, null, null, fsrChooser, true, null);
+        logger.info("processing sheet: " + sheet.getSheetName());
 
-    List<InternalRecord> inputList = null;
-    if (legacyEnabled) {
-      inputList = List.of(ics213IR, ics213RRIR, hics259IR, ics205IR, fsrIR);
-    } else {
-      inputList = List.of(ics213IR, ics213RRIR, ics205IR, fsrIR);
+        int rowNumber = 0;
+        for (var row : sheet) {
+          ++rowNumber;
+          if (rowNumber == 1) { // skip header row
+            continue;
+          }
+
+          var cnp = "sheet: " + sheetName + ", row: " + rowNumber + ", could not parse ";
+          var name = getStringValue(row, 0);
+
+          var extraData = getStringValue(row, 6);
+
+          var ordinalString = getStringValue(row, 1);
+          int ordinal = -1;
+          try {
+            var d = Double.parseDouble(ordinalString);
+            ordinal = (int) d;
+          } catch (Exception e) {
+            logger.error(cnp + "ordinal: " + ordinalString + ", " + e.getMessage());
+            System.exit(1);
+          }
+
+          var dowString = getStringValue(row, 2);
+          var dow = DayOfWeek.valueOf(dowString.toUpperCase());
+          if (dow == null) {
+            logger.error(cnp + "Day of Week: " + dowString);
+            System.exit(1);
+          }
+
+          var month = (Month) null;
+          var monthString = getStringValue(row, 3);
+          if (monthString != null && monthString.strip().length() > 0) {
+            try {
+              month = Month.valueOf(monthString);
+              if (month == null) {
+                logger.error(cnp + "Month: " + month);
+                System.exit(1);
+              }
+            } catch (Exception e) {
+              logger.error(cnp + "Month: " + month);
+              System.exit(1);
+            }
+          }
+
+          var yearString = getStringValue(row, 4);
+          Integer year = null;
+          if (yearString != null && yearString.strip().length() > 1) {
+            try {
+              var d = Double.parseDouble(yearString);
+              year = (int) d;
+
+              if (year < startYear) {
+                logger.error(cnp + "year: " + yearString + " must be before: " + startYear);
+                System.exit(1);
+              }
+
+              if (year > endYear) {
+                logger.error(cnp + "year: " + yearString + " must be after: " + endYear);
+                System.exit(1);
+              }
+            } catch (Exception e) {
+              logger.error(cnp + "year: " + yearString + ", " + e.getMessage());
+              System.exit(1);
+            }
+          }
+
+          var messageTypesString = getStringValue(row, 5);
+          BucketChooser<MessageType> chooser = null;
+          if (sheetName != SHEET_PROHIBITED) {
+            var messageTypeList = new ArrayList<MessageType>();
+            var fields = messageTypesString.split(",");
+            for (var field : fields) {
+              field = field.strip().toUpperCase();
+              var messageType = MessageType.valueOf(field);
+              if (messageType == null) {
+                logger.error(cnp + "messageType: " + field + ", not a MessageType");
+                System.exit(1);
+              } else {
+                messageTypeList.add(messageType);
+              }
+            } // end loop over fields
+            Collections.sort(messageTypeList);
+            chooser = messageTypeListChooserMap.get(messageTypeList);
+            if (chooser == null) {
+              chooser = new BucketChooser<MessageType>(messageTypeList, rng);
+              messageTypeListChooserMap.put(messageTypeList, chooser);
+            }
+          } // end if not prohibited sheet
+
+          var isPractice = !sheetName.equals(SHEET_PROHIBITED);
+          var internalRecord = new InternalRecord(name, ordinal, dow, month, year, chooser, isPractice, extraData);
+          list.add(internalRecord);
+
+        } // end loop over rows in sheet
+        logger.info("read: " + list.size() + " rows from sheet: " + sheetName);
+        map.put(sheetName, list);
+      } // end loop over sheets in workbook
+    } catch (Exception e) {
+      logger.error("Exception processing Excel file: " + file.getPath() + ", " + e.getMessage());
+      e.printStackTrace();
     }
 
-    return inputList;
+    return map;
+  }
+
+  protected String getStringValue(Row row, int columnIndex) {
+    Cell cell = row.getCell(columnIndex);
+    if (cell == null) {
+      return "";
+    }
+
+    switch (cell.getCellType()) {
+    case BLANK:
+      return "";
+
+    case BOOLEAN:
+      return Boolean.toString(cell.getBooleanCellValue());
+
+    case FORMULA: {
+      CellType cachedCellType = cell.getCachedFormulaResultType();
+      if (cachedCellType == CellType.STRING) {
+        return cell.getStringCellValue().strip();
+      } else if (cachedCellType == CellType.NUMERIC) {
+        return Double.toString(cell.getNumericCellValue());
+      } else if (cachedCellType == CellType.BOOLEAN) {
+        return Boolean.toString(cell.getBooleanCellValue());
+      }
+    }
+
+    case NUMERIC:
+      return Double.toString(cell.getNumericCellValue());
+
+    case STRING:
+      return cell.getStringCellValue().strip();
+
+    default:
+      logger.error(
+          "Unsupported type: " + cell.getCellType().name() + " on row: " + row.getRowNum() + ", col: " + columnIndex);
+      return "";
+    }
   }
 
   protected List<ScheduleRecord> generateSchedule(LocalDate startDate, LocalDate endDate,
-      List<InternalRecord> inputList) {
+      Map<String, List<InternalRecord>> inputMap) {
 
-    var outputList = new ArrayList<ScheduleRecord>();
     var matches = new ArrayList<InternalRecord>();
-    var date = startDate;
-    while (!date.isAfter(endDate)) {
-      var ordinal = PracticeUtils.getOrdinalDayOfWeek(date);
-      var dayOfWeek = date.getDayOfWeek();
-      var month = date.getMonth();
-      var year = date.getYear();
+    var dateScheduleRecordMap = new HashMap<LocalDate, ScheduleRecord>();
 
-      matches.clear();
-      for (var input : inputList) {
-        if (ordinal != input.ordinalDayOfWeek) {
-          logger.debug("skipping IR: " + input.name + ", date: " + date.toString() + ", ordinal mismatch");
-          continue;
+    for (var sheetName : REQUIRED_SHEET_NAMES) {
+      var inputList = inputMap.get(sheetName);
+      var date = startDate;
+      while (!date.isAfter(endDate)) {
+        var ordinal = PracticeUtils.getOrdinalDayOfWeek(date);
+        var dayOfWeek = date.getDayOfWeek();
+        var month = date.getMonth();
+        var year = date.getYear();
+
+        matches.clear();
+        for (var input : inputList) {
+          if (ordinal != input.ordinalDayOfWeek) {
+            logger.debug("skipping IR: " + input.name + ", date: " + date.toString() + ", ordinal mismatch");
+            continue;
+          }
+
+          if (!dayOfWeek.equals(input.dayOfWeek)) {
+            logger.debug("skipping IR: " + input.name + ", date: " + date.toString() + ", day of week mismatch");
+            continue;
+          }
+
+          if (input.month != null && !month.equals(input.month)) {
+            logger.debug("skipping IR: " + input.name + ", date: " + date.toString() + ", month mismatch");
+            continue;
+          }
+
+          if (input.year != null && year != input.year) {
+            logger.debug("skipping IR: " + input.name + ", date: " + date.toString() + ", year mismatch");
+            continue;
+          }
+
+          matches.add(input);
+        } // end loop over inputList
+
+        if (matches.size() > 1) {
+          throw new RuntimeException("Multiple IR matches for date: " + date.toString());
         }
 
-        if (!dayOfWeek.equals(input.dayOfWeek)) {
-          logger.debug("skipping IR: " + input.name + ", date: " + date.toString() + ", day of week mismatch");
-          continue;
+        if (matches.size() == 1) {
+          var input = matches.get(0);
+          var chooser = input.chooser;
+          var messageType = (sheetName.equals(SHEET_PROHIBITED)) ? null : chooser.next();
+          var output = new ScheduleRecord(input.name, date, messageType, input.isPractice, input.extraData);
+
+          var previousOutput = dateScheduleRecordMap.get(date);
+          if (previousOutput != null) {
+            logger.info("Phase: " + sheetName + ", overriding: " + previousOutput + ", with: " + output);
+          }
+          dateScheduleRecordMap.put(date, output);
         }
 
-        if (input.month != null && !month.equals(input.month)) {
-          logger.debug("skipping IR: " + input.name + ", date: " + date.toString() + ", month mismatch");
-          continue;
-        }
+        date = date.plusDays(1);
+      } // end loop over days
+    } // end loop over sheets and overriding
 
-        if (input.year != null && year != input.year) {
-          logger.debug("skipping IR: " + input.name + ", date: " + date.toString() + ", year mismatch");
-          continue;
-        }
-
-        matches.add(input);
-      } // end loop over IR
-
-      if (matches.size() > 1) {
-        throw new RuntimeException("Multiple IR matches for date: " + date.toString());
-      }
-
-      if (matches.size() == 1) {
-        var input = matches.get(0);
-        var chooser = input.chooser;
-        var messageType = chooser.next();
-        var output = new ScheduleRecord(input.name, date, messageType, input.canIncludeNextInstructions,
-            input.extraData);
-        outputList.add(output);
-        logger.debug("adding IR: " + input.name + ", date: " + date.toString() + ", type: " + messageType.name());
-
-      }
-
-      date = date.plusDays(1);
-    } // end loop over days
-
+    var outputList = new ArrayList<ScheduleRecord>(dateScheduleRecordMap.values());
+    Collections.sort(outputList);
     return outputList;
   }
 
   record InternalRecord(String name, int ordinalDayOfWeek, DayOfWeek dayOfWeek, Month month, Integer year,
-      BucketChooser<MessageType> chooser, boolean canIncludeNextInstructions, String extraData) {
+      BucketChooser<MessageType> chooser, boolean isPractice, String extraData) {
   }
 }

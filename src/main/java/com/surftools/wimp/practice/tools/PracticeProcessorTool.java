@@ -126,40 +126,37 @@ public class PracticeProcessorTool {
       var winlinkCallsign = cm.getAsString(Key.WINLINK_CALLSIGN);
       logger.info("Winlink callsign: " + winlinkCallsign);
 
-      var enableLegacy = cm.getAsBoolean(Key.ENABLE_LEGACY, Boolean.FALSE);
-      logger.info("enable Legacy (3rd week practice instructions send on 2nd week): " + enableLegacy);
-
       final var dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-      var nextExerciseDate = checkResult.nextOutput().date();
       var instructionText = "";
-      if (nextExerciseDate != null) {
-
-        var nextExerciseYear = nextExerciseDate.getYear();
-        var nextExerciseDateString = dtf.format(nextExerciseDate);
-        var instructionPath = Path.of(referencePathName, String.valueOf(nextExerciseYear), nextExerciseDateString,
-            nextExerciseDateString + "-instructions.txt");
-        instructionText = Files.readString(instructionPath);
-        var sb = new StringBuilder();
-        sb.append("\n\n");
-        if (!scheduleRecord.canIncludeNextInstructions()) {
-          var text = """
-              --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-              INSTRUCTIONS for next week:
-              Next Thursday is a \"Third Thursday Training Exercise\".
-              These instructions are simply too large for a Winlink messages,
-              so look for instructions on our web site at https://emcomm-training.org/Winlink_Thursdays.html
-                          """;
-          sb.append(text);
-
+      var nextSchedule = checkResult.nextOutput();
+      if (nextSchedule != null) {
+        var nextExerciseDate = nextSchedule.date();
+        if (nextExerciseDate == null) {
+          instructionText = "No instructions for next exercise are currently available";
         } else {
-          sb.append("INSTRUCTIONS for " + instructionText + "\n");
-        }
-        instructionText = sb.toString();
-      } else {
-        instructionText = "No instructions for next exercise are currently available";
-      }
+          var sb = new StringBuilder();
+          if (!nextSchedule.isPractice()) {
+            var text = """
+                --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+                INSTRUCTIONS for next week:
+                Next Thursday is a \"Third Thursday Training Exercise\".
+                These instructions are simply too large for a Winlink messages,
+                so look for instructions on our web site at https://emcomm-training.org/Winlink_Thursdays.html
+                            """;
+            sb.append(text);
+          } else {
+            var nextExerciseYear = nextExerciseDate.getYear();
+            var nextExerciseDateString = dtf.format(nextExerciseDate);
+            var instructionPath = Path.of(referencePathName, String.valueOf(nextExerciseYear), nextExerciseDateString,
+                nextExerciseDateString + "-instructions.txt");
+            instructionText = Files.readString(instructionPath);
+            sb.append("\n\n");
+          }
+          instructionText = sb.toString();
+        } // end if normal practice
+      } // end if nextSchedule != null
 
       // create the rest of our configuration on the fly
       cm.putString(Key.EXERCISE_DATE, exerciseDateString);

@@ -45,14 +45,13 @@ public enum Key implements IConfigurationKey {
   PATH_PUBLICATION("path.publication"), // path to remote folder for publishing results
   PATH_ARCHIVE("path.archive"), // path to remote folder for archiving entire exercise
   PATH_SCHEDULE("path.schedule"), // path to the expanded schedule.csv
+  PATH_META_SCHEDULE("path.metaSchedule"), // path to the meta-schedule.xlsx
 
   MAP_TEMPLATE_METHOD("map.template.method"), // "fast" or "slow", default "fast"
 
   GENERATOR_RNG_SEED("generator.rngSeed"), // to get consistent results
   GENERATOR_N_YEARS("generator.nYears"), // number of years to generate
   GENERATOR_INSTRUCTION_URL("generator.instruction.url"), // url at the bottom of each instruction
-
-  ENABLE_LEGACY("enable.legacy"), // allows for 3rd week practice, instead of monthly training
 
   ENABLE_FINALIZE("enable.finalize"), // set to true to enable, published, archive, snapshot to cloud, sends email,
                                       // set on command line

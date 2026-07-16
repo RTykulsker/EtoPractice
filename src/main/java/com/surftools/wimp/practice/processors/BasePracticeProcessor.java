@@ -31,7 +31,6 @@ import static java.time.temporal.ChronoUnit.DAYS;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -73,10 +72,8 @@ import com.surftools.wimp.persistence.dto.BulkInsertEntry;
 import com.surftools.wimp.persistence.dto.Event;
 import com.surftools.wimp.persistence.dto.Exercise;
 import com.surftools.wimp.persistence.dto.ReturnStatus;
-import com.surftools.wimp.practice.generator.PracticeUtils;
 import com.surftools.wimp.practice.misc.PracticeSummary;
-import com.surftools.wimp.practice.tools.Legacy.LegacyPracticeGeneratorTool;
-import com.surftools.wimp.practice.tools.Legacy.LegacyPracticeProcessorTool;
+import com.surftools.wimp.practice.tools.PracticeProcessorTool;
 import com.surftools.wimp.processors.std.AbstractBaseProcessor;
 import com.surftools.wimp.processors.std.AcknowledgementProcessor;
 import com.surftools.wimp.processors.std.AcknowledgementProcessor.AckEntry;
@@ -160,32 +157,14 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
 
     super.initialize(cm, mm);
 
-    if (!LegacyPracticeGeneratorTool.VALID_MESSAGE_TYPES.contains(exerciseMessageType)) {
-      throw new IllegalArgumentException("unsupported messageType: " + exerciseMessageTypeString);
-    }
-
-    var ord = PracticeUtils.getOrdinalDayOfWeek(date);
-    var dow = date.getDayOfWeek();
-    if (dow != DayOfWeek.THURSDAY) {
-      throw new RuntimeException("Exercise Date: " + dateString + " is NOT a THURSDAY, but is " + dow.toString());
-    }
-
-    var ordinalList = new ArrayList<Integer>(LegacyPracticeGeneratorTool.VALID_ORDINALS);
-    Collections.sort(ordinalList);
-    var ordinalLabels = ordinalList.stream().map(i -> PracticeUtils.getOrdinalLabel(i)).toList();
-    if (!LegacyPracticeGeneratorTool.VALID_ORDINALS.contains(ord)) {
-      throw new RuntimeException(
-          "Exercise Date: " + dateString + " is NOT one of " + String.join(",", ordinalLabels) + " THURSDAYS");
-    }
-
     windowOpenDT = LocalDateTime.from(DTF.parse(cm.getAsString(Key.EXERCISE_WINDOW_OPEN)));
     windowCloseDT = LocalDateTime.from(DTF.parse(cm.getAsString(Key.EXERCISE_WINDOW_CLOSE)));
 
-    referenceMessage = (ExportedMessage) mm.getContextObject(LegacyPracticeProcessorTool.REFERENCE_MESSAGE_KEY);
+    referenceMessage = (ExportedMessage) mm.getContextObject(PracticeProcessorTool.REFERENCE_MESSAGE_KEY);
 
     ackMap = (Map<String, AckEntry>) mm.getContextObject(AcknowledgementProcessor.ACK_MAP);
 
-    nextInstructions = (String) mm.getContextObject(LegacyPracticeProcessorTool.INSTRUCTIONS_KEY);
+    nextInstructions = (String) mm.getContextObject(PracticeProcessorTool.INSTRUCTIONS_KEY);
 
     for (var i = 1; i <= 9; ++i) {
       clearinghouseList.add("ETO-0" + i + "@winlink.org");
@@ -414,7 +393,7 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
     if (enableFeedbackForOnlyUnexpected) {
       // var ackTextMap = (Map<String, String>)
       // (mm.getContextObject(AcknowledgementProcessor.ACK_TEXT_MAP));
-      var nextInstructions = (String) mm.getContextObject(LegacyPracticeProcessorTool.INSTRUCTIONS_KEY);
+      var nextInstructions = (String) mm.getContextObject(PracticeProcessorTool.INSTRUCTIONS_KEY);
       var allSenderSet = new HashSet<String>(ackMap.keySet());
       var expectedSenderList = outboundMessageList.stream().map(m -> m.to()).toList();
       allSenderSet.removeAll(expectedSenderList);

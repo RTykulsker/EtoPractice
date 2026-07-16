@@ -32,8 +32,8 @@ import com.surftools.wimp.core.IWritableTable;
 import com.surftools.wimp.core.MessageType;
 import com.surftools.wimp.practice.generator.PracticeUtils;
 
-public record ScheduleRecord(String name, LocalDate date, MessageType messageType,
-    boolean canIncludeNextInstructions, String extraData) implements IWritableTable {
+public record ScheduleRecord(String name, LocalDate date, MessageType messageType, boolean isPractice, String extraData)
+    implements IWritableTable {
 
   @Override
   public int compareTo(IWritableTable other) {
@@ -43,23 +43,20 @@ public record ScheduleRecord(String name, LocalDate date, MessageType messageTyp
 
   @Override
   public String[] getHeaders() {
-    final var headers = new String[] { "Date", "Name", "MessageType", "Can Include Instructions", "Extra Data",
-        "Ordinal", "Day Of Week" };
+    final var headers = new String[] { "Date", "Name", "MessageType", "IsPractice", "Extra Data", "Ordinal",
+        "Day Of Week" };
     return headers;
   }
 
   @Override
   public String[] getValues() {
-    return new String[] { date.toString(), name, messageType.name(), String.valueOf(canIncludeNextInstructions),
-        extraData == null ? "" : extraData, String.valueOf(PracticeUtils.getOrdinalDayOfWeek(date)),
-        date.getDayOfWeek().toString() };
+    return new String[] { date.toString(), name, messageType == null ? "" : messageType.name(),
+        String.valueOf(isPractice), extraData == null ? "" : extraData,
+        String.valueOf(PracticeUtils.getOrdinalDayOfWeek(date)), date.getDayOfWeek().toString() };
   }
 
   public static ScheduleRecord from(String[] fields) {
     var messageType = MessageType.fromString(fields[2].toLowerCase());
-    if (messageType == null) {
-      throw new RuntimeException("Could not get messageType for: " + fields[2] + " on date: " + fields[0]);
-    }
     return new ScheduleRecord(fields[1], LocalDate.parse(fields[0]), messageType, Boolean.parseBoolean(fields[3]),
         fields[4]);
   }
