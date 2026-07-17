@@ -42,7 +42,6 @@ import org.slf4j.LoggerFactory;
 import com.surftools.utils.FileUtils;
 import com.surftools.wimp.configuration.Key;
 import com.surftools.wimp.core.MessageManager;
-import com.surftools.wimp.practice.generator.PracticeUtils;
 import com.surftools.wimp.practice.misc.PracticeJsonMessageDeserializer;
 import com.surftools.wimp.processors.std.PipelineProcessor;
 import com.surftools.wimp.schedule.ScheduleCheckResult;
@@ -99,17 +98,10 @@ public class PracticeProcessorTool {
       logger.info("begin run");
       var exerciseDate = LocalDate.parse(exerciseDateString);
 
-      var ord = PracticeUtils.getOrdinalDayOfWeek(exerciseDate);
       var messageType = scheduleRecord.messageType();
-      if (messageType == null) {
-        logger.error("null type for: " + scheduleRecord.date() + ", name: " + scheduleRecord.name() + ", extra: "
-            + scheduleRecord.extraData());
-        System.exit(1);
-      }
-
       var dayOfWeek = scheduleRecord.date().getDayOfWeek().toString();
-      logger.info("Exercise Date: " + exerciseDate.toString() + ", " + PracticeUtils.getOrdinalLabel(ord) + " "
-          + dayOfWeek + ",  exercise message type: " + messageType.toString());
+      logger.info("Exercise Date: " + exerciseDate.toString() + ", " + dayOfWeek + ",  exercise message type: "
+          + messageType.toString());
 
       var exercisesPathName = cm.getAsString(Key.PATH_EXERCISES);
       logger.info("exercises home" + exercisesPathName);
@@ -120,8 +112,7 @@ public class PracticeProcessorTool {
       var exerciseYearString = String.valueOf(exerciseDate.getYear());
       var referencePath = Path.of(referencePathName, exerciseYearString, exerciseDateString,
           exerciseDateString + "-reference.json");
-      copyReferenceFilesToInputIfNeeded(referencePath, exerciseYearString, cm);
-      var jsonString = Files.readString(referencePath);
+      var jsonString = copyReferenceFilesToInputIfNeededAndRead(referencePath, exerciseYearString, cm);
       var deserializer = new PracticeJsonMessageDeserializer();
       var referenceMessage = deserializer.deserialize(jsonString, messageType);
 
@@ -215,11 +206,12 @@ public class PracticeProcessorTool {
    * @param referenceFilePath
    * @param exerciseYearString
    * @param cm
+   * @return -- the content of the referenceFile as a String
    */
-  private void copyReferenceFilesToInputIfNeeded(Path referenceFilePath, String exerciseYearString,
+  private String copyReferenceFilesToInputIfNeededAndRead(Path referenceFilePath, String exerciseYearString,
       IConfigurationManager cm) {
     var parentPath = referenceFilePath.getParent();
-    var inputPath = Path.of(cm.getAsString(Key.PATH_EXERCISES), exerciseYearString, exerciseDateString);
+    var inputPath = Path.of(cm.getAsString(Key.PATH_EXERCISES), exerciseYearString, exerciseDateString, "input");
     try (Stream<Path> stream = Files.list(parentPath)) {
       var refFiles = stream.filter(Files::isRegularFile).toList();
       for (var refFile : refFiles) {
@@ -234,9 +226,17 @@ public class PracticeProcessorTool {
         }
       }
     } catch (Exception e) {
-      logger.error(
-          "Exception copying reference files for: " + referenceFilePath.toString() + ", " + e.getLocalizedMessage());
+      logger.error("Exception copying reference files for: " + referenceFilePath.toString() + ", " + e.getMessage());
     }
+
+    var refFilePath = Path.of(inputPath.toString(), exerciseDateString + "-reference.json");
+    var jsonString = (String) null;
+    try {
+      jsonString = Files.readString(refFilePath);
+    } catch (Exception e) {
+      logger.error("Exception reading reference file: " + refFilePath.toString() + ", " + e.getMessage());
+    }
+    return jsonString;
   }
 
   @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -311,6 +311,11 @@ public class PracticeProcessorTool {
         System.exit(1);
       }
       scheduleRecord = checkResult.lastOutput();
+
+      if (!scheduleRecord.isPractice()) {
+        logger.error("Last exercise date: " + scheduleRecord.date().toString() + " not a practice type");
+        System.exit(1);
+      }
     } else if (s.equals("next")) {
       if (checkResult.nextOutput() == null) {
         logger.error("No exercise scheduled for: " + input);
