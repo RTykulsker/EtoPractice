@@ -2,7 +2,7 @@
 
 The MIT License (MIT)
 
-Copyright (c) 2022, Robert Tykulsker
+Copyright (c) 2026, Robert Tykulsker
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -27,17 +27,11 @@ SOFTWARE.
 
 package com.surftools.wimp.processors.std;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Stream;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.surftools.utils.location.LatLongPair;
 import com.surftools.utils.location.LocationUtils;
@@ -46,7 +40,6 @@ import com.surftools.wimp.core.IMessageManager;
 import com.surftools.wimp.core.IWritableTable;
 import com.surftools.wimp.core.MessageType;
 import com.surftools.wimp.message.ExportedMessage;
-import com.surftools.wimp.schedule.ScheduleManager;
 import com.surftools.wimp.utils.config.IConfigurationManager;
 
 /**
@@ -58,8 +51,6 @@ import com.surftools.wimp.utils.config.IConfigurationManager;
  *
  */
 public class AcknowledgementProcessor extends AbstractBaseProcessor {
-  private static final Logger logger = LoggerFactory.getLogger(AcknowledgementProcessor.class);
-
   public static final String DASHES = "----------------------------------------------------------------------------------------------\n";
 
   private static final boolean LAST_LOCATION_WINS = true;
@@ -69,11 +60,6 @@ public class AcknowledgementProcessor extends AbstractBaseProcessor {
   private MessageType expectedMessageType;
   static private Map<String, AckEntry> ackMap; // sender -> AckEntry;
   private int relocationIndex = 0;
-
-  private static Map<String, ReferenceEntry> referenceMap;
-  private static String currentExerciseId;
-
-  private static ScheduleManager scheduleManager;
 
   @Override
   public void initialize(IConfigurationManager cm, IMessageManager mm) {
@@ -87,9 +73,6 @@ public class AcknowledgementProcessor extends AbstractBaseProcessor {
 
     ackMap = new HashMap<>();
     mm.putContextObject(ACK_MAP, ackMap);
-
-    scheduleManager = new ScheduleManager(cm);
-    createReferenceMap();
   }
 
   @Override
@@ -112,17 +95,14 @@ public class AcknowledgementProcessor extends AbstractBaseProcessor {
   public static String makeText(String from) {
     final var EXPECTED_CONTENT = "Feedback messages and maps for expected message types will be generated and published shortly.\n";
     final var UNEXPECTED_CONTENT = "No feedback can or will be produced for unexpected message types.\n";
-    final var EARLY_CONTENT = "No feedback can or will be produced for early messages.\n";
-    final var LATE_CONTENT = "No feedback can or will be produced for late messags.\n";
     var expectedContent = cm.getAsString(Key.ACKNOWLEDGEMENT_EXPECTED, EXPECTED_CONTENT);
     var unexpectedContent = cm.getAsString(Key.ACKNOWLEDGEMENT_UNEXPECTED, UNEXPECTED_CONTENT);
     var extraContent = cm.getAsString(Key.ACKNOWLEDGEMENT_EXTRA_CONTENT, "");
-    var earlyContent = EARLY_CONTENT;
-    var lateContent = LATE_CONTENT;
 
     var ackEntry = ackMap.get(from);
 
     var sb = new StringBuilder();
+
     if (ackEntry.expectedMessageMap.size() > 0) {
       sb.append("The following expected message types are acknowledged:\n");
       sb.append(ackEntry.format(AckType.Expected, 4));
@@ -130,6 +110,7 @@ public class AcknowledgementProcessor extends AbstractBaseProcessor {
       sb.append(expectedContent);
       sb.append(extraContent);
     }
+
     if (ackEntry.unexpectedMessageMap.size() > 0) {
       sb.append("The following unexpected message types are acknowledged:\n");
       sb.append(ackEntry.format(AckType.Unexpected, 4));
@@ -137,20 +118,7 @@ public class AcknowledgementProcessor extends AbstractBaseProcessor {
       sb.append(unexpectedContent);
       sb.append(extraContent);
     }
-    if (ackEntry.earlyMessageMap.size() > 0) {
-      sb.append("The following early message types are acknowledged:\n");
-      sb.append(ackEntry.format(AckType.Early, 4));
-      sb.append("\n");
-      sb.append(earlyContent);
-      sb.append(extraContent);
-    }
-    if (ackEntry.lateMessageMap.size() > 0) {
-      sb.append("The following late message types are acknowledged:\n");
-      sb.append(ackEntry.format(AckType.Late, 4));
-      sb.append("\n");
-      sb.append(lateContent);
-      sb.append(extraContent);
-    }
+
     sb.append(extraContent);
     sb.append(DASHES);
     sb.append("\n");
@@ -165,7 +133,7 @@ public class AcknowledgementProcessor extends AbstractBaseProcessor {
     var acknowledgments = new ArrayList<AckEntry>(ackMap.values().stream().toList());
     WriteProcessor.writeTable(new ArrayList<IWritableTable>(acknowledgments), "acknowledgements.csv");
 
-    // send acknowledgement messages here, we do it from BasePracticeProcessor
+    // don't send acknowledgement messages here, we do it from BasePracticeProcessor
   }
 
   record ReferenceEntry(LocalDate date, MessageType messageType) {
@@ -175,7 +143,7 @@ public class AcknowledgementProcessor extends AbstractBaseProcessor {
   };
 
   public enum AckType {
-    Expected, Unexpected, Early, Late
+    Expected, Unexpected
   };
 
   public class AckEntry implements IWritableTable {
@@ -183,16 +151,12 @@ public class AcknowledgementProcessor extends AbstractBaseProcessor {
     public LatLongPair location;
     public Map<AckKey, ExportedMessage> expectedMessageMap;
     public Map<AckKey, ExportedMessage> unexpectedMessageMap;
-    public Map<AckKey, ExportedMessage> earlyMessageMap;
-    public Map<AckKey, ExportedMessage> lateMessageMap;
 
     public AckEntry(String sender) {
       this.from = sender;
 
       expectedMessageMap = new HashMap<>();
       unexpectedMessageMap = new HashMap<>();
-      earlyMessageMap = new HashMap<>();
-      lateMessageMap = new HashMap<>();
     }
 
     public String getId() {
@@ -202,29 +166,16 @@ public class AcknowledgementProcessor extends AbstractBaseProcessor {
     public void update(ExportedMessage m) {
       // de-duplicate identical messages, support multiple messages of same type
       var ackKey = new AckKey(m.from, m.messageId, m.getMessageType());
-      var exerciseId = getExerciseId(m.getPlainContent().toLowerCase());
-      var isExpected = expectedMessageType == m.getMessageType() && exerciseId.equals(currentExerciseId);
+      var isExpected = expectedMessageType == m.getMessageType();
       if (isExpected) {
         expectedMessageMap.put(ackKey, m);
       } else {
-        if (exerciseId.length() > 0) { // early or late
-          var refEntry = referenceMap.get(exerciseId);
-          if (refEntry == null) {
-            unexpectedMessageMap.put(ackKey, m);
-          } else {
-            var refDate = refEntry.date;
-            if (date.isBefore(refDate)) {
-              earlyMessageMap.put(ackKey, m);
-            } else {
-              lateMessageMap.put(ackKey, m);
-            }
-          }
-        } else {
-          unexpectedMessageMap.put(ackKey, m);
-        }
+        unexpectedMessageMap.put(ackKey, m);
       }
 
-      if (LAST_LOCATION_WINS) {
+      if (LAST_LOCATION_WINS)
+
+      {
         this.location = m.mapLocation;
       } else {
         if (this.location == null) {
@@ -247,9 +198,7 @@ public class AcknowledgementProcessor extends AbstractBaseProcessor {
     public String[] getHeaders() {
       return new String[] { "From", "Latitude", "Longitude", //
           "Expected Messages", "Unexpected Messages", //
-          "Early Messages", "Late Messages", //
           "Expected Message #", "Unexpected Message #", //
-          "Early #", "Late #", //
           "Total Message #" };
     }
 
@@ -257,10 +206,8 @@ public class AcknowledgementProcessor extends AbstractBaseProcessor {
     public String[] getValues() {
       return new String[] { from, location.getLatitude(), location.getLongitude(), //
           format(AckType.Expected, 5), format(AckType.Unexpected, 5), //
-          format(AckType.Early, 5), format(AckType.Late, 5), //
           s(expectedMessageMap.size()), s(unexpectedMessageMap.size()), //
-          s(earlyMessageMap.size()), s(lateMessageMap.size()), //
-          s(expectedMessageMap.size() + unexpectedMessageMap.size() + earlyMessageMap.size() + lateMessageMap.size()) //
+          s(expectedMessageMap.size() + unexpectedMessageMap.size()) //
       };
     }
 
@@ -279,10 +226,6 @@ public class AcknowledgementProcessor extends AbstractBaseProcessor {
         map = expectedMessageMap;
       } else if (ackType == AckType.Unexpected) {
         map = unexpectedMessageMap;
-      } else if (ackType == AckType.Early) {
-        map = earlyMessageMap;
-      } else {
-        map = lateMessageMap;
       }
 
       var values = new ArrayList<ExportedMessage>(map.values());
@@ -297,64 +240,6 @@ public class AcknowledgementProcessor extends AbstractBaseProcessor {
       return results;
     }
 
-  }
-
-  private void createReferenceMap() {
-    var referencePathName = cm.getAsString(Key.PATH_REFERENCE);
-    referenceMap = new HashMap<>();
-
-    var referencePath = Path.of(referencePathName);
-    try (Stream<Path> stream = Files.walk(referencePath)) {
-      stream.filter(Files::isRegularFile).forEach(AcknowledgementProcessor::processAcknowledgementFile);
-    } catch (Exception e) {
-      logger.error("Exception processing reference path: " + referencePathName + ", " + e.getMessage());
-    }
-
-    logger.info("read " + referenceMap.size() + " reference files");
-  }
-
-  private static void processAcknowledgementFile(Path path) {
-    var fileName = path.getFileName().toString();
-    if (!fileName.endsWith(".txt")) {
-      return;
-    }
-    logger.debug("processing reference file: " + fileName);
-
-    try {
-      var anExerciseDateString = fileName.substring(0, 10);
-      var anExerciseDate = LocalDate.parse(anExerciseDateString);
-
-      var scheduleResult = scheduleManager.check(anExerciseDate);
-      var schedule = scheduleResult.thisOuput();
-
-      if (schedule != null && schedule.isPractice()) {
-        var messageType = schedule.messageType();
-
-        var content = Files.readString(path).toLowerCase();
-        var exerciseId = getExerciseId(content);
-
-        var referenceEntry = new ReferenceEntry(anExerciseDate, messageType);
-        referenceMap.put(exerciseId, referenceEntry);
-
-        if (anExerciseDateString.equals(dateString)) {
-          currentExerciseId = exerciseId;
-        }
-      }
-    } catch (Exception e) {
-      logger.error("Exception reading reference file: " + fileName + ", " + e.getMessage());
-    }
-
-  }
-
-  private static String getExerciseId(String content) {
-    final var key = "exercise id: ";
-    var index = content.indexOf(key);
-    var exerciseId = "";
-    if (index != -1) {
-      index = index + key.length();
-      exerciseId = content.substring(index, index + 12);
-    }
-    return exerciseId;
   }
 
 }

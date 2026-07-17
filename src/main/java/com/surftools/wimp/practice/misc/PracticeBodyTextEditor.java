@@ -37,7 +37,8 @@ public class PracticeBodyTextEditor implements ITextEditor {
    * just change a line ...
    */
   public String edit(String source) {
-    var result = source.replaceAll("INSTRUCTIONS for ETO Exercise Instructions for", AcknowledgementProcessor.DASHES + "\n" + "INSTRUCTIONS for");
+    var result = source.replaceAll("INSTRUCTIONS for ETO Exercise Instructions for",
+        AcknowledgementProcessor.DASHES + "\n" + "INSTRUCTIONS for");
     return result;
   }
 
