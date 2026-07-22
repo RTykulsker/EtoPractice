@@ -186,7 +186,31 @@ public class PracticeHicsData {
     map.put(keys.get(7), new CasualtyEntry(rng(10, 20), rng(5, 10), get(Types.TRANSFERRED)));
     map.put(keys.get(8), new CasualtyEntry("0", "0", "")); // Expired
 
+    /**
+     * now, do it right! Admitted *SHOULD BE* the total of critical, medical and
+     * pediatric leave the above code, so that we make the same number of calls to
+     * the rng
+     */
+    var criticalEntry = map.get(keys.get(3));
+    var medicalEntry = map.get(keys.get(4));
+    var pediatricEntry = map.get(keys.get(5));
+    var adultAdmitted = stringSum3(criticalEntry.adultCount(), medicalEntry.adultCount(), pediatricEntry.adultCount());
+    var pediAdmitted = stringSum3(criticalEntry.childCount(), medicalEntry.childCount(), pediatricEntry.childCount());
+    var newAdmittedEntry = new CasualtyEntry(pediAdmitted, adultAdmitted, get(Types.ADMITTED));
+    map.put(keys.get(2), newAdmittedEntry);
     return map;
+  }
+
+  /**
+   * add three Strings, return a String
+   *
+   * @param s1
+   * @param s2
+   * @param s3
+   * @return
+   */
+  private String stringSum3(String s1, String s2, String s3) {
+    return String.valueOf(Integer.parseInt(s1) + Integer.parseInt(s2) + Integer.parseInt(s3));
   }
 
 }
