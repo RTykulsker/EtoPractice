@@ -36,6 +36,9 @@ import org.apache.commons.codec.binary.Base32;
 
 import com.surftools.utils.BucketChooser;
 
+/**
+ * COMMON data
+ */
 public class PracticeData {
 
   public final BucketChooser<String> roleChooser;
@@ -44,7 +47,6 @@ public class PracticeData {
   public final BucketChooser<String> doubleNameChooser;
   public final BucketChooser<String> deliveryChooser;
   public final BucketChooser<String> priorityChooser;
-  public final BucketChooser<String> hospitalNameChooser;
 
   public enum ExerciseIdMethod {
     UUID, SHORT_UUID, MID, PHONE, FOUR_BY_FOUR
@@ -59,9 +61,15 @@ public class PracticeData {
     shortRoleChooser = new BucketChooser<String>(shortEmergencyRoles, rng);
     nameChooser = new BucketChooser<String>(names, rng);
     doubleNameChooser = new BucketChooser<String>(doubleNames, rng);
-    hospitalNameChooser = new BucketChooser<String>(hospitalNames, rng);
     deliveryChooser = new BucketChooser<String>(deliveryList, rng);
     priorityChooser = new BucketChooser<String>(List.of("Low", "Routine", "URGENT"), rng);
+
+    for (var name : hospitalNames) {
+      var len = name.length();
+      if (len > 30) {
+        throw new RuntimeException("Hospital Name: " + name + " must be <= 30 chars, not: " + len);
+      }
+    }
   }
 
   public String getExerciseId() {
@@ -190,33 +198,19 @@ public class PracticeData {
       "Megan Murphy", "Nolan Nash", "Oscar Olsen", "Phoebe Phelps", "Quora Quinlan", "Ronald Reid", "Samantha Steele",
       "Tristan Turner", "Ulric Urban", "Valerie Vaughn", "Willa Wade", "Xavier Xenos", "Yahir Yoder", "Zoey Zane");
 
-  // MUST BE 30 characters or less
-  private List<String> hospitalNames = Arrays.asList(//
-      "Mercy Ridge Medical Center", //
-      "Summit Peak General Hospital", //
-      "Evergreen Regional Health", //
-      "Crescent Valley Trauma Center", //
-      "Starlight Children's Hospital", //
-      "Horizon Behavioral Health", //
-      "Red Rock Emergency Hospital", //
-      "Blue River Community Medical", //
-      "Golden Gate Cardiac Institute", //
-      "Willow Grove Hospital", //
-      "Northbridge Memorial Hospital", //
-      "Cascade Lake Surgical Hospital", //
-      "Silver Lake Medical Facility", //
-      "Twin Pines Memorial Hospital", //
-      "Ironwood Memorial Hospital", //
-      "Liberty Field Mobile Hospital", //
-      "Maplecrest Veterans Hospital", //
-      "Oceanview Regional Hospital", //
-      "Prairie Hill Long-Term Care", //
-      "Lakeshore Medical and Imaging");
-
   List<String> deliveryList = Arrays.asList("Main Entrance", "Reception Desk", "Loading Dock", "Mailroom",
       "Security Office", "Parking Lot – North", "Parking Lot – South", "Visitor Entrance", "Side Entrance",
       "Rooftop Access", "Maintenance Room", "Basement Level", "Elevator Lobby – 1st Floor",
       "Elevator Lobby – 10th Floor", "Conference Room A", "Cafeteria Entrance", "Bike Rack Area",
       "Fire Exit – East Wing", "Drop Box – West Gate", "Garden Courtyard");
+
+  // MUST BE 30 characters or less
+  public static List<String> hospitalNames = Arrays.asList("Mercy Ridge Medical Center", "Summit Peak General Hospital",
+      "Evergreen Regional Health", "Crescent Valley Trauma Center", "Starlight Children's Hospital",
+      "Horizon Behavioral Health", "Red Rock Emergency Hospital", "Blue River Community Medical",
+      "Golden Gate Cardiac Institute", "Willow Grove Hospital", "Northbridge Memorial Hospital",
+      "Cascade Lake Surgical Hospital", "Silver Lake Medical Facility", "Twin Pines Memorial Hospital",
+      "Ironwood Memorial Hospital", "Liberty Field Mobile Hospital", "Maplecrest Veterans Hospital",
+      "Oceanview Regional Hospital", "Prairie Hill Long-Term Care", "Lakeshore Medical and Imaging");
 
 }

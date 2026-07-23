@@ -43,17 +43,20 @@ public class Hics259Generator extends AbstractBasePracticeGenerator {
 
   private boolean isInitialized = false;
   private Map<CasualtyType, BucketChooser<String>> casualtyTypeChooserMap;
+  private BucketChooser<String> hospitalNameChooser;
 
   @Override
   public void initialize(IConfigurationManager cm) {
     super.initialize(cm);
 
     if (!isInitialized) {
+      hospitalNameChooser = new BucketChooser<String>(PracticeData.hospitalNames, rng);
+
       casualtyTypeChooserMap = new HashMap<>();
       casualtyTypeChooserMap.put(CasualtyType.ADMITTED, new BucketChooser<String>(patientsAdmitted, rng));
       casualtyTypeChooserMap.put(CasualtyType.BED, new BucketChooser<String>(bedStatus, rng));
       casualtyTypeChooserMap.put(CasualtyType.DISCHARGED, new BucketChooser<String>(patientsDischarged, rng));
-      casualtyTypeChooserMap.put(CasualtyType.HOSPITAL_NAMES, data.hospitalNameChooser);
+      casualtyTypeChooserMap.put(CasualtyType.HOSPITAL_NAMES, hospitalNameChooser);
       casualtyTypeChooserMap.put(CasualtyType.SEEN, new BucketChooser<String>(patientsSeen, rng));
       casualtyTypeChooserMap.put(CasualtyType.TRANSFERRED, new BucketChooser<String>(patientsTransferred, rng));
       casualtyTypeChooserMap.put(CasualtyType.WAITING, new BucketChooser<String>(patientsWaiting, rng));
@@ -64,7 +67,7 @@ public class Hics259Generator extends AbstractBasePracticeGenerator {
   public Hics259Message generateMessage(LocalDate date) {
 
     var incidentName = "Exercise Id: " + data.getExerciseId();
-    var facilityName = data.hospitalNameChooser.next();
+    var facilityName = hospitalNameChooser.next();
     var subject = "HICS-259 HOSPITAL CASUALTY/FATALITY REPORT-" + incidentName;
     var exportedMessage = makeExportedMessage(date, subject);
 
