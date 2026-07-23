@@ -2,7 +2,7 @@
 
 The MIT License (MIT)
 
-Copyright (c) 2025, Robert Tykulsker
+Copyright (c) 2026, Robert Tykulsker
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,91 +22,143 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-
 */
 
 package com.surftools.wimp.practice.generator;
 
-import java.util.ArrayList;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 
+import com.surftools.utils.BucketChooser;
+import com.surftools.wimp.message.ExportedMessage;
 import com.surftools.wimp.message.Hics259Message;
 import com.surftools.wimp.message.Hics259Message.CasualtyEntry;
+import com.surftools.wimp.utils.config.IConfigurationManager;
 
-public class PracticeHicsData {
-  private Random rng;
+public class Hics259Generator extends AbstractBasePracticeGenerator {
 
-  public PracticeHicsData(Random rng) {
-    this.rng = rng;
-  }
+  private boolean isInitialized = false;
+  private Map<CasualtyType, BucketChooser<String>> casualtyTypeChooserMap;
 
-  public enum Types {
-    HOSPITAL_NAMES, SEEN, WAITING, ADMITTED, BED, DISCHARGED, TRANSFERRED
-  }
+  @Override
+  public void initialize(IConfigurationManager cm) {
+    super.initialize(cm);
 
-  private static Map<Types, List<String>> buckets = new HashMap<>();
-
-  public String get(Types type) {
-    var bucket = buckets.getOrDefault(type, new ArrayList<String>());
-    if (bucket.size() == 0) {
-      switch (type) {
-      case ADMITTED:
-        bucket.addAll(patientsAdmitted);
-        break;
-      case BED:
-        bucket.addAll(bedStatus);
-        break;
-      case DISCHARGED:
-        bucket.addAll(patientsDischarged);
-        break;
-      case HOSPITAL_NAMES:
-        bucket.addAll(hospitalNames);
-        break;
-      case SEEN:
-        bucket.addAll(patientsSeen);
-        break;
-      case TRANSFERRED:
-        bucket.addAll(patientsTransferred);
-        break;
-      case WAITING:
-        bucket.addAll(patientsWaiting);
-        break;
-      }
-      Collections.shuffle(bucket, rng);
-      buckets.put(type, bucket);
+    if (!isInitialized) {
+      casualtyTypeChooserMap = new HashMap<>();
+      casualtyTypeChooserMap.put(CasualtyType.ADMITTED, new BucketChooser<String>(patientsAdmitted, rng));
+      casualtyTypeChooserMap.put(CasualtyType.BED, new BucketChooser<String>(bedStatus, rng));
+      casualtyTypeChooserMap.put(CasualtyType.DISCHARGED, new BucketChooser<String>(patientsDischarged, rng));
+      casualtyTypeChooserMap.put(CasualtyType.HOSPITAL_NAMES, data.hospitalNameChooser);
+      casualtyTypeChooserMap.put(CasualtyType.SEEN, new BucketChooser<String>(patientsSeen, rng));
+      casualtyTypeChooserMap.put(CasualtyType.TRANSFERRED, new BucketChooser<String>(patientsTransferred, rng));
+      casualtyTypeChooserMap.put(CasualtyType.WAITING, new BucketChooser<String>(patientsWaiting, rng));
     }
+  }
 
-    var value = bucket.remove(0);
+  @Override
+  public Hics259Message generateMessage(LocalDate date) {
+
+    var incidentName = "Exercise Id: " + data.getExerciseId();
+    var facilityName = data.hospitalNameChooser.next();
+    var subject = "HICS-259 HOSPITAL CASUALTY/FATALITY REPORT-" + incidentName;
+    var exportedMessage = makeExportedMessage(date, subject);
+
+    var operationalPeriod = String.valueOf(rng.nextInt(1, 3));
+    var windowOpenDate = date.minusDays(5);
+    var windowCloseDate = date.plusDays(1);
+
+    var dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    var opFromDate = dtf.format(windowOpenDate);
+    var opFromTime = "00:00";
+    var opToDate = dtf.format(windowCloseDate);
+    var opToTime = "08:00";
+
+    var casualtyMap = makeCasualtyMap(date);
+    var patientTrackingManager = data.doubleNameChooser.next();
+
+    var m = new Hics259Message(exportedMessage, //
+        incidentName, NA, NA, //
+        operationalPeriod, opFromDate, opFromTime, opToDate, opToTime, //
+        casualtyMap, //
+        patientTrackingManager, facilityName, NA, NA);
+
+    return m;
+  }
+
+  @Override
+  public String generateIntructions(ExportedMessage message, LocalDate date) {
+    var m = (Hics259Message) message;
+
+    var sb = new StringBuilder(); // exercise instructions
+    sb.append("Task: Complete an HICS 259 Hospital Casualty/Fatality Report Message" + NL + NL);
+    sb.append(INDENT + "Incident name: " + m.incidentName + NL);
+    sb.append(INDENT + "Date: (click in box and accept date)" + NL);
+    sb.append(INDENT + "Time: (click in box and accept time)" + NL);
+    sb.append(INDENT + "Operational Period #: " + m.operationalPeriod + NL);
+    sb.append(INDENT + "Operational Period Date From: " + m.opFromDate + NL);
+    sb.append(INDENT + "Operational Period Date To: " + m.opToDate + NL);
+    sb.append(INDENT + "Operational Period Time From: " + m.opFromTime + NL);
+    sb.append(INDENT + "Operational Period Time To: " + m.opToTime + NL);
+
+    sb.append("Number Of Casualties" + NL);
+
+    for (var key : Hics259Message.CASUALTY_KEYS) {
+      var entry = m.casualtyMap.get(key);
+      sb.append(INDENT + key + NL);
+      sb.append(INDENT2 + "Adult: " + entry.adultCount() + NL);
+      sb.append(INDENT2 + "Pediatric: " + entry.childCount() + NL);
+      sb.append(INDENT2 + "Comments: " + entry.comment() + NL);
+    }
+    sb.append("Prepared by: " + m.patientTrackingManager + NL);
+    sb.append("Facility Name: " + m.facilityName + NL);
+
+    sb.append(generateInstructionTail());
+
+    return sb.toString();
+  }
+
+  public Map<String, CasualtyEntry> makeCasualtyMap(LocalDate date) {
+    var map = new HashMap<String, CasualtyEntry>();
+    var keys = Hics259Message.CASUALTY_KEYS;
+    map.put(keys.get(0), new CasualtyEntry(rng(50, 100), rng(5, 10), get(CasualtyType.SEEN)));
+    map.put(keys.get(1), new CasualtyEntry(rng(25, 50), rng(5, 10), get(CasualtyType.WAITING)));
+//    map.put(keys.get(2), new CasualtyEntry(rng(20, 60), rng(5, 10), get(CasualtyType.ADMITTED)));
+    map.put(keys.get(3), new CasualtyEntry(rng(10, 20), rng(5, 10), get(CasualtyType.BED))); // critical care
+    map.put(keys.get(4), new CasualtyEntry(rng(10, 20), rng(5, 10), get(CasualtyType.BED))); // medical/surgical
+    map.put(keys.get(5), new CasualtyEntry("0", rng(5, 10), get(CasualtyType.BED))); // pediatric
+    map.put(keys.get(6), new CasualtyEntry(rng(10, 20), rng(5, 10), get(CasualtyType.DISCHARGED)));
+    map.put(keys.get(7), new CasualtyEntry(rng(10, 20), rng(5, 10), get(CasualtyType.TRANSFERRED)));
+    map.put(keys.get(8), new CasualtyEntry("0", "0", "")); // Expired
+
+    /**
+     * now, do it right! Admitted *SHOULD BE* the total of critical, medical and
+     * pediatric leave the above code, so that we make the same number of calls to
+     * the rng
+     */
+    var criticalEntry = map.get(keys.get(3));
+    var medicalEntry = map.get(keys.get(4));
+    var pediatricEntry = map.get(keys.get(5));
+    var adultAdmitted = stringSum3(criticalEntry.adultCount(), medicalEntry.adultCount(), pediatricEntry.adultCount());
+    var pediAdmitted = stringSum3(criticalEntry.childCount(), medicalEntry.childCount(), pediatricEntry.childCount());
+    var newAdmittedEntry = new CasualtyEntry(adultAdmitted, pediAdmitted, get(CasualtyType.ADMITTED));
+    map.put(keys.get(2), newAdmittedEntry);
+    return map;
+  }
+
+  private String get(CasualtyType casualtyType) {
+    var chooser = casualtyTypeChooserMap.get(casualtyType);
+    var value = chooser.next();
     return value;
   }
 
-  // MUST BE 30 characters or less
-  private List<String> hospitalNames = Arrays.asList(//
-      "Mercy Ridge Medical Center", //
-      "Summit Peak General Hospital", //
-      "Evergreen Regional Health", //
-      "Crescent Valley Trauma Center", //
-      "Starlight Children's Hospital", //
-      "Horizon Behavioral Health", //
-      "Red Rock Emergency Hospital", //
-      "Blue River Community Medical", //
-      "Golden Gate Cardiac Institute", //
-      "Willow Grove Hospital", //
-      "Northbridge Memorial Hospital", //
-      "Cascade Lake Surgical Hospital", //
-      "Silver Lake Medical Facility", //
-      "Twin Pines Memorial Hospital", //
-      "Ironwood Memorial Hospital", //
-      "Liberty Field Mobile Hospital", //
-      "Maplecrest Veterans Hospital", //
-      "Oceanview Regional Hospital", //
-      "Prairie Hill Long-Term Care", //
-      "Lakeshore Medical and Imaging");
+  enum CasualtyType {
+    HOSPITAL_NAMES, SEEN, WAITING, ADMITTED, BED, DISCHARGED, TRANSFERRED
+  }
 
   private List<String> patientsSeen = Arrays.asList("Seen and discharged", "Seen with minor injuries",
       "Seen and admitted to ICU", "Seen and referred to specialist", "Seen with psychological distress",
@@ -176,14 +228,14 @@ public class PracticeHicsData {
   public Map<String, CasualtyEntry> makeCasualtyMap() {
     var map = new HashMap<String, CasualtyEntry>();
     var keys = Hics259Message.CASUALTY_KEYS;
-    map.put(keys.get(0), new CasualtyEntry(rng(50, 100), rng(5, 10), get(Types.SEEN)));
-    map.put(keys.get(1), new CasualtyEntry(rng(25, 50), rng(5, 10), get(Types.WAITING)));
-    map.put(keys.get(2), new CasualtyEntry(rng(20, 60), rng(5, 10), get(Types.ADMITTED)));
-    map.put(keys.get(3), new CasualtyEntry(rng(10, 20), rng(5, 10), get(Types.BED))); // critical care
-    map.put(keys.get(4), new CasualtyEntry(rng(10, 20), rng(5, 10), get(Types.BED))); // medical/surgical
-    map.put(keys.get(5), new CasualtyEntry("0", rng(5, 10), get(Types.BED))); // pediatric
-    map.put(keys.get(6), new CasualtyEntry(rng(10, 20), rng(5, 10), get(Types.DISCHARGED)));
-    map.put(keys.get(7), new CasualtyEntry(rng(10, 20), rng(5, 10), get(Types.TRANSFERRED)));
+    map.put(keys.get(0), new CasualtyEntry(rng(50, 100), rng(5, 10), get(CasualtyType.SEEN)));
+    map.put(keys.get(1), new CasualtyEntry(rng(25, 50), rng(5, 10), get(CasualtyType.WAITING)));
+//    map.put(keys.get(2), new CasualtyEntry(rng(20, 60), rng(5, 10), get(CasualtyType.ADMITTED)));
+    map.put(keys.get(3), new CasualtyEntry(rng(10, 20), rng(5, 10), get(CasualtyType.BED))); // critical care
+    map.put(keys.get(4), new CasualtyEntry(rng(10, 20), rng(5, 10), get(CasualtyType.BED))); // medical/surgical
+    map.put(keys.get(5), new CasualtyEntry("0", rng(5, 10), get(CasualtyType.BED))); // pediatric
+    map.put(keys.get(6), new CasualtyEntry(rng(10, 20), rng(5, 10), get(CasualtyType.DISCHARGED)));
+    map.put(keys.get(7), new CasualtyEntry(rng(10, 20), rng(5, 10), get(CasualtyType.TRANSFERRED)));
     map.put(keys.get(8), new CasualtyEntry("0", "0", "")); // Expired
 
     /**
@@ -196,7 +248,7 @@ public class PracticeHicsData {
     var pediatricEntry = map.get(keys.get(5));
     var adultAdmitted = stringSum3(criticalEntry.adultCount(), medicalEntry.adultCount(), pediatricEntry.adultCount());
     var pediAdmitted = stringSum3(criticalEntry.childCount(), medicalEntry.childCount(), pediatricEntry.childCount());
-    var newAdmittedEntry = new CasualtyEntry(pediAdmitted, adultAdmitted, get(Types.ADMITTED));
+    var newAdmittedEntry = new CasualtyEntry(adultAdmitted, pediAdmitted, get(CasualtyType.ADMITTED));
     map.put(keys.get(2), newAdmittedEntry);
     return map;
   }

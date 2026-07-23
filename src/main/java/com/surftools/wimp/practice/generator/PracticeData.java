@@ -28,82 +28,44 @@ SOFTWARE.
 package com.surftools.wimp.practice.generator;
 
 import java.security.MessageDigest;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 
 import org.apache.commons.codec.binary.Base32;
 
-import com.surftools.utils.WeightedChooser;
+import com.surftools.utils.BucketChooser;
 
 public class PracticeData {
-  public enum ListType {
-    EMERGENCY_REPSONSE_ROLES, SHORT_EMERGENCY_ROLES, NAMES, DOUBLED_NAMES
-  };
+
+  public final BucketChooser<String> roleChooser;
+  public final BucketChooser<String> shortRoleChooser;
+  public final BucketChooser<String> nameChooser;
+  public final BucketChooser<String> doubleNameChooser;
+  public final BucketChooser<String> deliveryChooser;
+  public final BucketChooser<String> priorityChooser;
+  public final BucketChooser<String> hospitalNameChooser;
 
   public enum ExerciseIdMethod {
-    UUID, SHORT_UUID, MID, PHONE
+    UUID, SHORT_UUID, MID, PHONE, FOUR_BY_FOUR
   }
 
   private final Random rng;
-  public final WeightedChooser<String> deliveryChooser;
-  public final WeightedChooser<String> priorityChooser;
 
   public PracticeData(Random rng) {
     this.rng = rng;
 
-    deliveryChooser = new WeightedChooser<String>(deliveryList, rng);
-    priorityChooser = new WeightedChooser<String>(List.of("Low", "Routine", "URGENT"), rng);
+    roleChooser = new BucketChooser<String>(emergencyResponseRoles, rng);
+    shortRoleChooser = new BucketChooser<String>(shortEmergencyRoles, rng);
+    nameChooser = new BucketChooser<String>(names, rng);
+    doubleNameChooser = new BucketChooser<String>(doubleNames, rng);
+    hospitalNameChooser = new BucketChooser<String>(hospitalNames, rng);
+    deliveryChooser = new BucketChooser<String>(deliveryList, rng);
+    priorityChooser = new BucketChooser<String>(List.of("Low", "Routine", "URGENT"), rng);
   }
 
-  private Map<ListType, List<String>> listTypeMap = Map.of(//
-      ListType.EMERGENCY_REPSONSE_ROLES, emergencyResponseRoles, //
-      ListType.SHORT_EMERGENCY_ROLES, shortEmergencyRoles, //
-      ListType.NAMES, names, //
-      ListType.DOUBLED_NAMES, doubleNames);
-
-  /**
-   * return exactly <count> unique elements from a list
-   *
-   * @param count
-   * @param listType
-   * @return
-   */
-  public List<String> getUniqueList(int count, List<String> list) {
-    if (list == null) {
-      return null;
-    }
-
-    var returnList = new ArrayList<String>();
-    if (count <= 0) {
-      return returnList;
-    }
-
-    var tmpList = new ArrayList<String>(list);
-    Collections.shuffle(tmpList, rng);
-    for (int i = 0; i < count; ++i) {
-      returnList.add(tmpList.get(i % count));
-    }
-
-    return returnList;
-  }
-
-  /**
-   * return exactly <count> unique elements from a list
-   *
-   * @param count
-   * @param listType
-   * @return
-   */
-  public List<String> getUniqueList(int count, ListType listType) {
-    if (listType == null) {
-      return null;
-    }
-
-    return getUniqueList(count, listTypeMap.get(listType));
+  public String getExerciseId() {
+    return getExerciseId(ExerciseIdMethod.PHONE);
   }
 
   public String getExerciseId(ExerciseIdMethod method) {
@@ -119,6 +81,10 @@ public class PracticeData {
       var n = (long) (rng.nextDouble() * 9000000000L) + 1000000000L;
       var s = String.valueOf(n);
       ret = s.substring(0, 3) + "-" + s.substring(3, 6) + "-" + s.substring(6);
+    case FOUR_BY_FOUR:
+      n = (long) (rng.nextDouble() * 9000000000L) + 1000000000L;
+      s = String.valueOf(n);
+      ret = s.substring(0, 4) + "-" + s.substring(4, 8);
     }
 
     return ret;
@@ -224,21 +190,28 @@ public class PracticeData {
       "Megan Murphy", "Nolan Nash", "Oscar Olsen", "Phoebe Phelps", "Quora Quinlan", "Ronald Reid", "Samantha Steele",
       "Tristan Turner", "Ulric Urban", "Valerie Vaughn", "Willa Wade", "Xavier Xenos", "Yahir Yoder", "Zoey Zane");
 
-  List<String> randomStrings = Arrays.asList("483-920-1745", "729-384-6102", "158-637-2940", "604-218-7391",
-      "317-845-9206", "890-472-1635", "245-309-8761", "731-608-4927", "506-194-7382", "962-307-1584", "184-620-3957",
-      "703-519-8460", "398-271-6043", "576-803-1294", "820-146-3709", "691-204-8753", "347-980-2165", "215-763-4890",
-      "904-315-7286", "638-472-1905", "472-608-3519", "189-437-6208", "560-218-9347", "703-194-5826", "826-370-1492",
-      "391-608-2475", "204-759-3186", "648-203-9175", "739-185-6204", "580-492-7316", "913-274-8065", "327-915-4802",
-      "604-381-7290", "185-620-4937", "472-903-1684", "739-284-6105", "820-194-3756", "608-472-9315", "194-820-6375",
-      "370-158-4926", "608-215-7394", "492-703-1860", "215-604-8397", "703-492-1685", "820-739-1046", "194-608-3725",
-      "158-492-7036", "604-215-8391", "739-820-1643", "492-703-1586", "215-604-7398", "703-492-1864", "820-739-1056",
-      "194-608-3726", "158-492-7037", "604-215-8392", "739-820-1644", "492-703-1587", "215-604-7399", "703-492-1865",
-      "820-739-1057", "194-608-3727", "158-492-7038", "604-215-8393", "739-820-1645", "492-703-1588", "215-604-7400",
-      "703-492-1866", "820-739-1058", "194-608-3728", "158-492-7039", "604-215-8394", "739-820-1646", "492-703-1589",
-      "215-604-7401", "703-492-1867", "820-739-1059", "194-608-3729", "158-492-7040", "604-215-8395", "739-820-1647",
-      "492-703-1590", "215-604-7402", "703-492-1868", "820-739-1060", "194-608-3730", "158-492-7041", "604-215-8396",
-      "739-820-1648", "492-703-1591", "215-604-7403", "703-492-1869", "820-739-1061", "194-608-3731", "158-492-7042",
-      "604-215-8397", "739-820-1649", "492-703-1592");
+  // MUST BE 30 characters or less
+  private List<String> hospitalNames = Arrays.asList(//
+      "Mercy Ridge Medical Center", //
+      "Summit Peak General Hospital", //
+      "Evergreen Regional Health", //
+      "Crescent Valley Trauma Center", //
+      "Starlight Children's Hospital", //
+      "Horizon Behavioral Health", //
+      "Red Rock Emergency Hospital", //
+      "Blue River Community Medical", //
+      "Golden Gate Cardiac Institute", //
+      "Willow Grove Hospital", //
+      "Northbridge Memorial Hospital", //
+      "Cascade Lake Surgical Hospital", //
+      "Silver Lake Medical Facility", //
+      "Twin Pines Memorial Hospital", //
+      "Ironwood Memorial Hospital", //
+      "Liberty Field Mobile Hospital", //
+      "Maplecrest Veterans Hospital", //
+      "Oceanview Regional Hospital", //
+      "Prairie Hill Long-Term Care", //
+      "Lakeshore Medical and Imaging");
 
   List<String> deliveryList = Arrays.asList("Main Entrance", "Reception Desk", "Loading Dock", "Mailroom",
       "Security Office", "Parking Lot – North", "Parking Lot – South", "Visitor Entrance", "Side Entrance",
