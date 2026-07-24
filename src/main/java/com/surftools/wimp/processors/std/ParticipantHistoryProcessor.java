@@ -27,10 +27,14 @@ SOFTWARE.
 
 package com.surftools.wimp.processors.std;
 
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,10 +57,23 @@ public class ParticipantHistoryProcessor extends AbstractBaseProcessor {
   private static final Logger logger = LoggerFactory.getLogger(ParticipantHistoryProcessor.class);
   protected static LocalDate epochDate;
   private IWritableConfigurationManager cm;
+  private Map<String, DogfoodEntry> dogfoodMap;
 
   @Override
   public void initialize(IConfigurationManager cm, IMessageManager mm) {
     this.cm = (IWritableConfigurationManager) cm;
+
+    dogfoodMap = new HashMap<>();
+    var dogfoodPathName = cm.getAsString(Key.PATH_DOGFOOD);
+    if (dogfoodPathName != null) {
+      var dogfoodPath = Path.of(dogfoodPathName);
+      var fieldsList = ReadProcessor.readCsvFileIntoFieldsArray(dogfoodPath, ',', false, 1);
+      for (var fields : fieldsList) {
+        var entry = DogfoodEntry.fromFields(fields);
+        dogfoodMap.put(entry.call, entry);
+      }
+      logger.info("read " + dogfoodMap.size() + " entries from " + dogfoodPathName);
+    }
   }
 
   @Override
@@ -113,6 +130,13 @@ public class ParticipantHistoryProcessor extends AbstractBaseProcessor {
         summaries.put(count, summaries.getOrDefault(count, new ParticipantSummary(count, 0)).increment());
         var eph = ExtendedParticipantHistory.fromJoinedUser(join, filteredExercises);
         extendedHistories.add(eph);
+
+        var call = join.user.call();
+        var dogfood = dogfoodMap.get(call);
+        if (dogfood != null) {
+          dogfood = dogfood.addExtendedHistory(eph);
+          dogfoodMap.put(call, dogfood);
+        }
       } // end if join has exercises
     }
     logger.info("Got " + histories.size() + " particpant Histories");
@@ -122,6 +146,9 @@ public class ParticipantHistoryProcessor extends AbstractBaseProcessor {
         dateString + "-extendedParticipantHistory.csv");
     WriteProcessor.writeTable(new ArrayList<IWritableTable>(summaries.values()),
         dateString + "-participantSummary.csv");
+    if (dogfoodMap.size() > 0) {
+      WriteProcessor.writeTable(new ArrayList<IWritableTable>(dogfoodMap.values()), dateString + "-dogfood.csv");
+    }
   }
 
   static record ParticipantHistory(String call, int count, LocalDate firstDate, LocalDate lastDate)
@@ -224,5 +251,53 @@ public class ParticipantHistoryProcessor extends AbstractBaseProcessor {
 
     }
 
+  }
+
+  static record DogfoodEntry(String email, String call, String firstName, String lastName, String state,
+      String isWriter, String isTechTeam, ExtendedParticipantHistory history) implements IWritableTable {
+
+    @Override
+    public int compareTo(IWritableTable other) {
+      var o = (DogfoodEntry) other;
+      return email.compareTo(o.email);
+    }
+
+    @Override
+    public String[] getHeaders() {
+      var headers = new String[] { "Email", "Callsign", "FirstName", "LastName", "State", "IsWriter", "IsTech" };
+      var exHeaders = new String[] { "Call", "Latitude", "Longitude", //
+          "First Date", "Last Date", "FirstTime?", "OneAndDone?", "Current?", //
+          "ExerciseCount", "TotalExercises", "ExercisesSinceJoin", //
+          "% All Exercises", "% Exercises Since Joined" };
+
+      String[] result = Stream.concat(Arrays.stream(headers), Arrays.stream(exHeaders)).toArray(String[]::new);
+      return result;
+    }
+
+    @Override
+    public String[] getValues() {
+      var values = new String[] { email, call, firstName, lastName, state, isWriter, isTechTeam };
+      var exValues = (history == null)//
+          ? new String[] { "", "", "", "", "", "", "", "", "", "", "", "", "" } //
+          : history.getValues();
+      String[] result = Stream.concat(Arrays.stream(values), Arrays.stream(exValues)).toArray(String[]::new);
+      return result;
+    }
+
+    public static DogfoodEntry fromFields(String[] fields) {
+      var email = fields[0];
+      var call = fields[1].toUpperCase();
+      var firstName = fields[2];
+      var lastName = fields[3];
+      var state = fields[4];
+      var isWriter = fields[5];
+      var isTechTeam = fields[6];
+      var entry = new DogfoodEntry(email, call, firstName, lastName, state, isWriter, isTechTeam, null);
+      return entry;
+    }
+
+    public DogfoodEntry addExtendedHistory(ExtendedParticipantHistory history) {
+      return new DogfoodEntry(email, call, firstName, lastName, state, isWriter, isTechTeam, history);
+    }
   }
 }
