@@ -46,6 +46,7 @@ public enum Key implements IConfigurationKey {
   PATH_ARCHIVE("path.archive"), // path to remote folder for archiving entire exercise
   PATH_SCHEDULE("path.schedule"), // path to the expanded schedule.csv
   PATH_META_SCHEDULE("path.metaSchedule"), // path to the meta-schedule.xlsx
+  PATH_DOGFOOD("path.dogfood"), // path to csv of eto volunteers
 
   MAP_TEMPLATE_METHOD("map.template.method"), // "fast" or "slow", default "fast"
 
