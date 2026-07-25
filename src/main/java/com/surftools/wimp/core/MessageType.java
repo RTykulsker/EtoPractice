@@ -50,7 +50,7 @@ public enum MessageType {
   ICS_213("RMS_Express_Form_ICS213_Initial_Viewer.xml", "Ics213"), //
   ICS_213_RR("RMS_Express_Form_ICS213RR_Viewer.xml", "Ics213RR"), //
   HICS_259("RMS_Express_Form_HICS 259_viewer.xml", "Hics259"), //
-
+  BLOOD_AVAILABILITY("RMS_Express_Form_Blood Availability viewer.xml", "BloodAvailability"), //
   ;
 
   private final String rmsViewerName;

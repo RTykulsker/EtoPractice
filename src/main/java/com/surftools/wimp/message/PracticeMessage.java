@@ -49,6 +49,11 @@ public class PracticeMessage {
       break;
     }
 
+    case BLOOD_AVAILABILITY:
+      var m = (BloodAvailabilityMessage) message;
+      formVersion = m.version;
+      expressVersion = m.expressVersion;
+
     default:
       break;
     }

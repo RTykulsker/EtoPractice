@@ -43,6 +43,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.surftools.utils.location.LatLongPair;
 import com.surftools.wimp.core.MessageType;
+import com.surftools.wimp.message.BloodAvailabilityMessage;
 import com.surftools.wimp.message.ExportedMessage;
 import com.surftools.wimp.message.FieldSituationMessage;
 import com.surftools.wimp.message.Hics259Message;
@@ -83,6 +84,9 @@ public class PracticeJsonMessageDeserializer {
 
       case HICS_259:
         return deserialize_Hics259Message(jsonString);
+
+      case BLOOD_AVAILABILITY:
+        return deserialize_BloodAvailabilityMessage(jsonString);
 
       default:
         throw new RuntimeException("unsupported messageType: " + messageType.toString());
@@ -401,6 +405,45 @@ public class PracticeJsonMessageDeserializer {
         operationalPeriod, opFromDate, opFromTime, opToDate, opToTime, //
         casualtyMap, //
         patientTrackingManager, facilityName, version, expressVersion);
+
+    return m;
+  }
+
+  private BloodAvailabilityMessage deserialize_BloodAvailabilityMessage(String jsonString)
+      throws JsonMappingException, JsonProcessingException {
+    var json = mapper.readTree(jsonString);
+    var exportedMessage = deserialize_ExportedMessage(json);
+    var isExercise = json.get("isExercise").asBoolean();
+    var formDateTime = json.get("formDateTime").asText();
+    var facilityName = json.get("facilityName").asText();
+    var facilityAddress = json.get("facilityAddress").asText();
+    var facilityContactName = json.get("facilityContactName").asText();
+    var facilityPhoneNumber = json.get("facilityPhoneNumber").asText();
+    var redOPlus = json.get("redOPlus").asText();
+    var redOMinus = json.get("redOMinus").asText();
+    var redAPlus = json.get("redAPlus").asText();
+    var redAMinus = json.get("redAMinus").asText();
+    var redBPlus = json.get("redBPlus").asText();
+    var redBMinus = json.get("redBMinus").asText();
+    var redABPlus = json.get("redABPlus").asText();
+    var redABMinus = json.get("redABMinus").asText();
+    var plasmaO = json.get("plasmaO").asText();
+    var plasmaA = json.get("plasmaA").asText();
+    var plasmaB = json.get("plasmaB").asText();
+    var plasmaAB = json.get("plasmaAB").asText();
+    var comments = json.get("comments").asText();
+    var approvedBy = json.get("approved_name").asText();
+    var attachCSV = json.get("addattachment").asText();
+    var formLatitude = json.get("maplat").asText();
+    var formLongitude = json.get("maplon").asText();
+    var version = json.get("version").asText();
+    var expressVersion = json.get("expressVersion").asText();
+
+    var m = new BloodAvailabilityMessage(exportedMessage, isExercise, formDateTime, //
+        facilityName, facilityAddress, facilityContactName, facilityPhoneNumber, //
+        redOPlus, redOMinus, redAPlus, redAMinus, redBPlus, redBMinus, redABPlus, redABMinus, //
+        plasmaO, plasmaA, plasmaB, plasmaAB, //
+        comments, approvedBy, attachCSV, formLatitude, formLongitude, version, expressVersion);
 
     return m;
   }

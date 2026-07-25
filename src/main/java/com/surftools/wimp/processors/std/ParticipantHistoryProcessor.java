@@ -248,7 +248,6 @@ public class ParticipantHistoryProcessor extends AbstractBaseProcessor {
           firstDate.toString(), lastDate.toString(), isFirstTime, isOneAndDone, isCurrent, //
           String.valueOf(count), totalExercises, exercisesSinceJoined, //
           percentAllExercises, percentExercisesSinceJointed);
-
     }
 
   }
