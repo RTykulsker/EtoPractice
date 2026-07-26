@@ -27,11 +27,13 @@ SOFTWARE.
 
 package com.surftools.wimp.practice.tools;
 
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -59,7 +61,7 @@ import com.surftools.wimp.utils.config.impl.PropertyFileConfigurationManager;
  */
 public class PracticeGeneratorTool {
   private static final Logger logger = LoggerFactory.getLogger(PracticeGeneratorTool.class);
-
+  private static final DateTimeFormatter DTF = DateTimeFormatter.ofPattern("yyyy-MM-dd");
   static {
     System.setProperty("logback.configurationFile", "src/main/resources/logback.xml");
   }
@@ -91,6 +93,7 @@ public class PracticeGeneratorTool {
     logger.info("Using configuration file: " + configurationFileName);
 
     backupReferenceDir();
+    var legacyDate = copyLegacyToReferency();
 
     var generatorMap = new HashMap<MessageType, IGenerator>();
     for (var type : MessageType.getAllSupportedTypes()) {
@@ -107,7 +110,6 @@ public class PracticeGeneratorTool {
       }
     }
 
-    var dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     var scheduleManager = new ScheduleManager(cm);
     var scheduleRecords = scheduleManager.getSchedules();
     for (var schedule : scheduleRecords) {
@@ -116,6 +118,12 @@ public class PracticeGeneratorTool {
       }
 
       var date = schedule.date();
+      if (legacyDate != null && !date.isAfter(legacyDate)) {
+        logger.info(
+            "skipping: " + schedule.date() + ", " + schedule.name() + " before legacyDate: " + DTF.format(legacyDate));
+        continue;
+      }
+
       exerciseYear = String.valueOf(date.getYear());
       FileUtils.createDirectory(Path.of(referenceDirName, exerciseYear));
 
@@ -129,8 +137,8 @@ public class PracticeGeneratorTool {
       var objectMapper = JsonMapper.builder().addModule(new JavaTimeModule()).build();
       try {
         var json = objectMapper.writeValueAsString(m);
-        Files.writeString(Path.of(path.toString(), dtf.format(date) + "-reference.json"), json);
-        Files.writeString(Path.of(path.toString(), dtf.format(date) + "-instructions.txt"), instructions);
+        Files.writeString(Path.of(path.toString(), DTF.format(date) + "-reference.json"), json);
+        Files.writeString(Path.of(path.toString(), DTF.format(date) + "-instructions.txt"), instructions);
       } catch (Exception e) {
         logger.error("Exception: " + e.getMessage());
       }
@@ -140,6 +148,87 @@ public class PracticeGeneratorTool {
           + messageType.name());
     }
     logger.info("end run");
+  }
+
+  /**
+   * copy reference json and instructions from "golden" legacy dir to newly
+   * created reference dir if stricly before legacy date
+   *
+   * @return legacyDate
+   */
+  private LocalDate copyLegacyToReferency() throws Exception {
+    referenceDirName = cm.getAsString(Key.PATH_REFERENCE);
+    var referencePath = Path.of(referenceDirName);
+
+    var legacyDateString = cm.getAsString(Key.GENERATOR_LEGACY_DATE);
+    if (legacyDateString == null) {
+      logger.info("LegacyDate null: skipping legacy processing");
+      return null;
+    }
+
+    LocalDate legacyDate = null;
+    if (legacyDateString != null) {
+      try {
+        legacyDate = LocalDate.parse(legacyDateString, DTF);
+      } catch (Exception e) {
+        throw new RuntimeException("Could not parse legacyDate: " + legacyDateString + ", " + e.getMessage());
+      }
+      logger.info("LegacyDate: " + DTF.format(legacyDate));
+    }
+
+    var legacyPathString = cm.getAsString(Key.PATH_REFERENCE_LEGACY);
+    if (legacyPathString == null) {
+      logger.info("Reference legacy path null: skipping legacy processing");
+      return null;
+    }
+    var legacyPath = Path.of(legacyPathString);
+    var legacyDir = legacyPath.toFile();
+    if (!legacyDir.exists() || !legacyDir.isDirectory()) {
+      throw new RuntimeException("Reference legacy path: " + legacyPathString + " not found or not a directory");
+    }
+    logger.info("LegacyPath: " + legacyPath.toString());
+
+    // Iterate year folders: 2025, 2026, etc.
+    try (DirectoryStream<Path> years = Files.newDirectoryStream(legacyPath)) {
+      for (Path yearDir : years) {
+        if (!Files.isDirectory(yearDir)) {
+          continue;
+        }
+
+        String yearName = yearDir.getFileName().toString();
+        if (!yearName.matches("\\d{4}")) {
+          continue; // skip non-year folders
+        }
+
+        // Iterate date folders inside each year
+        try (DirectoryStream<Path> dateDirs = Files.newDirectoryStream(yearDir)) {
+          for (Path dateDir : dateDirs) {
+            if (!Files.isDirectory(dateDir)) {
+              continue;
+            }
+
+            String dateName = dateDir.getFileName().toString();
+            LocalDate folderDate;
+
+            try {
+              folderDate = LocalDate.parse(dateName, DTF);
+            } catch (Exception ex) {
+              continue; // skip non-date folders
+            }
+
+            if (folderDate.isBefore(legacyDate)) {
+              Path dest = referencePath.resolve(yearName).resolve(dateName);
+              FileUtils.copyDirectory(dateDir, dest);
+              Files.writeString(Path.of(dest.toString(), "legacy.txt"),
+                  "legacy processing on: " + LocalDateTime.now().toString());
+              logger.debug("Copying: " + dateDir.toString() + " to: " + dest.toString());
+            } // end if copying
+          } // end loop over dates in year
+        } // end try over year
+      } // end loop over years
+    }
+
+    return legacyDate;
   }
 
   private void backupReferenceDir() throws Exception {
@@ -161,586 +250,5 @@ public class PracticeGeneratorTool {
     Files.move(referencePath, destinationPath);
     FileUtils.createDirectory(Path.of(referenceDirName));
   }
-//  private void generate(LocalDate date, MessageType messageType, IConfigurationManager cm) {
-//
-//    var path = Path.of(referenceDirName, exerciseYear, date.toString());
-//    var ord = PracticeUtils.getOrdinalDayOfWeek(date);
-//    FileUtils.createDirectory(path);
-//    switch (messageType) {
-//    case ICS_213:
-//      handle_Ics213(date, ord, path);
-//      break;
-//    case ICS_213_RR:
-//      handle_Ics213RR(date, ord, path, cm);
-//      break;
-//    case HICS_259:
-//      handle_Hics259(date, ord, path);
-//      break;
-//    case ICS_205:
-//      handle_Ics205(date, ord, path);
-//      break;
-//    case FIELD_SITUATION:
-//      handle_Fsr(date, ord, path);
-//      break;
-//    default:
-//      throw new RuntimeException("unsupported messageType: " + messageType.toString());
-//    }
-//  }
-//
-//  private String makeMessageId(String prefix, LocalDateTime dateTime) {
-//    final var dtf = DateTimeFormatter.ofPattern("MMddHHmmss");
-//    return prefix + dtf.format(dateTime);
-//  }
-//
-//  private ExportedMessage makeExportedMessage(LocalDate date, String subject) {
-//    LocalDateTime dateTime = LocalDateTime.of(date, LocalTime.of(12, 0));
-//    var messageId = makeMessageId("PX", dateTime);
-//    var from = NA;
-//    var source = NA;
-//    var to = NA;
-//    var toList = NA;
-//    var ccList = NA;
-//
-//    var msgLocation = LatLongPair.ZERO_ZERO;
-//    var locationSource = NA;
-//    var mime = NA;
-//    var plainContent = NA;
-//    Map<String, byte[]> attachments = new HashMap<String, byte[]>();
-//    boolean isP2p = false;
-//    String fileName = NA;
-//    List<String> lines = new ArrayList<String>();
-//
-//    var exportedMessage = new ExportedMessage(messageId, from, source, to, toList, ccList, //
-//        subject, dateTime, //
-//        msgLocation, locationSource, //
-//        mime, plainContent, attachments, isP2p, fileName, lines);
-//
-//    return exportedMessage;
-//  }
-//
-//  private void handle_Ics213(LocalDate date, int ord, Path path) {
-//    var dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-//    var formSubject = "ETO Practice Exercise for " + dtf.format(date);
-//    var subject = "ICS-213: " + formSubject;
-//    var exportedMessage = makeExportedMessage(date, subject);
-//
-//    var rng = new Random(rngSeed + date.toString().hashCode());
-//    var pd = new PracticeData(rng);
-//
-//    var names = pd.getUniqueList(3, ListType.DOUBLED_NAMES);
-//    var positions = pd.getUniqueList(3, ListType.SHORT_EMERGENCY_ROLES);
-//
-//    var dow_dtf = DateTimeFormatter.ofPattern("EEE yyyy-MM-dd");
-//
-//    var organization = "EmComm Training Organization";
-//    var incidentName = "ETO Weekly Practice";
-//    var formFrom = names.get(0) + " / " + positions.get(0);
-//    var formTo = names.get(1) + " / " + positions.get(1);
-//
-//    var formDate = NA;
-//    var formTime = NA;
-//    var formMessage = "Exercise Id: " + pd.getExerciseId(ExerciseIdMethod.PHONE);
-//    var approvedBy = names.get(2);
-//    var position = positions.get(2); //
-//    var isExercise = true;
-//    var formLocation = LatLongPair.ZERO_ZERO;
-//    var version = NA;
-//    var expressVersion = NA;
-//    var dataSource = NA;
-//
-//    var sb = new StringBuilder(); // exercise instructions
-//    sb.append("ETO Exercise Instructions for Thursday, " + dtf.format(date) + NL + NL);
-//    sb.append("Task: Complete an ICS-213 General Message" + NL + NL);
-//    var windowOpenDate = date.minusDays(5);
-//    var windowCloseDate = date.plusDays(1);
-//    sb.append("Exercise window: " + dow_dtf.format(windowOpenDate) + " 00:00 UTC - " + //
-//        dow_dtf.format(windowCloseDate) + " 08:00 UTC" + NL + NL);
-//    sb.append("Use the following values when completing the form:" + NL);
-//    sb.append(INDENT + "Setup: agency or group name: " + organization + NL);
-//    sb.append(INDENT + "THIS IS AN EXERCISE: (checked)" + NL);
-//    sb.append(INDENT + "Incident Name: " + incidentName + NL);
-//    sb.append(INDENT + "To (Name/Position): " + formTo + NL);
-//    sb.append(INDENT + "From (Name/Position): " + formFrom + NL);
-//    sb.append(INDENT + "Subject: " + formSubject + NL);
-//    sb.append(INDENT + "Date: (click in box and accept date)" + NL);
-//    sb.append(INDENT + "Time: (click in box and accept time)" + NL);
-//    sb.append(INDENT + "Message: " + formMessage + NL);
-//    sb.append(INDENT + "Approved by: " + approvedBy + NL);
-//    sb.append(INDENT + "Position / Title: " + position + NL);
-//    sb.append(NL);
-//    sb.append("Ensure that you have a valid and appropriate Latitude and Longitude." + NL);
-//    sb.append(NL);
-//    sb.append("Send the message via the Session type of your choice to ETO-PRACTICE." + NL);
-//    sb.append(NL);
-//    sb.append("Refer to " + practiceInstructionURL + " for further instructions " + NL);
-//    sb.append(" about the weekly practice exercises and/or monthly training exercises." + NL);
-//
-//    var m = new Ics213Message(exportedMessage, organization, incidentName, //
-//        formFrom, formTo, formSubject, formDate, formTime, //
-//        formMessage, approvedBy, position, //
-//        isExercise, formLocation, version, expressVersion, dataSource);
-//
-//    var objectMapper = JsonMapper.builder().addModule(new JavaTimeModule()).build();
-//    try {
-//      var json = objectMapper.writeValueAsString(m);
-//      Files.writeString(Path.of(path.toString(), dtf.format(date) + "-reference.json"), json);
-//      Files.writeString(Path.of(path.toString(), dtf.format(date) + "-instructions.txt"), sb.toString());
-//    } catch (Exception e) {
-//      logger.error("Exception: " + e.getLocalizedMessage());
-//    }
-//    var ordName = PracticeUtils.getOrdinalLabel(ord);
-//    logger.info("generated date: " + date + ", " + ordName + " " + date.getDayOfWeek().toString() + ", ICS_213");
-//  }
-//
-//  private void handle_Ics213RR(LocalDate date, int ord, Path path, IConfigurationManager cm) {
-//    final int nLineItems = 3;
-//    Ics213RRMessage.setLineItemsToDisplay(nLineItems);
-//
-//    var rng = new Random(rngSeed + date.toString().hashCode());
-//    var pd = new PracticeData(rng);
-//    var prd = new PracticeResourceData(rng, cm);
-//
-//    var incidentName = "ETO Weekly Practice";
-//    var requestNumber = "Exercise Id: " + pd.getExerciseId(ExerciseIdMethod.PHONE);
-//
-//    var subject = "ICS 213RR- " + incidentName + "- Request #:" + requestNumber;
-//    var exportedMessage = makeExportedMessage(date, subject);
-//
-//    var dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-//    var dow_dtf = DateTimeFormatter.ofPattern("EEE yyyy-MM-dd");
-//    var names = pd.getUniqueList(2, ListType.DOUBLED_NAMES);
-//    var positions = pd.getUniqueList(1, ListType.SHORT_EMERGENCY_ROLES);
-//
-//    var organization = "EmComm Training Organization";
-//
-//    var lineItems = prd.getRandomResources(date, nLineItems, null, null);
-//
-//    var delivery = pd.deliveryChooser.next();
-//    var substitutes = rng.nextBoolean() ? "substitute as appropriate" : "no substitutes allowed";
-//
-//    var requestedBy = names.get(0) + " / " + positions.get(0);
-//    var priority = pd.priorityChooser.next();
-//    var approvedBy = names.get(1);
-//
-//    var version = NA;
-//    var expressVersion = NA;
-//
-//    var sb = new StringBuilder(); // exercise instructions
-//    sb.append("ETO Exercise Instructions for Thursday, " + dtf.format(date) + NL + NL);
-//    sb.append("Task: Complete an ICS-213 Resource Request Message" + NL + NL);
-//    var windowOpenDate = date.minusDays(5);
-//    var windowCloseDate = date.plusDays(1);
-//    sb.append("Exercise window: " + dow_dtf.format(windowOpenDate) + " 00:00 UTC - " + //
-//        dow_dtf.format(windowCloseDate) + " 08:00 UTC" + NL + NL);
-//
-//    sb.append("Use the following values when completing the form:" + NL);
-//    sb.append(INDENT + "Setup: agency or group name: " + organization + NL);
-//    sb.append(INDENT + "Incident name: " + incidentName + NL);
-//    sb.append(INDENT + "Date/Time: (click in box and accept date/time)" + NL);
-//    sb.append(INDENT + "Resource Request Number: " + requestNumber + NL);
-//    sb.append(INDENT + "Order Items (leave Estimated and Cost empty)" + NL);
-//
-//    var lineNumber = 0;
-//    for (var line : lineItems) {
-//      if (line.isEmpty()) {
-//        continue;
-//      }
-//
-//      ++lineNumber;
-//      sb.append(INDENT2 + "line " + lineNumber + NL); //
-//      sb.append(INDENT3 + "Qty: " + line.quantity() + NL);
-//      sb.append(INDENT3 + "Kind: " + line.kind() + NL);
-//      sb.append(INDENT3 + "Type: " + line.type() + NL);
-//      sb.append(INDENT3 + "Description: " + line.item() + NL);
-//      sb.append(INDENT3 + "Requested Time: " + line.requestedDateTime() + NL);
-//    }
-//
-//    sb.append(INDENT + "Delivery/Reporting Location: " + delivery + NL);
-//    sb.append(INDENT + "Substitutes: " + substitutes + NL);
-//    sb.append(INDENT + "Requested by Name/Position: " + requestedBy + NL);
-//    sb.append(INDENT + "Priority: " + priority + NL);
-//    sb.append(INDENT + "Section Chief Name for Approval: " + approvedBy + NL);
-//
-//    sb.append(NL);
-//    sb.append("Send the message via the Session type of your choice to ETO-PRACTICE." + NL);
-//    sb.append(NL);
-//    sb.append("Refer to " + practiceInstructionURL + " for further instructions " + NL);
-//    sb.append("about the weekly practice exercises and/or monthly training exercises." + NL);
-//
-//    var m = new Ics213RRMessage(exportedMessage, organization, incidentName, //
-//        NA, requestNumber, //
-//        lineItems, //
-//        delivery, substitutes, requestedBy, priority, approvedBy, //
-//        "", "", "", // logisticsOrderNumber, supplierInfo, supplierName, //
-//        "", "", "", // supplierPointOfContact, supplyNotes, logisticsAuthorizer, //
-//        "", "", // logisticsDateTime, orderedBy, //
-//        "", "", "", // financeComments, financeName, financeDateTime//
-//        version, expressVersion);
-//
-//    var objectMapper = JsonMapper.builder().addModule(new JavaTimeModule()).build();
-//    try {
-//      var json = objectMapper.writeValueAsString(m);
-//      Files.writeString(Path.of(path.toString(), dtf.format(date) + "-reference.json"), json);
-//      Files.writeString(Path.of(path.toString(), dtf.format(date) + "-instructions.txt"), sb.toString());
-//    } catch (Exception e) {
-//      logger.error("Exception: " + e.getLocalizedMessage());
-//    }
-//    var ordName = PracticeUtils.getOrdinalLabel(ord);
-//    logger.info("generated date: " + date + ", " + ordName + " " + date.getDayOfWeek().toString() + ", ICS_213RR");
-//  }
-//
-//  private void handle_Hics259(LocalDate date, int ord, Path path) {
-//
-//    var rng = new Random(rngSeed + date.toString().hashCode());
-//    var pd = new PracticeData(rng);
-//    var phd = new PracticeHicsData(rng);
-//
-//    var incidentName = "Exercise Id: " + pd.getExerciseId(ExerciseIdMethod.PHONE);
-//    var facilityName = phd.get(Types.HOSPITAL_NAMES);
-//    var subject = "HICS-259 HOSPITAL CASUALTY/FATALITY REPORT-" + incidentName;
-//    var exportedMessage = makeExportedMessage(date, subject);
-//
-//    var operationalPeriod = String.valueOf(rng.nextInt(1, 3));
-//    var windowOpenDate = date.minusDays(5);
-//    var windowCloseDate = date.plusDays(1);
-//
-//    var dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-//    var opFromDate = dtf.format(windowOpenDate);
-//    var opFromTime = "00:00";
-//    var opToDate = dtf.format(windowCloseDate);
-//    var opToTime = "08:00";
-//
-//    var casualtyMap = phd.makeCasualtyMap();
-//    var patientTrackingManager = pd.getUniqueList(1, ListType.DOUBLED_NAMES).get(0);
-//
-//    var date_dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-//    var dow_dtf = DateTimeFormatter.ofPattern("EEE yyyy-MM-dd");
-//    var sb = new StringBuilder(); // exercise instructions
-//    sb.append("ETO Exercise Instructions for Thursday, " + date_dtf.format(date) + NL + NL);
-//    sb.append("Task: Complete an HICS 259 Hospital Casualty/Fatality Report Message" + NL + NL);
-//    sb.append("Exercise window: " + dow_dtf.format(windowOpenDate) + " 00:00 UTC - " + //
-//        dow_dtf.format(windowCloseDate) + " 08:00 UTC" + NL + NL);
-//    sb.append("Use the following values when completing the form:" + NL);
-//    sb.append(INDENT + "Incident name: " + incidentName + NL);
-//    sb.append(INDENT + "Date: (click in box and accept date)" + NL);
-//    sb.append(INDENT + "Time: (click in box and accept time)" + NL);
-//    sb.append(INDENT + "Operational Period #: " + operationalPeriod + NL);
-//    sb.append(INDENT + "Operational Period Date From: " + opFromDate + NL);
-//    sb.append(INDENT + "Operational Period Date To: " + opToDate + NL);
-//    sb.append(INDENT + "Operational Period Time From: " + opFromTime + NL);
-//    sb.append(INDENT + "Operational Period Time To: " + opToTime + NL);
-//
-//    sb.append("Number Of Casualties" + NL);
-//
-//    for (var key : Hics259Message.CASUALTY_KEYS) {
-//      var entry = casualtyMap.get(key);
-//      sb.append(INDENT + key + NL);
-//      sb.append(INDENT2 + "Adult: " + entry.adultCount() + NL);
-//      sb.append(INDENT2 + "Pediatric: " + entry.childCount() + NL);
-//      sb.append(INDENT2 + "Comments: " + entry.comment() + NL);
-//    }
-//    sb.append("Prepared by: " + patientTrackingManager + NL);
-//    sb.append("Facility Name: " + facilityName + NL);
-//
-//    sb.append(NL);
-//    sb.append("Send the message via the Session type of your choice to ETO-PRACTICE." + NL);
-//    sb.append(NL);
-//    sb.append("Refer to " + practiceInstructionURL + " for further instructions " + NL);
-//    sb.append("about the weekly practice exercises and/or monthly training exercises." + NL);
-//
-//    var m = new Hics259Message(exportedMessage, //
-//        incidentName, NA, NA, //
-//        operationalPeriod, opFromDate, opFromTime, opToDate, opToTime, //
-//        casualtyMap, //
-//        patientTrackingManager, facilityName, NA, NA);
-//
-//    var objectMapper = JsonMapper.builder().addModule(new JavaTimeModule()).build();
-//    try {
-//      var json = objectMapper.writeValueAsString(m);
-//      Files.writeString(Path.of(path.toString(), dtf.format(date) + "-reference.json"), json);
-//      Files.writeString(Path.of(path.toString(), dtf.format(date) + "-instructions.txt"), sb.toString());
-//    } catch (Exception e) {
-//      logger.error("Exception: " + e.getLocalizedMessage());
-//    }
-//    var ordName = PracticeUtils.getOrdinalLabel(ord);
-//    logger.info("generated date: " + date + ", " + ordName + " " + date.getDayOfWeek().toString() + ", HICS_259");
-//  }
-//
-//  private void handle_Ics205(LocalDate date, int ord, Path path) {
-//    final int nRadioEntries = 3;
-//    Ics205Message.setRadioEntriesToDisplay(nRadioEntries);
-//
-//    var incidentName = "ETO Weekly Practice";
-//    var subject = "ICS 205 - " + incidentName;
-//    var exportedMessage = makeExportedMessage(date, subject);
-//
-//    var rng = new Random(rngSeed + date.toString().hashCode());
-//    var pd = new PracticeData(rng);
-//    var prd = new PracticeRadioData(rng);
-//
-//    var dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-//    var dow_dtf = DateTimeFormatter.ofPattern("EEE yyyy-MM-dd");
-//    var names = pd.getUniqueList(1, ListType.NAMES);
-//
-//    var organization = "EmComm Training Organization";
-//
-//    var windowOpenDate = date.minusDays(5);
-//    var windowCloseDate = date.plusDays(1);
-//    var dateFrom = dtf.format(windowOpenDate);
-//    var dateTo = dtf.format(windowCloseDate);
-//    var timeFrom = "00:00 UTC";
-//    var timeTo = "08:00 UTC";
-//    var radioItems = prd.makeRadioEntries(nRadioEntries);
-//    for (var i = nRadioEntries; i < Ics205Message.MAX_RADIO_ENTRIES; ++i) {
-//      radioItems.add(RadioEntry.EMPTY);
-//    }
-//    var specialInstructions = "Exercise Id: " + pd.getExerciseId(ExerciseIdMethod.PHONE);
-//    var approvedBy = names.get(0);
-//    var iapPage = String.valueOf(rng.nextInt(5, 10));
-//
-//    var sb = new StringBuilder(); // exercise instructions
-//    sb.append("ETO Exercise Instructions for Thursday, " + dtf.format(date) + NL + NL);
-//    sb.append("Task: Complete an ICS-205 Incident Radio Communications Plan Message" + NL + NL);
-//    sb.append("Exercise window: " + dow_dtf.format(windowOpenDate) + " 00:00 UTC - " + //
-//        dow_dtf.format(windowCloseDate) + " 08:00 UTC" + NL + NL);
-//
-//    sb.append("Use the following values when completing the form:" + NL);
-//    sb.append(INDENT + "Setup: agency or group name: " + organization + NL);
-//    sb.append(INDENT + "Incident name: " + incidentName + NL);
-//    sb.append(INDENT + "Date/Time: (click in box and accept date/time)" + NL);
-//    sb.append(INDENT + "Operational Period Date From: " + dateFrom + NL);
-//    sb.append(INDENT + "Operational Period Date To: " + dateTo + NL);
-//    sb.append(INDENT + "Operational Period Time From: " + timeFrom + NL);
-//    sb.append(INDENT + "Operational Period Time To: " + timeTo + NL);
-//
-//    sb.append(INDENT + "Basic Radio Channel Use:" + NL);
-//    var lineNumber = 0;
-//    for (var item : radioItems) {
-//      if (item.isEmpty()) {
-//        break;
-//      }
-//
-//      ++lineNumber;
-//      sb.append(INDENT2 + "line " + lineNumber + NL); //
-//      sb.append(INDENT3 + "Ch #: " + item.channelNumber() + NL);
-//      sb.append(INDENT3 + "Function: " + item.function() + NL);
-//      sb.append(INDENT3 + "Channel Name: " + item.channelName() + NL);
-//      sb.append(INDENT3 + "Assignment: " + item.assignment() + NL);
-//      sb.append(INDENT3 + "RX Freq: " + item.rxFrequency() + NL);
-//      sb.append(INDENT3 + "RX N or W: " + item.rxNarrowWide() + NL);
-//      sb.append(INDENT3 + "RX Tone: " + item.rxTone() + NL);
-//      sb.append(INDENT3 + "Tx Freq: " + item.txFrequency() + NL);
-//      sb.append(INDENT3 + "TX N or W: " + item.txNarrowWide() + NL);
-//      sb.append(INDENT3 + "TX Tone: " + item.txTone() + NL);
-//      sb.append(INDENT3 + "Mode: " + item.mode() + NL);
-//      sb.append(INDENT3 + "Remarks: " + item.remarks() + NL);
-//    }
-//
-//    sb.append(INDENT + "Special Instructions: " + specialInstructions + NL);
-//    sb.append(INDENT + "Approved by: " + approvedBy + NL);
-//    sb.append(INDENT + "Approved Date/Time: (click in box and accept date/time)" + NL);
-//    sb.append(INDENT + "IAP Page: " + iapPage + NL);
-//    sb.append(INDENT + "Attach CSV: (No)" + NL);
-//
-//    sb.append(NL);
-//    sb.append("Send the message via the Session type of your choice to ETO-PRACTICE." + NL);
-//    sb.append(NL);
-//    sb.append("Refer to " + practiceInstructionURL + " for further instructions " + NL);
-//    sb.append("about the weekly practice exercises and/or monthly training exercises." + NL);
-//
-//    var m = new Ics205Message(exportedMessage, organization, incidentName, NA, //
-//        dateFrom, dateTo, timeFrom, timeTo, //
-//        specialInstructions, approvedBy, NA, iapPage, //
-//        radioItems, NA, NA);
-//
-//    var objectMapper = JsonMapper.builder().addModule(new JavaTimeModule()).build();
-//    try {
-//      var json = objectMapper.writeValueAsString(m);
-//      Files.writeString(Path.of(path.toString(), dtf.format(date) + "-reference.json"), json);
-//      Files.writeString(Path.of(path.toString(), dtf.format(date) + "-instructions.txt"), sb.toString());
-//    } catch (Exception e) {
-//      logger.error("Exception: " + e.getLocalizedMessage());
-//    }
-//    var ordName = PracticeUtils.getOrdinalLabel(ord);
-//    logger.info("generated date: " + date + ", " + ordName + " " + date.getDayOfWeek().toString() + ", ICS_205");
-//  }
-//
-//  private void handle_Fsr(LocalDate date, int ord, Path path) {
-//    var subject = "//WL2K R/ Routine/ Field Situation Report";
-//    var exportedMessage = makeExportedMessage(date, subject);
-//
-//    var rng = new Random(rngSeed + date.toString().hashCode());
-//    var pd = new PracticeData(rng);
-//
-//    var dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-//    var dow_dtf = DateTimeFormatter.ofPattern("EEE yyyy-MM-dd");
-//    var names = pd.getUniqueList(1, ListType.NAMES);
-//
-//    var organization = "EmComm Training Organization";
-//    var precedence = "R/ Routine";
-//    var formDateTime = NA;
-//    var task = "ETO Weekly Practice";
-//    var formTo = "ETO-PRACTICE";
-//    var formFrom = NA;
-//    var isHelpNeeded = "NO";
-//    var neededHelp = "";
-//
-//    var city = "Fort Collins";
-//    var county = "Larimer";
-//    var state = "CO";
-//    var territory = "";
-//
-//    var formLocation = new LatLongPair("40.2503", "-103.7990");
-//
-//    final var YES = "YES";
-//    final var NO = "NO";
-//    final var UNK = "Unknown - N/A";
-//    var statusChooser = new WeightedChooser<String>(List.of(YES, NO, UNK), rng);
-//
-//    var landlineStatus = statusChooser.next();
-//    var landlineComments = landlineStatus.equals(NO) ? "CenturyLink" : "";
-//
-//    var voipStatus = UNK;
-//    var voipComments = "";
-//
-//    var cellPhoneStatus = statusChooser.next();
-//    var cellPhoneComments = cellPhoneStatus.equals(NO) ? "Verizon" : "";
-//
-//    var cellTextStatus = cellPhoneStatus;
-//    var cellTextComments = cellPhoneComments;
-//
-//    var radioStatus = statusChooser.next();
-//    var radioComments = radioStatus.equals(NO) ? "KFRC FM" : "";
-//
-//    var tvStatus = statusChooser.next();
-//    var tvComments = tvStatus.equals(NO) ? "KUSA" : "";
-//
-//    var satTvStatus = UNK;
-//    var satTvComments = "";
-//
-//    var cableTvStatus = statusChooser.next();
-//    var cableTvComments = cableTvStatus.equals(NO) ? "Xfinity" : "";
-//
-//    var waterStatus = statusChooser.next();
-//    var waterComments = waterStatus.equals(NO) ? "Fort Collins Utilities" : "";
-//
-//    var powerStatus = statusChooser.next();
-//    var powerComments = powerStatus.equals(NO) ? "Fort Collins Utilities" : "";
-//
-//    var powerStable = statusChooser.next();
-//    var powerStableComments = powerStable.equals(NO) ? "Fort Collins Utilities" : "";
-//
-//    var naturalGasStatus = statusChooser.next();
-//    var naturalGasComments = naturalGasStatus.equals(NO) ? "Xcel Energy" : "";
-//
-//    var internetStatus = cableTvStatus;
-//    var internetComments = cableTvComments;
-//
-//    var noaaStatus = YES;
-//    var noaaComments = "";
-//
-//    var noaaAudioDegraded = NO;
-//    var noaaAudioDegradedComments = "";
-//
-//    var additionalComments = "Exercise Id: " + pd.getExerciseId(ExerciseIdMethod.PHONE);
-//    var poc = names.get(0);
-//    var formVersion = NA;
-//    var expressVersion = NA;
-//
-//    var windowOpenDate = date.minusDays(5);
-//    var windowCloseDate = date.plusDays(1);
-//    var sb = new StringBuilder();
-//    sb.append("ETO Exercise Instructions for Thursday, " + dtf.format(date) + NL + NL);
-//    sb.append("Task: Complete a Field SituationReport Message" + NL + NL);
-//    sb.append("Exercise window: " + dow_dtf.format(windowOpenDate) + " 00:00 UTC - " + //
-//        dow_dtf.format(windowCloseDate) + " 08:00 UTC" + NL + NL);
-//
-//    sb.append("Use the following values when completing the form:" + NL);
-//    sb.append(INDENT + "Setup: agency or group name: " + organization + NL);
-//    sb.append(INDENT + "Precedence: " + precedence + NL);
-//    sb.append(INDENT + "Date/Time: (click in box and accept date/time)" + NL);
-//    sb.append(INDENT + "Task #: " + task + NL);
-//    sb.append(INDENT + "From: <YOUR CALL>" + NL);
-//    sb.append(INDENT + "To: " + formTo + NL);
-//    sb.append(INDENT + "EMERGENT/LIFE SAFETY Need: " + isHelpNeeded + NL);
-//
-//    sb.append(INDENT + "City: " + city + NL);
-//    sb.append(INDENT + "County: " + county + NL);
-//    sb.append(INDENT + "State: " + state + NL);
-//    sb.append(INDENT + "Latitude: " + formLocation.getLatitude() + NL);
-//    sb.append(INDENT + "Longitude: " + formLocation.getLongitude() + NL);
-//
-//    sb.append(INDENT + "POTS landlines functioning: " + landlineStatus + NL);
-//    sb.append(INDENT + "POTS landlines provider if NO: " + landlineComments + NL);
-//    sb.append(INDENT + "VOIP landlines functioning: " + voipStatus + NL);
-//    sb.append(INDENT + "VOIP landlines provider if NO: " + voipComments + NL);
-//    sb.append(INDENT + "Cell phone voice calls functioning: " + cellPhoneStatus + NL);
-//    sb.append(INDENT + "Cell phone voice provider if NO: " + cellPhoneComments + NL);
-//    sb.append(INDENT + "Cell phone texts functioning: " + cellTextStatus + NL);
-//    sb.append(INDENT + "Cell phone texts provider if NO: " + cellTextComments + NL);
-//
-//    sb.append(INDENT + "AM/FM Broadcast Stations functioning: " + radioStatus + NL);
-//    sb.append(INDENT + "Broadcast station callsign if NO: " + radioComments + NL);
-//    sb.append(INDENT + "OTA TV functioning: " + tvStatus + NL);
-//    sb.append(INDENT + "TV station if NO: " + tvComments + NL);
-//    sb.append(INDENT + "Satellite TV functioning: " + satTvStatus + NL);
-//    sb.append(INDENT + "Satellite TV provider if NO: " + satTvComments + NL);
-//    sb.append(INDENT + "Cable TV functioning: " + cableTvStatus + NL);
-//    sb.append(INDENT + "Cable TV provider if NO: " + cableTvComments + NL);
-//
-//    sb.append(INDENT + "Public Water Works functioning: " + waterStatus + NL);
-//    sb.append(INDENT + "Public Water Works provider if NO: " + waterComments + NL);
-//    sb.append(INDENT + "Commercial Power functioning: " + powerStatus + NL);
-//    sb.append(INDENT + "Commercial Power provider if NO: " + powerComments + NL);
-//    sb.append(INDENT + "Commercial Power Stable: " + powerStable + NL);
-//    sb.append(INDENT + "Commercial Power provider if NO: " + powerStableComments + NL);
-//    sb.append(INDENT + "Natural Gas supply functioning: " + naturalGasStatus + NL);
-//    sb.append(INDENT + "Natural Gas supply provider if NO: " + naturalGasComments + NL);
-//    sb.append(INDENT + "Internet functioning: " + internetStatus + NL);
-//    sb.append(INDENT + "Internet provider if NO: " + internetComments + NL);
-//
-//    sb.append(INDENT + "NOAA weather radio functioning: " + noaaStatus + NL);
-//    sb.append(INDENT + "NOAA transmitter/frequency if NO: " + noaaComments + NL);
-//    sb.append(INDENT + "NOAA weather radio audio degraded: " + noaaAudioDegraded + NL);
-//    sb.append(INDENT + "NOAA transmitter/frequency if NO: " + noaaAudioDegradedComments + NL);
-//
-//    sb.append(INDENT + "Additional Comments: " + additionalComments + NL);
-//    sb.append(INDENT + "POC: " + poc + NL);
-//
-//    sb.append(NL);
-//    sb.append("Ensure that you have a valid and appropriate Latitude and Longitude." + NL);
-//    sb.append(NL);
-//    sb.append("Send the message via the Session type of your choice to ETO-PRACTICE." + NL);
-//    sb.append(NL);
-//    sb.append("Refer to " + practiceInstructionURL + " for further instructions " + NL);
-//    sb.append(" about the weekly practice exercises and/or monthly training exercises." + NL);
-//
-//    var m = new FieldSituationMessage(//
-//        exportedMessage, organization, formLocation, //
-//        precedence, formDateTime, task, formTo, formFrom, isHelpNeeded, neededHelp, //
-//        city, county, state, territory, //
-//        landlineStatus, landlineComments, voipStatus, voipComments, //
-//        cellPhoneStatus, cellPhoneComments, cellTextStatus, cellTextComments, //
-//        radioStatus, radioComments, //
-//        tvStatus, tvComments, satTvStatus, satTvComments, cableTvStatus, cableTvComments, //
-//        waterStatus, waterComments, //
-//        powerStatus, powerComments, powerStable, powerStableComments, //
-//        naturalGasStatus, naturalGasComments, //
-//        internetStatus, internetComments, //
-//        noaaStatus, noaaComments, noaaAudioDegraded, noaaAudioDegradedComments, //
-//        additionalComments, poc, formVersion, expressVersion);
-//
-//    var objectMapper = JsonMapper.builder().addModule(new JavaTimeModule()).build();
-//    try {
-//      var json = objectMapper.writeValueAsString(m);
-//      Files.writeString(Path.of(path.toString(), dtf.format(date) + "-reference.json"), json);
-//      Files.writeString(Path.of(path.toString(), dtf.format(date) + "-instructions.txt"), sb.toString());
-//    } catch (Exception e) {
-//      logger.error("Exception: " + e.getLocalizedMessage());
-//    }
-//
-//    var ordName = PracticeUtils.getOrdinalLabel(ord);
-//    logger.info("generated date: " + date + ", " + ordName + " " + date.getDayOfWeek().toString() + ", FSR");
-//
-//  }
+
 }

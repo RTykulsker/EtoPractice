@@ -47,12 +47,14 @@ public enum Key implements IConfigurationKey {
   PATH_SCHEDULE("path.schedule"), // path to the expanded schedule.csv
   PATH_META_SCHEDULE("path.metaSchedule"), // path to the meta-schedule.xlsx
   PATH_DOGFOOD("path.dogfood"), // path to csv of eto volunteers
+  PATH_REFERENCE_LEGACY("path.reference.legacy"), // path to read-only legacy reference
 
   MAP_TEMPLATE_METHOD("map.template.method"), // "fast" or "slow", default "fast"
 
   GENERATOR_RNG_SEED("generator.rngSeed"), // to get consistent results
   GENERATOR_N_YEARS("generator.nYears"), // number of years to generate
   GENERATOR_INSTRUCTION_URL("generator.instruction.url"), // url at the bottom of each instruction
+  GENERATOR_LEGACY_DATE("generator.legacy.date"), // date, before which, we copy from referency-legacy
 
   ENABLE_FINALIZE("enable.finalize"), // set to true to enable, published, archive, snapshot to cloud, sends email,
                                       // set on command line
