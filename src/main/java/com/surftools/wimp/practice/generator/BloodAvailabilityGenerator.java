@@ -27,7 +27,6 @@ SOFTWARE.
 package com.surftools.wimp.practice.generator;
 
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
 
@@ -59,9 +58,8 @@ public class BloodAvailabilityGenerator extends AbstractBasePracticeGenerator {
 
   @Override
   public BloodAvailabilityMessage generateMessage(LocalDate date) {
-    var dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     var facilityName = faciltyNameChooser.next();
-    var subject = "Blood Availability: " + facilityName + " " + dtf.format(date);
+    var subject = "Blood Availability: " + facilityName;
     var exportedMessage = makeExportedMessage(date, subject);
 
     var isExercise = true;

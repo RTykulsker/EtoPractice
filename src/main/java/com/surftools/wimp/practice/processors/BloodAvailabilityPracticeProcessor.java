@@ -57,6 +57,18 @@ public class BloodAvailabilityPracticeProcessor extends BasePracticeProcessor {
     count(sts.test("Facility Phone Number should be #EV", ref.facilityPhoneNumber, m.facilityPhoneNumber));
 
     count(sts.test("RED BLOOD CELL O+ should be #EV", ref.redOPlus, m.redOPlus));
+    count(sts.test("RED BLOOD CELL O- should be #EV", ref.redOMinus, m.redOMinus));
+    count(sts.test("RED BLOOD CELL O+ should be #EV", ref.redAPlus, m.redAPlus));
+    count(sts.test("RED BLOOD CELL O- should be #EV", ref.redAMinus, m.redAMinus));
+    count(sts.test("RED BLOOD CELL O+ should be #EV", ref.redBPlus, m.redBPlus));
+    count(sts.test("RED BLOOD CELL O- should be #EV", ref.redBMinus, m.redBMinus));
+    count(sts.test("RED BLOOD CELL O+ should be #EV", ref.redABPlus, m.redABPlus));
+    count(sts.test("RED BLOOD CELL O- should be #EV", ref.redABMinus, m.redABMinus));
+
+    count(sts.test("PLASMA O should be #EV", ref.plasmaO, m.plasmaO));
+    count(sts.test("PLASMA A should be #EV", ref.plasmaA, m.plasmaA));
+    count(sts.test("PLASMA B should be #EV", ref.plasmaB, m.plasmaB));
+    count(sts.test("PLASMA AB should be #EV", ref.plasmaAB, m.plasmaAB));
 
     count(sts.test("Comments should be #EV", ref.comments, m.comments));
     count(sts.test("Approved by should be #EV", ref.approvedBy, m.approvedBy));

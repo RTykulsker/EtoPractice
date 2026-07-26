@@ -60,6 +60,7 @@ import com.surftools.wimp.core.IWritableTable;
 import com.surftools.wimp.core.MessageType;
 import com.surftools.wimp.feedback.FeedbackMessage;
 import com.surftools.wimp.feedback.FeedbackResult;
+import com.surftools.wimp.message.BloodAvailabilityMessage;
 import com.surftools.wimp.message.ExportedMessage;
 import com.surftools.wimp.message.FieldSituationMessage;
 import com.surftools.wimp.message.Hics259Message;
@@ -701,7 +702,7 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
     var messageType = ref.getMessageType();
     switch (messageType) {
     case ICS_213:
-      fullExerciseId = ((Ics213Message) ref).formMessage;
+      fullExerciseId = ((Ics213Message) ref).incidentName;
       break;
     case ICS_213_RR:
       fullExerciseId = ((Ics213RRMessage) ref).requestNumber;
@@ -714,6 +715,9 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
       break;
     case FIELD_SITUATION:
       fullExerciseId = ((FieldSituationMessage) ref).additionalComments;
+      break;
+    case BLOOD_AVAILABILITY:
+      fullExerciseId = ((BloodAvailabilityMessage) ref).comments;
       break;
     default:
       throw new RuntimeException("unsupported messageType: " + ref.getMessageType().toString());

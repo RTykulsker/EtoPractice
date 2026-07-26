@@ -432,10 +432,10 @@ public class PracticeJsonMessageDeserializer {
     var plasmaB = json.get("plasmaB").asText();
     var plasmaAB = json.get("plasmaAB").asText();
     var comments = json.get("comments").asText();
-    var approvedBy = json.get("approved_name").asText();
-    var attachCSV = json.get("addattachment").asText();
-    var formLatitude = json.get("maplat").asText();
-    var formLongitude = json.get("maplon").asText();
+    var approvedBy = json.get("approvedBy").asText();
+    var attachCSV = json.get("attachCSV").asText();
+    var formLatitude = json.get("formLatitude").asText();
+    var formLongitude = json.get("formLongitude").asText();
     var version = json.get("version").asText();
     var expressVersion = json.get("expressVersion").asText();
 

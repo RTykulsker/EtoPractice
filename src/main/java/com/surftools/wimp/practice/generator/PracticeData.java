@@ -73,7 +73,7 @@ public class PracticeData {
   }
 
   public String getExerciseId() {
-    return getExerciseId(ExerciseIdMethod.PHONE);
+    return getExerciseId(ExerciseIdMethod.FOUR_BY_FOUR);
   }
 
   public String getExerciseId(ExerciseIdMethod method) {
@@ -81,18 +81,23 @@ public class PracticeData {
     switch (method) {
     case UUID:
       ret = java.util.UUID.randomUUID().toString();
+      break;
     case SHORT_UUID:
       ret = java.util.UUID.randomUUID().toString().substring(9, 23);
+      break;
     case MID:
       ret = generateMid(java.util.UUID.randomUUID().toString());
+      break;
     case PHONE:
       var n = (long) (rng.nextDouble() * 9000000000L) + 1000000000L;
       var s = String.valueOf(n);
       ret = s.substring(0, 3) + "-" + s.substring(3, 6) + "-" + s.substring(6);
+      break;
     case FOUR_BY_FOUR:
       n = (long) (rng.nextDouble() * 9000000000L) + 1000000000L;
       s = String.valueOf(n);
-      ret = s.substring(0, 4) + "-" + s.substring(4, 8);
+      ret = "ETOID-" + s.substring(0, 4) + "-" + s.substring(4, 8);
+      break;
     }
 
     return ret;
