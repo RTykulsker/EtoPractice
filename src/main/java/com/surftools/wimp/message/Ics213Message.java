@@ -45,14 +45,12 @@ public class Ics213Message extends ExportedMessage {
 
   public final boolean isExercise;
   public final LatLongPair formLocation;
-  public final String version;
-  public final String expressVersion;
   public final String dataSource;
 
   public Ics213Message(ExportedMessage exportedMessage, String organization, String incidentName, //
       String formFrom, String formTo, String formSubject, String formDate, String formTime, //
       String formMessage, String approvedBy, String position, //
-      boolean isExercise, LatLongPair formLocation, String version, String expressVersion, String dataSource) {
+      boolean isExercise, LatLongPair formLocation, String formVersion, String expressVersion, String dataSource) {
     super(exportedMessage);
     this.organization = organization;
     this.incidentName = incidentName;
@@ -69,11 +67,10 @@ public class Ics213Message extends ExportedMessage {
 
     this.isExercise = isExercise;
     this.formLocation = formLocation != null ? formLocation : LatLongPair.INVALID;
-    this.version = version;
-    this.expressVersion = expressVersion;
     this.dataSource = dataSource;
 
     this.mapLocation = (formLocation != null && formLocation.isValid()) ? formLocation : mapLocation;
+    setParsedFields(formVersion, expressVersion);
   }
 
   @Override
@@ -86,7 +83,7 @@ public class Ics213Message extends ExportedMessage {
         "Latitude", "Longitude", "Msg Location", "Form Location", //
         "Organization", "IncidentName", //
         "Form From", "Form To", "Form Subject", "Form Date", "Form Time", //
-        "Form Message", "Approved By", "Position/Title", "Is Exercise", "Version", "Express Version", "Data Source",
+        "Form Message", "Approved By", "Position/Title", "Is Exercise", "FormVersion", "Express Version", "Data Source",
         "File Name" };
   }
 
@@ -108,7 +105,8 @@ public class Ics213Message extends ExportedMessage {
         formLocation == null ? "" : formLocation.toString(), //
         organization, incidentName, //
         formFrom, formTo, formSubject, formDate, formTime, //
-        formMessage, approvedBy, position, String.valueOf(isExercise), version, expressVersion, dataSource, fileName };
+        formMessage, approvedBy, position, String.valueOf(isExercise), formVersion, expressVersion, dataSource,
+        fileName };
   }
 
   @Override

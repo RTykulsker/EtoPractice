@@ -88,9 +88,6 @@ public class Ics213RRMessage extends ExportedMessage {
   public final String financeName;
   public final String financeDateTime;
 
-  public final String version;
-  public final String expressVersion;
-
   public Ics213RRMessage(ExportedMessage xmlMessage, String organization, String incidentName, //
       String activityDateTime, String requestNumber, //
       List<LineItem> lineItems, String delivery, String substitutes, //
@@ -101,7 +98,7 @@ public class Ics213RRMessage extends ExportedMessage {
       String logisticsDateTime, String orderedBy, //
 
       String financeComments, String financeName, String financeDateTime, //
-      String version, String expressVersion) {
+      String formVersion, String expressVersion) {
     super(xmlMessage);
 
     this.organization = organization;
@@ -130,8 +127,7 @@ public class Ics213RRMessage extends ExportedMessage {
     this.financeName = financeName;
     this.financeDateTime = financeDateTime;
 
-    this.version = version;
-    this.expressVersion = expressVersion;
+    setParsedFields(formVersion, expressVersion);
   }
 
   @Override
@@ -170,7 +166,7 @@ public class Ics213RRMessage extends ExportedMessage {
         logisticsOrderNumber, supplierInfo, supplierName, //
         supplierPointOfContact, supplyNotes, logisticsAuthorizer, //
         logisticsDateTime, orderedBy, //
-        financeComments, financeName, financeDateTime, version, expressVersion, fileName };
+        financeComments, financeName, financeDateTime, formVersion, expressVersion, fileName };
 
     Collections.addAll(resultList, preValues);
     for (int i = 1; i <= lineItemsToDisplay; ++i) {

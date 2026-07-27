@@ -80,12 +80,12 @@ public class Ics205Parser extends AbstractBaseParser {
 
       var radioEntries = makeRadioEntries();
 
-      var version = "";
+      var formVersion = "";
       var templateVersion = getStringFromXml("templateversion");
 
       if (templateVersion != null) {
         var fields = templateVersion.split(" ");
-        version = fields[fields.length - 1]; // last field
+        formVersion = fields[fields.length - 1]; // last field
       }
 
       var dateTimeApprovedString = getStringFromXml("activitydatetime1");
@@ -113,7 +113,7 @@ public class Ics205Parser extends AbstractBaseParser {
       var m = new Ics205Message(message, organization, incidentName, //
           dateTimePreparedString, dateFrom, dateTo, timeFrom, timeTo, //
           specialInstructions, approvedBy, dateTimeApprovedString, iapPageString, //
-          radioEntries, version, expressVersion);
+          radioEntries, formVersion, expressVersion);
 
       return m;
     } catch (Exception e) {

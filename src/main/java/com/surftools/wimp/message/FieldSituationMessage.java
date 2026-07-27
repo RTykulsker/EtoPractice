@@ -119,8 +119,6 @@ public class FieldSituationMessage extends ExportedMessage {
   public final String noaaAudioDegradedComments;
   public final String additionalComments;
   public final String poc;
-  public final String version;
-  public final String expressVersion;
 
   public final Map<ResourceType, Resource> resourceMap;
 
@@ -143,7 +141,7 @@ public class FieldSituationMessage extends ExportedMessage {
       String internetStatus, String internetComments, //
       String noaaStatus, String noaaComments, //
       String noaaAudioDegraded, String noaaAudioDegradedComments, //
-      String additionalComments, String poc, String version, String expressVersion) {
+      String additionalComments, String poc, String formVersion, String expressVersion) {
     super(exportedMessage);
     this.organization = organization;
     this.formLocation = formLocation;
@@ -190,8 +188,7 @@ public class FieldSituationMessage extends ExportedMessage {
     this.noaaAudioDegraded = noaaAudioDegraded;
     this.noaaAudioDegradedComments = noaaAudioDegradedComments;
     this.poc = poc;
-    this.version = version;
-    this.expressVersion = expressVersion;
+    setParsedFields(formVersion, expressVersion);
 
     if (formLocation.isValid()) {
       setMapLocation(formLocation);
@@ -236,7 +233,7 @@ public class FieldSituationMessage extends ExportedMessage {
         "Natural Gas Status", "Natural Gas Comments", //
         "Internet Status", "Internet Comments", //
         "NOAA Status", "NOAA Comments", "NOAA audio degraded", "NOAA audio degraded Comments", //
-        "Additional Comments", "POC", "FormVersion", "ExpressVersion", "File Name" };
+        "Additional Comments", "POC", "Form Version", "Express Version", "File Name" };
   }
 
   @Override
@@ -254,7 +251,7 @@ public class FieldSituationMessage extends ExportedMessage {
         naturalGasStatus, naturalGasComments, //
         internetStatus, internetComments, //
         noaaStatus, noaaComments, noaaAudioDegraded, noaaAudioDegradedComments, //
-        additionalComments, poc, version, expressVersion, fileName };
+        additionalComments, poc, formVersion, expressVersion, fileName };
   }
 
   @Override

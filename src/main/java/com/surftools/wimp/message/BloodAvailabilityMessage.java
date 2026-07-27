@@ -53,8 +53,6 @@ public class BloodAvailabilityMessage extends ExportedMessage {
   public final String attachCSV;
   public final String formLatitude;
   public final String formLongitude;
-  public final String version;
-  public final String expressVersion;
 
   public BloodAvailabilityMessage(ExportedMessage exportedMessage, boolean isExercise, String formDateTime, //
       String facilityName, String facilityAddress, String facilityContactName, String facilityPhoneNumber, //
@@ -62,7 +60,7 @@ public class BloodAvailabilityMessage extends ExportedMessage {
       String redABPlus, String redABMinus, //
       String plasmaO, String plasmaA, String plasmaB, String plasmaAB, //
       String comments, String approvedBy, String attachCSV, //
-      String formLatitude, String formLongitude, String version, String expressVersion) {
+      String formLatitude, String formLongitude, String formVersion, String expressVersion) {
     super(exportedMessage);
     this.isExercise = isExercise;
     this.formDateTime = formDateTime;
@@ -87,8 +85,8 @@ public class BloodAvailabilityMessage extends ExportedMessage {
     this.attachCSV = attachCSV;
     this.formLatitude = formLatitude;
     this.formLongitude = formLongitude;
-    this.version = version;
-    this.expressVersion = expressVersion;
+
+    setParsedFields(formVersion, expressVersion);
   }
 
   @Override
@@ -102,7 +100,7 @@ public class BloodAvailabilityMessage extends ExportedMessage {
         "FacilityName", "FacilityAddress", "FacilityContact", "FacilityPhone", //
         "Red O+", "Red O-", "Red A+", "Red A-", "Red B+", "Red B-", "Red AB+", "Red AB-", //
         "Plasma O", "Plasma A", "Plasma B", "Plasma AB", //
-        "Comments", "Approved By", "AttachCSV", "Form Latitude", "Form Longitude", "Version", "ExpressVersion",
+        "Comments", "Approved By", "AttachCSV", "Form Latitude", "Form Longitude", "FormVersion", "ExpressVersion",
         "File Name" };
   }
 
@@ -121,7 +119,7 @@ public class BloodAvailabilityMessage extends ExportedMessage {
         facilityName, facilityAddress, facilityContactName, facilityPhoneNumber, //
         redOPlus, redOMinus, redAPlus, redAMinus, redBPlus, redBMinus, redABPlus, redABMinus, //
         plasmaO, plasmaA, plasmaB, plasmaO, //
-        comments, approvedBy, attachCSV, formLatitude, formLongitude, version, expressVersion, fileName };
+        comments, approvedBy, attachCSV, formLatitude, formLongitude, formVersion, expressVersion, fileName };
   }
 
   @Override

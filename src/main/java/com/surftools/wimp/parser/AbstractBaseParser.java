@@ -384,7 +384,7 @@ public abstract class AbstractBaseParser implements IParser {
     return map;
   }
 
-  protected String getVersion(String tagName) {
+  protected String getFormVersion(String tagName) {
     var version = "";
     var templateVersion = getStringFromXml(tagName);
     if (templateVersion != null) {

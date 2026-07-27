@@ -62,8 +62,6 @@ public class Ics205Message extends ExportedMessage {
   public final String approvedBy;
   public final String approvedDateTime;
   public final String iapPage;
-  public final String version;
-  public final String expressVersion;
 
   public final List<RadioEntry> radioEntries;
 
@@ -79,7 +77,7 @@ public class Ics205Message extends ExportedMessage {
   public Ics205Message(ExportedMessage exportedMessage, String organization, String incidentName,
       String dateTimePrepared, String dateFrom, String dateTo, String timeFrom, String timeTo,
       String specialInstructions, String approvedBy, String approvedDateTime, String iapPage,
-      List<RadioEntry> radioEntries, String version, String expressVersion) {
+      List<RadioEntry> radioEntries, String formVersion, String expressVersion) {
     super(exportedMessage);
 
     this.organization = organization;
@@ -94,8 +92,7 @@ public class Ics205Message extends ExportedMessage {
     this.approvedDateTime = approvedDateTime;
     this.iapPage = iapPage;
     this.radioEntries = radioEntries;
-    this.version = version;
-    this.expressVersion = expressVersion;
+    setParsedFields(formVersion, expressVersion);
   }
 
   public static String[] getStaticHeaders() {
@@ -146,7 +143,7 @@ public class Ics205Message extends ExportedMessage {
         organization, incidentName, dateTimePrepared, //
         dateFrom, dateTo, timeFrom, timeTo, //
         specialInstructions, approvedBy, approvedDateTime, //
-        iapPage, version, expressVersion, fileName };
+        iapPage, formVersion, expressVersion, fileName };
 
     var radioValues = new ArrayList<String>();
     for (int i = 0; i < radioEntriesToDisplay; i++) {

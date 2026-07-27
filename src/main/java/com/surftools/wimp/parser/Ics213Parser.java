@@ -68,11 +68,11 @@ public class Ics213Parser extends AbstractBaseParser {
         var isExerciseString = getStringFromXml("isexercise");
         var isExercise = isExerciseString != null && isExerciseString.equals(IS_EXERCISE);
         var formLocation = getLatLongFromXml(mapLocationTags);
-        var version = getStringFromXml("templateversion");
-        if (version != null) {
-          var fields = version.replaceAll("  ", " ").split(" ");
+        var formVersion = getStringFromXml("templateversion");
+        if (formVersion != null) {
+          var fields = formVersion.replaceAll("  ", " ").split(" ");
           if (fields.length >= 3) {
-            version = fields[2];
+            formVersion = fields[2];
           }
         }
         var expressVersion = getExpressVersion(message, "Senders Express Version:");
@@ -80,7 +80,7 @@ public class Ics213Parser extends AbstractBaseParser {
         var m = new Ics213Message(message, organization, incidentName, //
             formFrom, formTo, formSubject, formDate, formTime, //
             formMessage, approvedBy, position, //
-            isExercise, formLocation, version, expressVersion, DATA_SOURCE_RMS_VIEWER);
+            isExercise, formLocation, formVersion, expressVersion, DATA_SOURCE_RMS_VIEWER);
         return m;
       } else {
         @SuppressWarnings("unchecked")

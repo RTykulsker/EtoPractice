@@ -75,6 +75,11 @@ public class ExportedMessage implements IMessage, IWritableTable {
   public final String fileName;
   public final List<String> lines;
 
+  // these variables aren't known at contructor time, only after a message is
+  // parsed
+  public String formVersion;
+  public String expressVersion;
+
   @Override
   public int hashCode() {
     final int prime = 31;
@@ -164,6 +169,9 @@ public class ExportedMessage implements IMessage, IWritableTable {
     this.isP2p = exportedMessage.isP2p;
     this.fileName = exportedMessage.fileName;
     this.lines = exportedMessage.lines;
+
+    this.formVersion = "";
+    this.expressVersion = "";
   }
 
   @Override
@@ -173,7 +181,8 @@ public class ExportedMessage implements IMessage, IWritableTable {
     String attachmentsString = "\n" + nAttachments + " attachments(" + attachmentNames + ")\n";
     return "ExportedMessage {messageId: " + messageId + ", from: " + from + ", to: " + to + ", subject: " + subject
         + ", date: " + msgDateTime.toLocalDate() + ", time: " + msgDateTime.toLocalTime() + ", plainContent: \n"
-        + plainContent + attachmentsString + ", fileName: " + fileName + "}";
+        + plainContent + attachmentsString + ", fileName: " + fileName + ", fornVersion: " + formVersion
+        + ", expressVersion: " + expressVersion + "}";
   }
 
   public String[] getMimeLines() {
@@ -188,7 +197,7 @@ public class ExportedMessage implements IMessage, IWritableTable {
   public String[] getHeaders() {
     return new String[] { "MessageId", "From", "To", "ToList", "CcList", "Subject", //
         "Date", "Time", "Latitude", "Longitude", "LocSource", //
-        "Plain Content", "#Attachments", "FileName"//
+        "Plain Content", "#Attachments", "FileName", "FormVersion", "ExpressVersion"//
     };
   }
 
@@ -201,7 +210,7 @@ public class ExportedMessage implements IMessage, IWritableTable {
     var nAttachments = attachments == null ? "" : String.valueOf(attachments.size());
     return new String[] { messageId, from, to, toList, ccList, subject, //
         date, time, lat, lon, msgLocationSource, //
-        plainContent, nAttachments, fileName };
+        plainContent, nAttachments, fileName, formVersion, expressVersion };
   }
 
   public MessageType getMessageType() {
@@ -227,6 +236,17 @@ public class ExportedMessage implements IMessage, IWritableTable {
     }
     cmp = this.from.compareTo(o.from);
     return cmp;
+  }
+
+  /**
+   * should be called from child Message constructors
+   *
+   * @param version
+   * @param expressVersion
+   */
+  public void setParsedFields(String formVersion, String expressVersion) {
+    this.formVersion = formVersion;
+    this.expressVersion = expressVersion;
   }
 
 }

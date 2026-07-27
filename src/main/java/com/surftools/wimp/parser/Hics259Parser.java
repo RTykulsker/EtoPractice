@@ -70,11 +70,11 @@ public class Hics259Parser extends AbstractBaseParser {
       var facilityName = getStringFromXml("facility");
 
       // HICS 259 v 0.2
-      var version = getStringFromXml("templateversion");
-      if (version != null) {
-        var fields = version.replaceAll("  ", " ").split(" ");
+      var formVersion = getStringFromXml("templateversion");
+      if (formVersion != null) {
+        var fields = formVersion.replaceAll("  ", " ").split(" ");
         if (fields.length > 1) {
-          version = fields[fields.length - 1];
+          formVersion = fields[fields.length - 1];
         }
       }
 
@@ -84,7 +84,7 @@ public class Hics259Parser extends AbstractBaseParser {
           incidentName, formDate, formTime, //
           operationalPeriod, opFromDate, opFromTime, opToDate, opToTime, //
           casualtyMap, //
-          patientTrackingManager, facilityName, version, expressVersion);
+          patientTrackingManager, facilityName, formVersion, expressVersion);
 
       return m;
     } catch (Exception e) {

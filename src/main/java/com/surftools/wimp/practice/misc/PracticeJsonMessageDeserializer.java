@@ -120,6 +120,12 @@ public class PracticeJsonMessageDeserializer {
         subject, msgDateTime, //
         msgLocation, locationSource, //
         mime, plainContent, attachments, isP2p, fileName, lines);
+
+    var formNode = json.get("formVersion") == null ? json.get("version") : json.get("formVersion");
+    var formVersion = formNode == null ? "n/a" : formNode.asText();
+    var expressVersion = json.get("expressVersion").asText();
+    exportedMessage.setParsedFields(formVersion, expressVersion);
+
     return exportedMessage;
   }
 

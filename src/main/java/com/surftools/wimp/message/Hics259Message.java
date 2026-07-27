@@ -58,14 +58,11 @@ public class Hics259Message extends ExportedMessage {
   public final String patientTrackingManager;
   public final String facilityName;
 
-  public final String version;
-  public final String expressVersion;
-
   public Hics259Message(ExportedMessage exportedMessage, //
       String incidentName, String formDate, String formTime, //
       String operationalPeriod, String opFromDate, String opFromTime, String opToDate, String opToTime, //
       Map<String, CasualtyEntry> casualtyMap, //
-      String patientTrackingManager, String facilityName, String version, String expressVersion) {
+      String patientTrackingManager, String facilityName, String formVersion, String expressVersion) {
 
     super(exportedMessage);
 
@@ -84,8 +81,7 @@ public class Hics259Message extends ExportedMessage {
     this.patientTrackingManager = patientTrackingManager;
     this.facilityName = facilityName;
 
-    this.version = version;
-    this.expressVersion = expressVersion;
+    setParsedFields(formVersion, expressVersion);
   }
 
   public static String[] getStaticHeaders() {
@@ -136,7 +132,7 @@ public class Hics259Message extends ExportedMessage {
     }
 
     var lastList = List.of(patientTrackingManager, facilityName, //
-        version, expressVersion, fileName);
+        formVersion, expressVersion, fileName);
 
     var resultList = new ArrayList<String>(firstList.size() + casualtyList.size() + lastList.size());
     resultList.addAll(firstList);

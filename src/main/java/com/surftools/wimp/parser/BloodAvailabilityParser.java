@@ -72,11 +72,11 @@ public class BloodAvailabilityParser extends AbstractBaseParser {
       var attachCSV = getStringFromXml("addattachment").equals("false") ? "No" : "Yes";
       var formLatitude = getStringFromXml("maplat");
       var formLongitude = getStringFromXml("maplon");
-      var version = "";
+      var formVersion = "";
       var templateVersion = getStringFromXml("templateversion");
       if (templateVersion != null) {
         var fields = templateVersion.split(" ");
-        version = fields[fields.length - 1]; // last field
+        formVersion = fields[fields.length - 1]; // last field
       }
       var expressVersion = getExpressVersion(message, "Senders Express Version:");
 
@@ -84,7 +84,7 @@ public class BloodAvailabilityParser extends AbstractBaseParser {
           facilityName, facilityAddress, facilityContactName, facilityPhoneNumber, //
           redOPlus, redOMinus, redAPlus, redAMinus, redBPlus, redBMinus, redABPlus, redABMinus, //
           plasmaO, plasmaA, plasmaB, plasmaAB, //
-          comments, approvedBy, attachCSV, formLatitude, formLongitude, version, expressVersion);
+          comments, approvedBy, attachCSV, formLatitude, formLongitude, formVersion, expressVersion);
 
       return m;
     } catch (Exception e) {
