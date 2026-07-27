@@ -101,13 +101,19 @@ public class BucketChooser<T> {
     var firstItem = workingList.remove(0);
     if (workingList.size() == 0) {
       workingList.addAll(sourceList);
+      if (rng != null) {
+        Collections.shuffle(workingList, rng);
+      }
     }
-
-    if (rng != null && workingList.size() > 1) {
-      Collections.shuffle(workingList, rng);
-    }
-
     return firstItem;
   }
 
+  /**
+   * return the number of items in a
+   *
+   * @return
+   */
+  public int size() {
+    return (singleton != null) ? 1 : sourceList.size();
+  }
 }
