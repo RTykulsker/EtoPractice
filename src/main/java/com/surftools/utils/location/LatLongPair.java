@@ -36,8 +36,9 @@ import org.slf4j.LoggerFactory;
 /**
  * DTO for latitude/longitude pair
  *
- * The "natural" type is the String, not double. The default precision is 4 decimal digits. This is 111 m at the
- * equator, etc. We are primarily interested in people's locations, and will be storing in text, CSV files.
+ * The "natural" type is the String, not double. The default precision is 4
+ * decimal digits. This is 111 m at the equator, etc. We are primarily
+ * interested in people's locations, and will be storing in text, CSV files.
  *
  * https://en.wikipedia.org/wiki/Decimal_degrees
  *
@@ -73,11 +74,6 @@ public class LatLongPair {
 
     this.latitude = latitude;
     this.longitude = longitude;
-  }
-
-  public LatLongPair(String grid) {
-    this(String.valueOf(LocationUtils.getLatitudeFromMaidenhead(grid)),
-        String.valueOf(LocationUtils.getLongitudeFromMaidenhead(grid)));
   }
 
   @Override
@@ -199,10 +195,6 @@ public class LatLongPair {
     }
 
     return true;
-  }
-
-  public int computeDistanceMiles(LatLongPair other) {
-    return LocationUtils.computeDistanceMiles(this, other);
   }
 
   public double computeDistanceMeters(LatLongPair other) {
