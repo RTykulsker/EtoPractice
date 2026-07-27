@@ -49,7 +49,6 @@ import java.util.function.Predicate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.surftools.utils.MultiDateTimeParser;
 import com.surftools.utils.counter.Counter;
 import com.surftools.utils.counter.ICounter;
 import com.surftools.utils.location.LatLongPair;
@@ -646,16 +645,6 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
         dateString + " Message Type Counts", // map title
         null, legendTitle, layers, mapEntries);
     mapService.makeMap(context);
-  }
-
-  protected LocalDateTime parseDateTime(String dateString, String timeString) {
-    final var list = List.of(//
-        "yyyy-MM-dd HH:mm", // default
-        "yyyy-MM-dd HH:mm 'Z'", // default, with Z
-        "yyyy/MM/dd HH:mm" // default with slashes
-    );
-    final var mdtp = new MultiDateTimeParser(list);
-    return mdtp.parseDateTime(dateString + " " + timeString);
   }
 
   protected String formatPercent(Double d) {

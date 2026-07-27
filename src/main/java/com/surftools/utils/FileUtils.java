@@ -80,20 +80,6 @@ public class FileUtils {
   }
 
   /**
-   * (recursively) create directory
-   *
-   * @param path
-   */
-  public static Path createDirectory(Path parentPath, String fileName) {
-    var path = Path.of(parentPath.toString(), fileName);
-    try {
-      return Files.createDirectories(path);
-    } catch (Exception e) {
-      throw new RuntimeException("exception creating directory: " + path.toString() + ", " + e.getLocalizedMessage());
-    }
-  }
-
-  /**
    * recursively remove directory and all contents
    *
    * @param path
@@ -110,22 +96,6 @@ public class FileUtils {
     } catch (Exception e) {
       throw new RuntimeException("exception deleting directory: " + path.toString() + ", " + e.getLocalizedMessage());
     }
-  }
-
-  /**
-   * return a canonical suffix
-   *
-   * @param fileName
-   * @return
-   */
-  public static String getFileNameSuffix(String fileName) {
-    int index = fileName.lastIndexOf(".");
-    if (index == -1) {
-      return null;
-    }
-
-    String suffix = fileName.substring(index + 1).toUpperCase();
-    return suffix;
   }
 
   /**
