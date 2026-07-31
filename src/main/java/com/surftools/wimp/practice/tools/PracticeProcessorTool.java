@@ -149,6 +149,7 @@ public class PracticeProcessorTool {
             var instructionPath = Path.of(referencePathName, String.valueOf(nextExerciseYear), nextExerciseDateString,
                 nextExerciseDateString + "-instructions.txt");
             instructionText = Files.readString(instructionPath);
+            sb.append(instructionText);
             sb.append("\n\n");
           }
           instructionText = sb.toString();
