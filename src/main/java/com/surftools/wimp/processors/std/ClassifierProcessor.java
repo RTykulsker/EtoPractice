@@ -28,6 +28,7 @@ SOFTWARE.
 package com.surftools.wimp.processors.std;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,6 +56,8 @@ public class ClassifierProcessor extends AbstractBaseProcessor {
 
   private Map<MessageType, IParser> parserMap = new HashMap<>();
 
+  private final List<MessageType> SUPPORTED_TYPES = new ArrayList<>();
+
   @Override
   public void initialize(IConfigurationManager cm, IMessageManager mm) {
     super.initialize(cm, mm);
@@ -63,6 +66,7 @@ public class ClassifierProcessor extends AbstractBaseProcessor {
       if (IGNORED_TYPES.contains(type)) {
         continue;
       }
+      SUPPORTED_TYPES.add(type);
       var parserName = "com.surftools.wimp.parser." + type.makeParserName() + "Parser";
       try {
         var parserClass = Class.forName(parserName);
@@ -73,6 +77,11 @@ public class ClassifierProcessor extends AbstractBaseProcessor {
         logger.error("Couldn't create parser for: " + type.toString() + ", " + e.getLocalizedMessage());
       }
     }
+
+    // because I chose to support MacWinlink, which was/is buggy, //
+    // ICS_213_RR sorts after ICS_213, reverse it
+    Collections.sort(SUPPORTED_TYPES);
+    Collections.reverse(SUPPORTED_TYPES);
   }
 
   @Override
@@ -131,7 +140,7 @@ public class ClassifierProcessor extends AbstractBaseProcessor {
         continue;
       }
 
-      for (var messageType : MessageType.values()) {
+      for (var messageType : SUPPORTED_TYPES) {
         if (messageType.rmsViewerName() == null) {
           continue;
         }
