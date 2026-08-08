@@ -48,6 +48,7 @@ public enum Key implements IConfigurationKey {
   PATH_META_SCHEDULE("path.metaSchedule"), // path to the meta-schedule.xlsx
   PATH_DOGFOOD("path.dogfood"), // path to csv of eto volunteers
   PATH_REFERENCE_LEGACY("path.reference.legacy"), // path to read-only legacy reference
+  PATH_HINT_CONTENT("path.hintContent"), // path to FILE where hints for better messages are stored
 
   MAP_TEMPLATE_METHOD("map.template.method"), // "fast" or "slow", default "fast"
 
@@ -106,6 +107,7 @@ public enum Key implements IConfigurationKey {
 
   WINLINK_NOTIFICATION_SOURCE("winlink.notification.source"), // mbo address
   WINLINK_NOTIFICATION_SENDER("winlink.notification.sender"), // from address
+  WINLINK_NOTIFICATION_HINT_ON_PERFECT("winlink.notification.hint.OnPerfect"), // to send hints even on perfect messages
 
   OUTBOUND_MESSAGE_SOURCE("outboundMessage.source"), // mbo address
   OUTBOUND_MESSAGE_SENDER("outboundMessage.sender"), // from address
@@ -115,6 +117,7 @@ public enum Key implements IConfigurationKey {
   CHART_CONFIG("chartConfig"), // as a JSON blob
 
   READ_FILTER_ENABLED("read.filterEnabled"), // to filter in/out messages by sender/from in BaseReadProcessor
+
   ;
 
   private final String key;

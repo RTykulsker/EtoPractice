@@ -140,6 +140,9 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
   public Map<String, Counter> counterMap = new LinkedHashMap<String, Counter>();
   private List<IWritableTable> sourceSenderEntries = new ArrayList<>();
 
+  private boolean hintOnPerfect = false;
+  private String hintContent = "";
+
   @SuppressWarnings("unchecked")
   public void initialize(IConfigurationManager cm, IMessageManager mm, MessageType _processorMessageType) {
 
@@ -179,22 +182,39 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
     outboundMessageList = new ArrayList<>();
     if (doOutboundMessaging) {
       outboundMessageExtraContent = "";
-      var extraContentPathName = cm.getAsString(Key.PATH_NAG_CONTENT);
-      if (extraContentPathName != null) {
+      var nagContentPathName = cm.getAsString(Key.PATH_NAG_CONTENT);
+      if (nagContentPathName != null) {
         try {
-          var extraContentPath = Path.of(extraContentPathName);
-          var lines = Files.readAllLines(extraContentPath);
-          var extraContent = String.join("\n", lines.stream().filter(s -> !s.trim().startsWith("#")).toList()).trim();
-          if (extraContent != null && extraContent.length() > 0) {
-            outboundMessageExtraContent = extraContent;
-            logger.info("file: " + extraContentPathName + " provides the following extra content:\n"
-                + outboundMessageExtraContent);
+          var nagContentPath = Path.of(nagContentPathName);
+          var lines = Files.readAllLines(nagContentPath);
+          var nagContent = String.join("\n", lines.stream().filter(s -> !s.trim().startsWith("#")).toList()).trim();
+          if (nagContent != null && nagContent.length() > 0) {
+            outboundMessageExtraContent = "\n\n" + PracticeProcessorTool.DASHES_72 + "\n\n" + nagContent;
+            logger.info(
+                "file: " + nagContentPathName + " provides the following nag content:\n" + outboundMessageExtraContent);
           }
         } catch (Exception e) {
-          logger.warn("Could not get extra content for outbound messages. Using default");
+          logger.warn("Could not get nag content for outbound messages. Using default");
         }
-      }
-    }
+      } // endif nagContentPathName
+
+      hintOnPerfect = cm.getAsBoolean(Key.WINLINK_NOTIFICATION_HINT_ON_PERFECT);
+
+      var hintContentPathName = cm.getAsString(Key.PATH_HINT_CONTENT);
+      if (hintContentPathName != null) {
+        try {
+          var hintContentPath = Path.of(hintContentPathName);
+          var lines = Files.readAllLines(hintContentPath);
+          hintContent = String.join("\n", lines.stream().filter(s -> !s.trim().startsWith("#")).toList()).trim();
+          if (hintContent != null && hintContent.length() > 0) {
+            logger.info("file: " + hintContentPathName + " provides the following hint content:\n" + hintContent);
+          }
+        } catch (Exception e) {
+          logger.warn("Could not get hint content for outbound messages. Using default");
+        }
+      } // endif hintContentPathName
+
+    } // endif doOutboundMessaging
   }
 
   @Override
@@ -293,8 +313,12 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
     if (explanations.size() == 0) {
       ++ppMessageCorrectCount;
       feedback = "Perfect Message!";
+
+      if (hintOnPerfect) {
+        feedback = feedback + "\n\n" + hintContent;
+      }
     } else {
-      feedback = String.join("\n", explanations);
+      feedback = String.join("\n", explanations) + "\n\n" + hintContent;
     }
 
     var feedbackResult = new FeedbackResult(sender, feedbackLocation.getLatitude(), feedbackLocation.getLongitude(),
