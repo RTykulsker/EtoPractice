@@ -28,7 +28,7 @@ SOFTWARE.
 package com.surftools.wimp.practice.misc;
 
 import com.surftools.utils.textEditor.ITextEditor;
-import com.surftools.wimp.processors.std.AcknowledgementProcessor;
+import com.surftools.wimp.practice.tools.PracticeProcessorTool;
 
 public class PracticeBodyTextEditor implements ITextEditor {
 
@@ -38,7 +38,7 @@ public class PracticeBodyTextEditor implements ITextEditor {
    */
   public String edit(String source) {
     var result = source.replaceAll("INSTRUCTIONS for ETO Exercise Instructions for",
-        AcknowledgementProcessor.DASHES + "\n" + "INSTRUCTIONS for");
+        PracticeProcessorTool.DASHES_72 + "\n\n" + "INSTRUCTIONS for");
     return result;
   }
 

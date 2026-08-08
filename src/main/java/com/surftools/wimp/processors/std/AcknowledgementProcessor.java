@@ -40,6 +40,7 @@ import com.surftools.wimp.core.IMessageManager;
 import com.surftools.wimp.core.IWritableTable;
 import com.surftools.wimp.core.MessageType;
 import com.surftools.wimp.message.ExportedMessage;
+import com.surftools.wimp.practice.tools.PracticeProcessorTool;
 import com.surftools.wimp.utils.config.IConfigurationManager;
 
 /**
@@ -51,8 +52,6 @@ import com.surftools.wimp.utils.config.IConfigurationManager;
  *
  */
 public class AcknowledgementProcessor extends AbstractBaseProcessor {
-  public static final String DASHES = "----------------------------------------------------------------------------------------------\n";
-
   private static final boolean LAST_LOCATION_WINS = true;
 
   public static final String ACK_MAP = "ackMap";
@@ -120,8 +119,7 @@ public class AcknowledgementProcessor extends AbstractBaseProcessor {
     }
 
     sb.append(extraContent);
-    sb.append(DASHES);
-    sb.append("\n");
+    sb.append("\n" + PracticeProcessorTool.DASHES_72 + "\n\n");
     var text = sb.toString();
     return text;
   }

@@ -77,6 +77,8 @@ public class PracticeProcessorTool {
   private ScheduleCheckResult checkResult;
   private ScheduleRecord scheduleRecord;
 
+  public static final String DASHES_72 = "---------------------------------------------------------------------";
+
   public static void main(String[] args) {
     var tool = new PracticeProcessorTool();
     CmdLineParser parser = new CmdLineParser(tool);
@@ -134,9 +136,8 @@ public class PracticeProcessorTool {
         } else {
           var sb = new StringBuilder();
           if (!nextSchedule.isPractice()) {
+            sb.append(DASHES_72 + "\n\n");
             var text = """
-                --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
                 INSTRUCTIONS for next week:
                 Next Thursday is a \"Third Thursday Training Exercise\".
                 These instructions are simply too large for a Winlink messages,
@@ -149,8 +150,7 @@ public class PracticeProcessorTool {
             var instructionPath = Path.of(referencePathName, String.valueOf(nextExerciseYear), nextExerciseDateString,
                 nextExerciseDateString + "-instructions.txt");
             instructionText = Files.readString(instructionPath);
-            sb.append(
-                "\n\n--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n\n");
+            sb.append("\n\n" + DASHES_72 + "\n\n");
             sb.append("INSTRUCTIONS for " + nextExerciseDateString + "\n\n");
             sb.append(instructionText);
             sb.append("\n\n");
