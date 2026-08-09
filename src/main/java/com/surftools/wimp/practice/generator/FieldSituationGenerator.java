@@ -115,7 +115,7 @@ public class FieldSituationGenerator extends AbstractBasePracticeGenerator {
     var noaaAudioDegraded = NO;
     var noaaAudioDegradedComments = "";
 
-    var additionalComments = "Exercise Id: " + data.getExerciseId();
+    var additionalComments = data.getExerciseId();
     var poc = data.nameChooser.next();
     var formVersion = NA;
     var expressVersion = NA;

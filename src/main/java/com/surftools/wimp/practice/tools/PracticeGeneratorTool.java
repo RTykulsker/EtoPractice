@@ -63,7 +63,7 @@ public class PracticeGeneratorTool {
   private static final Logger logger = LoggerFactory.getLogger(PracticeGeneratorTool.class);
   private static final DateTimeFormatter DTF = DateTimeFormatter.ofPattern("yyyy-MM-dd");
   static {
-    System.setProperty("logback.configurationFile", "src/main/resources/logback.xml");
+    System.setProperty("logback.configurationFile", "resources/logback.xml");
   }
 
   @Option(name = "--config", usage = "practice configuration file name", required = true)

@@ -49,7 +49,7 @@ public class PracticeData {
   public final BucketChooser<String> priorityChooser;
 
   public enum ExerciseIdMethod {
-    UUID, SHORT_UUID, MID, PHONE, FOUR_BY_FOUR, ETOID_5
+    UUID, SHORT_UUID, MID, PHONE, ETOID_5
   }
 
   private final Random rng;
@@ -97,15 +97,10 @@ public class PracticeData {
       var s = String.valueOf(n);
       ret = s.substring(0, 3) + "-" + s.substring(3, 6) + "-" + s.substring(6);
       break;
-    case FOUR_BY_FOUR:
-      n = (long) (rng.nextDouble() * 9000000000L) + 1000000000L;
-      s = String.valueOf(n);
-      ret = "ETOID-" + s.substring(0, 4) + "-" + s.substring(4, 8);
-      break;
     case ETOID_5:
       n = (long) (rng.nextDouble() * 9000000000L) + 1000000000L;
       s = String.valueOf(n);
-      ret = s.substring(0, 5);
+      ret = "ETOID-" + s.substring(0, 5);
       break;
     }
 

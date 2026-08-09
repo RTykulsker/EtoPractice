@@ -68,7 +68,7 @@ import com.surftools.wimp.utils.config.impl.PropertyFileConfigurationManager;
 public class PracticeScheduleTool {
   private static final Logger logger = LoggerFactory.getLogger(PracticeScheduleTool.class);
   static {
-    System.setProperty("logback.configurationFile", "src/main/resources/logback.xml");
+    System.setProperty("logback.configurationFile", "resources/logback.xml");
   }
 
   private static final LocalDate startDate = LocalDate.of(2025, 1, 1);

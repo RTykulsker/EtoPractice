@@ -60,7 +60,7 @@ public class PracticeProcessorTool {
   public static final String CONFIGURATION_FILE_KEY = "configurationFileName";
 
   static {
-    System.setProperty("logback.configurationFile", "src/main/resources/logback.xml");
+    System.setProperty("logback.configurationFile", "resources/logback.xml");
   }
 
   private static final Logger logger = LoggerFactory.getLogger(PracticeProcessorTool.class);
