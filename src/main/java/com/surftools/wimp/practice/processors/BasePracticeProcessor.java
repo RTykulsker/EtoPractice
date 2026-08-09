@@ -713,7 +713,14 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
     var messageType = ref.getMessageType();
     switch (messageType) {
     case ICS_213:
-      fullExerciseId = ((Ics213Message) ref).incidentName;
+      var m = (Ics213Message) ref;
+      if (m.formMessage.startsWith("Exercise Id")) {
+        fullExerciseId = m.formMessage;
+      } else if (m.incidentName.startsWith("ETOID")) {
+        fullExerciseId = m.incidentName;
+      } else {
+        fullExerciseId = "unknown";
+      }
       break;
     case ICS_213_RR:
       fullExerciseId = ((Ics213RRMessage) ref).requestNumber;
