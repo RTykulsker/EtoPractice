@@ -35,7 +35,7 @@ import com.surftools.utils.BucketChooser;
 import com.surftools.utils.location.LatLongPair;
 import com.surftools.wimp.message.ExportedMessage;
 import com.surftools.wimp.message.Ics213Message;
-import com.surftools.wimp.practice.generator.PracticeData.ExerciseIdMethod;
+import com.surftools.wimp.schedule.ScheduleRecord;
 import com.surftools.wimp.utils.config.IConfigurationManager;
 
 public class Ics213Generator extends AbstractBasePracticeGenerator {
@@ -44,18 +44,18 @@ public class Ics213Generator extends AbstractBasePracticeGenerator {
   @Override
   public void initialize(IConfigurationManager cm) {
     super.initialize(cm);
-    messageChooser = new BucketChooser<String>(messageList, rng);
+    messageChooser = new BucketChooser<String>(messageList, baseRng);
   }
 
   @Override
-  public Ics213Message generateMessage(LocalDate date) {
+  public Ics213Message generateMessage(LocalDate date, ScheduleRecord schedule) {
     var dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     var formSubject = "ETO Practice Exercise for " + dtf.format(date);
     var subject = "ICS-213: " + formSubject;
     var exportedMessage = makeExportedMessage(date, subject);
 
     var organization = "EmComm Training Organization";
-    var incidentName = "Exercise Id: " + data.getExerciseId(ExerciseIdMethod.PHONE);
+    var incidentName = data.getExerciseId();
     var formFrom = data.nameChooser.next() + " / " + data.roleChooser.next();
     var formTo = data.nameChooser.next() + " / " + data.roleChooser.next();
 
@@ -79,7 +79,7 @@ public class Ics213Generator extends AbstractBasePracticeGenerator {
   }
 
   @Override
-  public String generateIntructions(ExportedMessage message, LocalDate date) {
+  public String generateIntructions(ExportedMessage message, LocalDate date, ScheduleRecord schedule) {
     var m = (Ics213Message) message;
 
     var sb = new StringBuilder();

@@ -32,11 +32,13 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import com.surftools.utils.BucketChooser;
 import com.surftools.wimp.message.ExportedMessage;
 import com.surftools.wimp.message.Hics259Message;
 import com.surftools.wimp.message.Hics259Message.CasualtyEntry;
+import com.surftools.wimp.schedule.ScheduleRecord;
 import com.surftools.wimp.utils.config.IConfigurationManager;
 
 public class Hics259Generator extends AbstractBasePracticeGenerator {
@@ -44,34 +46,36 @@ public class Hics259Generator extends AbstractBasePracticeGenerator {
   private boolean isInitialized = false;
   private Map<CasualtyType, BucketChooser<String>> casualtyTypeChooserMap;
   private BucketChooser<String> hospitalNameChooser;
+  private Random dateRng;
 
   @Override
   public void initialize(IConfigurationManager cm) {
     super.initialize(cm);
 
     if (!isInitialized) {
-      hospitalNameChooser = new BucketChooser<String>(PracticeData.hospitalNames, rng);
+      hospitalNameChooser = new BucketChooser<String>(PracticeData.hospitalNames, baseRng);
 
       casualtyTypeChooserMap = new HashMap<>();
-      casualtyTypeChooserMap.put(CasualtyType.ADMITTED, new BucketChooser<String>(patientsAdmitted, rng));
-      casualtyTypeChooserMap.put(CasualtyType.BED, new BucketChooser<String>(bedStatus, rng));
-      casualtyTypeChooserMap.put(CasualtyType.DISCHARGED, new BucketChooser<String>(patientsDischarged, rng));
+      casualtyTypeChooserMap.put(CasualtyType.ADMITTED, new BucketChooser<String>(patientsAdmitted, baseRng));
+      casualtyTypeChooserMap.put(CasualtyType.BED, new BucketChooser<String>(bedStatus, baseRng));
+      casualtyTypeChooserMap.put(CasualtyType.DISCHARGED, new BucketChooser<String>(patientsDischarged, baseRng));
       casualtyTypeChooserMap.put(CasualtyType.HOSPITAL_NAMES, hospitalNameChooser);
-      casualtyTypeChooserMap.put(CasualtyType.SEEN, new BucketChooser<String>(patientsSeen, rng));
-      casualtyTypeChooserMap.put(CasualtyType.TRANSFERRED, new BucketChooser<String>(patientsTransferred, rng));
-      casualtyTypeChooserMap.put(CasualtyType.WAITING, new BucketChooser<String>(patientsWaiting, rng));
+      casualtyTypeChooserMap.put(CasualtyType.SEEN, new BucketChooser<String>(patientsSeen, baseRng));
+      casualtyTypeChooserMap.put(CasualtyType.TRANSFERRED, new BucketChooser<String>(patientsTransferred, baseRng));
+      casualtyTypeChooserMap.put(CasualtyType.WAITING, new BucketChooser<String>(patientsWaiting, baseRng));
     }
   }
 
   @Override
-  public Hics259Message generateMessage(LocalDate date) {
+  public Hics259Message generateMessage(LocalDate date, ScheduleRecord schedule) {
+    dateRng = getRandom(date.toString());
 
     var incidentName = "Exercise Id: " + data.getExerciseId();
     var facilityName = hospitalNameChooser.next();
     var subject = "HICS-259 HOSPITAL CASUALTY/FATALITY REPORT-" + incidentName;
     var exportedMessage = makeExportedMessage(date, subject);
 
-    var operationalPeriod = String.valueOf(rng.nextInt(1, 3));
+    var operationalPeriod = String.valueOf(dateRng.nextInt(1, 3));
     var windowOpenDate = date.minusDays(5);
     var windowCloseDate = date.plusDays(1);
 
@@ -94,7 +98,7 @@ public class Hics259Generator extends AbstractBasePracticeGenerator {
   }
 
   @Override
-  public String generateIntructions(ExportedMessage message, LocalDate date) {
+  public String generateIntructions(ExportedMessage message, LocalDate date, ScheduleRecord schedule) {
     var m = (Hics259Message) message;
 
     var sb = new StringBuilder(); // exercise instructions
@@ -225,7 +229,7 @@ public class Hics259Generator extends AbstractBasePracticeGenerator {
       "Transferred - respiratory support facility", "Transferred - discharge shelter coordination");
 
   private String rng(int min, int max) {
-    return String.valueOf(rng.nextInt(min, max));
+    return String.valueOf(dateRng.nextInt(min, max));
   }
 
   public Map<String, CasualtyEntry> makeCasualtyMap() {

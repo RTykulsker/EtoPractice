@@ -34,7 +34,7 @@ import com.surftools.utils.BucketChooser;
 import com.surftools.utils.location.LatLongPair;
 import com.surftools.wimp.message.BloodAvailabilityMessage;
 import com.surftools.wimp.message.ExportedMessage;
-import com.surftools.wimp.practice.generator.PracticeData.ExerciseIdMethod;
+import com.surftools.wimp.schedule.ScheduleRecord;
 import com.surftools.wimp.utils.config.IConfigurationManager;
 
 public class BloodAvailabilityGenerator extends AbstractBasePracticeGenerator {
@@ -49,15 +49,15 @@ public class BloodAvailabilityGenerator extends AbstractBasePracticeGenerator {
   public void initialize(IConfigurationManager cm) {
     super.initialize(cm);
 
-    faciltyNameChooser = new BucketChooser<String>(PracticeData.hospitalNames, rng);
-    facilityAddressChooser = new BucketChooser<String>(streetNames, rng);
-    multiplierChooser = new BucketChooser<Double>(List.of(1.0, 0.9, 1.1, .95, 1.05), rng);
-    zeroChooser = new BucketChooser<Double>(List.of(1d, 1d, 1d, 0d));
-    pairChooser = new BucketChooser<LatLongPair>(latlongs, rng);
+    faciltyNameChooser = new BucketChooser<String>(PracticeData.hospitalNames, baseRng);
+    facilityAddressChooser = new BucketChooser<String>(streetNames, baseRng);
+    multiplierChooser = new BucketChooser<Double>(List.of(1.0, 0.9, 1.1, .95, 1.05), baseRng);
+    zeroChooser = new BucketChooser<Double>(List.of(1d, 1d, 1d, 0d), baseRng);
+    pairChooser = new BucketChooser<LatLongPair>(latlongs, baseRng);
   }
 
   @Override
-  public BloodAvailabilityMessage generateMessage(LocalDate date) {
+  public BloodAvailabilityMessage generateMessage(LocalDate date, ScheduleRecord schedule) {
     var facilityName = faciltyNameChooser.next();
     var subject = "Blood Availability: " + facilityName;
     var exportedMessage = makeExportedMessage(date, subject);
@@ -65,9 +65,11 @@ public class BloodAvailabilityGenerator extends AbstractBasePracticeGenerator {
     var isExercise = true;
     var formDateTime = NA;
 
-    var facilityAddress = String.valueOf(rng.nextInt(1000, 10_000)) + " " + facilityAddressChooser.next();
+    var dateRng = getRandom(date.toString());
+
+    var facilityAddress = String.valueOf(dateRng.nextInt(1000, 10_000)) + " " + facilityAddressChooser.next();
     var facilityContactName = data.nameChooser.next();
-    var facilityPhoneNumber = data.getExerciseId(ExerciseIdMethod.PHONE);
+    var facilityPhoneNumber = data.getPhoneNumber();
 
     var multiplier = multiplierChooser.next();
     var zeroOrOne = zeroChooser.next();
@@ -111,7 +113,7 @@ public class BloodAvailabilityGenerator extends AbstractBasePracticeGenerator {
   }
 
   @Override
-  public String generateIntructions(ExportedMessage message, LocalDate date) {
+  public String generateIntructions(ExportedMessage message, LocalDate date, ScheduleRecord schedule) {
     var m = (BloodAvailabilityMessage) message;
 
     var sb = new StringBuilder();

@@ -29,6 +29,7 @@ package com.surftools.wimp.practice.generator;
 import java.time.LocalDate;
 
 import com.surftools.wimp.message.ExportedMessage;
+import com.surftools.wimp.schedule.ScheduleRecord;
 import com.surftools.wimp.utils.config.IConfigurationManager;
 
 /**
@@ -38,8 +39,8 @@ public interface IGenerator {
 
   public void initialize(IConfigurationManager cm);
 
-  public ExportedMessage generateMessage(LocalDate date);
+  public ExportedMessage generateMessage(LocalDate date, ScheduleRecord schedule);
 
-  public String generateIntructions(ExportedMessage message, LocalDate date);
+  public String generateIntructions(ExportedMessage message, LocalDate date, ScheduleRecord schedule);
 
 }

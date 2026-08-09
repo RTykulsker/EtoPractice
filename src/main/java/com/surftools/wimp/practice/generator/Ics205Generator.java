@@ -35,6 +35,7 @@ import com.surftools.utils.BucketChooser;
 import com.surftools.wimp.message.ExportedMessage;
 import com.surftools.wimp.message.Ics205Message;
 import com.surftools.wimp.message.Ics205Message.RadioEntry;
+import com.surftools.wimp.schedule.ScheduleRecord;
 import com.surftools.wimp.utils.config.IConfigurationManager;
 
 public class Ics205Generator extends AbstractBasePracticeGenerator {
@@ -45,7 +46,8 @@ public class Ics205Generator extends AbstractBasePracticeGenerator {
   }
 
   @Override
-  public Ics205Message generateMessage(LocalDate date) {
+  public Ics205Message generateMessage(LocalDate date, ScheduleRecord schedule) {
+    var dateRng = getRandom(date.toString());
     final int nRadioEntries = 3;
     Ics205Message.setRadioEntriesToDisplay(nRadioEntries);
 
@@ -67,7 +69,7 @@ public class Ics205Generator extends AbstractBasePracticeGenerator {
     }
     var specialInstructions = "Exercise Id: " + data.getExerciseId();
     var approvedBy = data.nameChooser.next();
-    var iapPage = String.valueOf(rng.nextInt(5, 10));
+    var iapPage = String.valueOf(dateRng.nextInt(5, 10));
 
     var m = new Ics205Message(exportedMessage, organization, incidentName, NA, //
         dateFrom, dateTo, timeFrom, timeTo, //
@@ -77,7 +79,7 @@ public class Ics205Generator extends AbstractBasePracticeGenerator {
   }
 
   @Override
-  public String generateIntructions(ExportedMessage message, LocalDate date) {
+  public String generateIntructions(ExportedMessage message, LocalDate date, ScheduleRecord schedule) {
     var m = (Ics205Message) message;
 
     var sb = new StringBuilder();
@@ -133,11 +135,11 @@ public class Ics205Generator extends AbstractBasePracticeGenerator {
     }
 
     final List<Boolean> booleans = List.of(Boolean.FALSE, Boolean.TRUE);
-    final BucketChooser<Boolean> isRepeaterChooser = new BucketChooser<Boolean>(booleans, rng);
-    final BucketChooser<Boolean> isBandChooser = new BucketChooser<Boolean>(booleans, rng);
-    final BucketChooser<Boolean> isOffsetPositiveChooser = new BucketChooser<Boolean>(booleans, rng);
-    final BucketChooser<Boolean> isSquelchToneChooser = new BucketChooser<Boolean>(booleans, rng);
-    final BucketChooser<String> widthChooser = new BucketChooser<String>(List.of("W", "N"), rng);
+    final BucketChooser<Boolean> isRepeaterChooser = new BucketChooser<Boolean>(booleans, baseRng);
+    final BucketChooser<Boolean> isBandChooser = new BucketChooser<Boolean>(booleans, baseRng);
+    final BucketChooser<Boolean> isOffsetPositiveChooser = new BucketChooser<Boolean>(booleans, baseRng);
+    final BucketChooser<Boolean> isSquelchToneChooser = new BucketChooser<Boolean>(booleans, baseRng);
+    final BucketChooser<String> widthChooser = new BucketChooser<String>(List.of("W", "N"), baseRng);
 
     var entry = (RadioEntry) null;
     for (var count = 1; count <= 2; ++count) {
@@ -157,7 +159,7 @@ public class Ics205Generator extends AbstractBasePracticeGenerator {
       }
     } // end lines 1 and 2
 
-    final var bonusChooser = new BucketChooser<String>(List.of("WX", "GMRS", "TAC"), rng);
+    final var bonusChooser = new BucketChooser<String>(List.of("WX", "GMRS", "TAC"), baseRng);
     var bonus = bonusChooser.next();
     if (bonus.equals("WX")) {
       entry = makeWx(3);
@@ -197,18 +199,18 @@ public class Ics205Generator extends AbstractBasePracticeGenerator {
       // Repeaters above 147 typically use positive offsets, while those below 147
       // often use negative offsets.
       if (isOffsetPositive) {
-        rxFreq = rxFreq + (rng.nextInt(50) * 10);
+        rxFreq = rxFreq + (baseRng.nextInt(50) * 10);
       } else {
-        rxFreq = rxFreq - (rng.nextInt(100) * 10);
+        rxFreq = rxFreq - (baseRng.nextInt(100) * 10);
       }
     } else {
       rxFreq = 442_000;
       // Repeaters above 442 generally use +5 offset, while those below 445 may use –5
       // offset
       if (isOffsetPositive) {
-        rxFreq = rxFreq + (rng.nextInt(60) * 50);
+        rxFreq = rxFreq + (baseRng.nextInt(60) * 50);
       } else {
-        rxFreq = rxFreq - (rng.nextInt(60) * 50);
+        rxFreq = rxFreq - (baseRng.nextInt(60) * 50);
       }
     }
     // convert from Hz to double, to 3 digits as String;
@@ -257,10 +259,10 @@ public class Ics205Generator extends AbstractBasePracticeGenerator {
     final var twoMeterSimplex = List.of("146.400", "146.415", "146.430", "146.445", "146.460", "146.475", "146.490",
         "146.505", "146.535", "146.550", "146.565", "146.580", "146.595", "147.405", "147.420", "147.435", "147.450",
         "147.465", "147.480", "147.495", "147.510", "147.525", "147.540", "147.555", "147.570", "147.585");
-    final var twoMeterChooser = new BucketChooser<String>(twoMeterSimplex, rng);
+    final var twoMeterChooser = new BucketChooser<String>(twoMeterSimplex, baseRng);
     final var seventySimplex = List.of("445.925", "445.950", "445.975", "446.025", "446.050", "446.075", "446.100",
         "446.125", "446.150", "446.175");
-    final var seventyChooser = new BucketChooser<String>(seventySimplex, rng);
+    final var seventyChooser = new BucketChooser<String>(seventySimplex, baseRng);
 
     var chooser = isBandVhf ? twoMeterChooser : seventyChooser;
     var rxFreq = chooser.next();
@@ -287,14 +289,14 @@ public class Ics205Generator extends AbstractBasePracticeGenerator {
     final var list = List.of( //
         "WX1 - 162.400", "WX2 - 162.425", "WX3 - 162.450", "WX4 - 162.475", "WX5 - 162.500", "WX6 - 162.525",
         "WX7 - 162.550");
-    final var chooser = new BucketChooser<String>(list, rng);
+    final var chooser = new BucketChooser<String>(list, baseRng);
     var data = chooser.next();
     var fields = data.split(" - ");
     var name = fields[0];
     var rxFreq = fields[1];
 
     var entry = new RadioEntry(rowNumber, "", String.valueOf(rowNumber), //
-        "Information", name, "weather", //
+        "Support", name, "weather", //
         rxFreq, "W", "", //
         "", "", "", //
         "A", "Receive only. Do not Transmit!");
@@ -308,14 +310,14 @@ public class Ics205Generator extends AbstractBasePracticeGenerator {
         "GMRS 11 - 467.6375", "GMRS 12 - 467.6625", "GMRS 13 - 467.6875", "GMRS 14 - 467.7125", "GMRS 15 - 462.5500",
         "GMRS 16 - 462.5750", "GMRS 17 - 462.6000", "GMRS 18 - 462.6250", "GMRS 19 - 462.6500", "GMRS 20 - 462.6750",
         "GMRS 21 - 462.7000", "GMRS 22 - 462.7250");
-    final var chooser = new BucketChooser<String>(list, rng);
+    final var chooser = new BucketChooser<String>(list, baseRng);
     var data = chooser.next();
     var fields = data.split(" - ");
     var name = fields[0];
     var rxFreq = fields[1];
 
     var entry = new RadioEntry(rowNumber, "", String.valueOf(rowNumber), //
-        "Information", name, "GMRS", //
+        "Support", name, "GMRS", //
         rxFreq, "N", "", //
         rxFreq, "N", "", //
         "A", "Do not Transmit without GMRS license!");
@@ -327,7 +329,7 @@ public class Ics205Generator extends AbstractBasePracticeGenerator {
     final var list = List.of("VCALL10 - 155.7525", "VTAC11 - 151.1375", "VTAC12 - 154.4525", "VTAC13 - 158.7375",
         "VTAC14 - 159.4725", "VTAC17 - 161.8500", "UCALL40 - 453.2125", "UTAC41 - 453.4625", "UTAC42 - 453.7125",
         "UTAC43 - 453.8625");
-    final var chooser = new BucketChooser<String>(list, rng);
+    final var chooser = new BucketChooser<String>(list, baseRng);
     var data = chooser.next();
     var fields = data.split(" - ");
 
@@ -336,7 +338,7 @@ public class Ics205Generator extends AbstractBasePracticeGenerator {
 
     // CTCSS tone 156.7 Hz is commonly used for analog FM operation
     var entry = new RadioEntry(rowNumber, "", String.valueOf(rowNumber), //
-        "InterOp", name, "public safety", //
+        "Support", name, "public safety", //
         rxFreq, "N", "156.7", //
         "", "", "", //
         "A", "Receive only. Do not Transmit!");
@@ -350,7 +352,7 @@ public class Ics205Generator extends AbstractBasePracticeGenerator {
         "156.7", "159.8", "162.2", "165.5", "167.9", "171.3", "173.8", "177.3", "179.9", "183.5", "186.2", "189.9",
         "192.8", "196.6", "199.5", "203.5", "206.5", "210.7", "218.1", "225.7", "229.1", "233.6", "241.8", "250.3",
         "254.1");
-    final var chooser = new BucketChooser<String>(list, rng);
+    final var chooser = new BucketChooser<String>(list, baseRng);
     var freq = chooser.next();
 
     return freq;

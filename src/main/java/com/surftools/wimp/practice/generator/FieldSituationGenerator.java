@@ -33,6 +33,7 @@ import com.surftools.utils.BucketChooser;
 import com.surftools.utils.location.LatLongPair;
 import com.surftools.wimp.message.ExportedMessage;
 import com.surftools.wimp.message.FieldSituationMessage;
+import com.surftools.wimp.schedule.ScheduleRecord;
 import com.surftools.wimp.utils.config.IConfigurationManager;
 
 public class FieldSituationGenerator extends AbstractBasePracticeGenerator {
@@ -43,9 +44,10 @@ public class FieldSituationGenerator extends AbstractBasePracticeGenerator {
   }
 
   @Override
-  public FieldSituationMessage generateMessage(LocalDate date) {
+  public FieldSituationMessage generateMessage(LocalDate date, ScheduleRecord schedule) {
     var subject = "//WL2K R/ Routine/ Field Situation Report";
     var exportedMessage = makeExportedMessage(date, subject);
+    var dateRng = getRandom(date.toString());
 
     var organization = "EmComm Training Organization";
     var precedence = "R/ Routine";
@@ -66,7 +68,7 @@ public class FieldSituationGenerator extends AbstractBasePracticeGenerator {
     final var YES = "YES";
     final var NO = "NO";
     final var UNK = "Unknown - N/A";
-    var statusChooser = new BucketChooser<String>(List.of(YES, NO, UNK), rng);
+    var statusChooser = new BucketChooser<String>(List.of(YES, NO, UNK), dateRng);
 
     var landlineStatus = statusChooser.next();
     var landlineComments = landlineStatus.equals(NO) ? "CenturyLink" : "";
@@ -137,7 +139,7 @@ public class FieldSituationGenerator extends AbstractBasePracticeGenerator {
   }
 
   @Override
-  public String generateIntructions(ExportedMessage message, LocalDate date) {
+  public String generateIntructions(ExportedMessage message, LocalDate date, ScheduleRecord schedule) {
     var m = (FieldSituationMessage) message;
 
     var sb = new StringBuilder();

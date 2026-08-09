@@ -28,28 +28,30 @@ package com.surftools.wimp.practice.generator;
 
 import java.nio.file.Path;
 import java.time.LocalDate;
-import java.time.Month;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Random;
 
 import com.surftools.utils.BucketChooser;
 import com.surftools.wimp.configuration.Key;
 import com.surftools.wimp.message.ExportedMessage;
 import com.surftools.wimp.message.Ics213RRMessage;
 import com.surftools.wimp.message.Ics213RRMessage.LineItem;
-import com.surftools.wimp.practice.generator.PracticeData.ExerciseIdMethod;
 import com.surftools.wimp.processors.std.ReadProcessor;
+import com.surftools.wimp.schedule.ScheduleRecord;
 import com.surftools.wimp.utils.config.IConfigurationManager;
 
 public class Ics213RrGenerator extends AbstractBasePracticeGenerator {
 
-  private static boolean isInitialized = false;
+  private static final String SANTAS_WISHLIST = "Santa's Wishlist";
   private static final String SANTA_KEY = "SANTA";
+  private static boolean isInitialized = false;
   private BucketChooser<ResourceEntry> santaChooser;
   private BucketChooser<BucketChooser<ResourceEntry>> resourceChooserChooser;
+  private Random dateRng;
 
   @Override
   public void initialize(IConfigurationManager cm) {
@@ -92,32 +94,46 @@ public class Ics213RrGenerator extends AbstractBasePracticeGenerator {
       resourceListMap.put(key, list);
     }
 
+//    final var santaList = List.of(//
+//        new ResourceEntry("SANTA", "1", "n/a", "n/a", "Wolf River Silver Bullet 1000"), //
+//        new ResourceEntry("SANTA", "1", "n/a", "n/a", "LDG Electronics AT-1000ProII Automatic Antenna Tuner"), //
+//        new ResourceEntry("SANTA", "1", "n/a", "n/a", "Heil Sound PRO 7 Headset"), //
+//        new ResourceEntry("SANTA", "2", "n/a", "n/a", "Bioenno Power BLF-1220A LiFePO4 Battery"), //
+//        new ResourceEntry("SANTA", "1", "n/a", "n/a", "RigExpert Antenna Analyzer AA-55ZOOM"), //
+//        new ResourceEntry("SANTA", "1", "n/a", "n/a", "Kenwood TS-990S HF/6 Meter Base Transceiver"), //
+//        new ResourceEntry("SANTA", "0", "n/a", "n/a", "DX Engineering Hat DXE-HAT"), //
+//        new ResourceEntry("SANTA", "1", "n/a", "n/a", "Icom IC-7300 HF/6 Meter Base Transceiver") //
+//    );
+//    santaChooser = new BucketChooser<ResourceEntry>(santaList, baseRng);
+
     var chooserList = new ArrayList<BucketChooser<ResourceEntry>>();
     for (var key : resourceListMap.keySet()) {
-      var list = resourceListMap.get(key);
       if (key.equals(SANTA_KEY)) {
-        santaChooser = new BucketChooser<ResourceEntry>(list, rng);
+        var list = resourceListMap.get(key);
+        santaChooser = new BucketChooser<ResourceEntry>(list, baseRng);
       } else {
-        var chooser = new BucketChooser<ResourceEntry>(list, rng);
+        var list = resourceListMap.get(key);
+        var chooser = new BucketChooser<ResourceEntry>(list, baseRng);
         chooserList.add(chooser);
       }
     }
-    resourceChooserChooser = new BucketChooser<BucketChooser<ResourceEntry>>(chooserList, rng);
+    resourceChooserChooser = new BucketChooser<BucketChooser<ResourceEntry>>(chooserList, baseRng);
   }
 
   @Override
-  public Ics213RRMessage generateMessage(LocalDate date) {
+  public Ics213RRMessage generateMessage(LocalDate date, ScheduleRecord schedule) {
+    dateRng = getRandom(date.toString());
     final int nLineItems = 3;
     Ics213RRMessage.setLineItemsToDisplay(nLineItems);
 
     var incidentName = "ETO Weekly Practice";
-    var requestNumber = "Exercise Id: " + data.getExerciseId(ExerciseIdMethod.PHONE);
+    var requestNumber = data.getExerciseId();
     var subject = "ICS 213RR- " + incidentName + "- Request #:" + requestNumber;
     var exportedMessage = makeExportedMessage(date, subject);
     var organization = "EmComm Training Organization";
-    var lineItems = getLineItems(date, nLineItems, null, null);
+    var lineItems = getLineItems(date, nLineItems, null, null, schedule);
     var delivery = data.deliveryChooser.next();
-    var substitutes = rng.nextBoolean() ? "substitute as appropriate" : "no substitutes allowed";
+    var substitutes = dateRng.nextBoolean() ? "substitute as appropriate" : "no substitutes allowed";
     var requestedBy = data.doubleNameChooser.next() + " / " + data.shortRoleChooser.next();
     var priority = data.priorityChooser.next();
     var approvedBy = data.doubleNameChooser.next();
@@ -138,7 +154,7 @@ public class Ics213RrGenerator extends AbstractBasePracticeGenerator {
   }
 
   @Override
-  public String generateIntructions(ExportedMessage message, LocalDate date) {
+  public String generateIntructions(ExportedMessage message, LocalDate date, ScheduleRecord schedule) {
     var m = (Ics213RRMessage) message;
 
     var sb = new StringBuilder();
@@ -181,19 +197,20 @@ public class Ics213RrGenerator extends AbstractBasePracticeGenerator {
     }
   };
 
-  private List<LineItem> getLineItems(LocalDate date, int desiredCount, Integer minInt, Integer maxInt) {
+  private List<LineItem> getLineItems(LocalDate date, int desiredCount, Integer minInt, Integer maxInt,
+      ScheduleRecord schedule) {
     var lineItems = new ArrayList<LineItem>(desiredCount);
-    var chooser = (date.getMonth() == Month.DECEMBER) ? santaChooser : resourceChooserChooser.next();
+    var chooser = (schedule.extraData().equals(SANTAS_WISHLIST)) ? santaChooser : resourceChooserChooser.next();
     var minQty = minInt == null ? 1 : minInt.intValue();
     var maxQty = maxInt == null ? 100 : maxInt.intValue();
 
-    var timeString = rng.nextInt(10, 18) + ":00";
+    var timeString = dateRng.nextInt(10, 18) + ":00";
 
     for (var i = 0; i < Ics213RRMessage.MAX_LINE_ITEMS; ++i) {
       if (i < desiredCount) {
         var resource = chooser.next();
         if (resource.qty.equals("0")) {
-          var qty = String.valueOf(rng.nextInt(minQty, maxQty));
+          var qty = String.valueOf(dateRng.nextInt(minQty, maxQty));
           resource = new ResourceEntry(resource.key, qty, resource.kind, resource.type, resource.description);
         }
         var lineItem = new LineItem(resource.qty, resource.kind, resource.type, resource.description, //

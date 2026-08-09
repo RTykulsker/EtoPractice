@@ -49,7 +49,7 @@ public class PracticeData {
   public final BucketChooser<String> priorityChooser;
 
   public enum ExerciseIdMethod {
-    UUID, SHORT_UUID, MID, PHONE, FOUR_BY_FOUR
+    UUID, SHORT_UUID, MID, PHONE, FOUR_BY_FOUR, ETOID_5
   }
 
   private final Random rng;
@@ -72,11 +72,15 @@ public class PracticeData {
     }
   }
 
-  public String getExerciseId() {
-    return getExerciseId(ExerciseIdMethod.FOUR_BY_FOUR);
+  public String getPhoneNumber() {
+    return getExerciseId(ExerciseIdMethod.PHONE);
   }
 
-  public String getExerciseId(ExerciseIdMethod method) {
+  public String getExerciseId() {
+    return getExerciseId(ExerciseIdMethod.ETOID_5);
+  }
+
+  private String getExerciseId(ExerciseIdMethod method) {
     var ret = "";
     switch (method) {
     case UUID:
@@ -97,6 +101,11 @@ public class PracticeData {
       n = (long) (rng.nextDouble() * 9000000000L) + 1000000000L;
       s = String.valueOf(n);
       ret = "ETOID-" + s.substring(0, 4) + "-" + s.substring(4, 8);
+      break;
+    case ETOID_5:
+      n = (long) (rng.nextDouble() * 9000000000L) + 1000000000L;
+      s = String.valueOf(n);
+      ret = s.substring(0, 5);
       break;
     }
 

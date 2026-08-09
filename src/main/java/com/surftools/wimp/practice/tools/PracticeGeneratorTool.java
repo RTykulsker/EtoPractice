@@ -129,8 +129,8 @@ public class PracticeGeneratorTool {
 
       var messageType = schedule.messageType();
       var generator = generatorMap.get(messageType);
-      var m = generator.generateMessage(date);
-      var instructions = generator.generateIntructions(m, date);
+      var m = generator.generateMessage(date, schedule);
+      var instructions = generator.generateIntructions(m, date, schedule);
 
       var path = Path.of(referenceDirName, exerciseYear, date.toString());
       FileUtils.createDirectory(path);
