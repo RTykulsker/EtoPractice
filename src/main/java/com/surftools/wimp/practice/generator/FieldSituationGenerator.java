@@ -52,7 +52,7 @@ public class FieldSituationGenerator extends AbstractBasePracticeGenerator {
     var organization = "EmComm Training Organization";
     var precedence = "R/ Routine";
     var formDateTime = NA;
-    var task = "ETO Weekly Practice";
+    var task = data.getExerciseId(date);
     var formTo = "ETO-PRACTICE";
     var formFrom = NA;
     var isHelpNeeded = "NO";
@@ -115,7 +115,7 @@ public class FieldSituationGenerator extends AbstractBasePracticeGenerator {
     var noaaAudioDegraded = NO;
     var noaaAudioDegradedComments = "";
 
-    var additionalComments = data.getExerciseId();
+    var additionalComments = EXERCISE;
     var poc = data.nameChooser.next();
     var formVersion = NA;
     var expressVersion = NA;

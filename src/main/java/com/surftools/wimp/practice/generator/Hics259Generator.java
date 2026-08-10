@@ -70,7 +70,7 @@ public class Hics259Generator extends AbstractBasePracticeGenerator {
   public Hics259Message generateMessage(LocalDate date, ScheduleRecord schedule) {
     dateRng = getRandom(date.toString());
 
-    var incidentName = "Exercise Id: " + data.getExerciseId();
+    var incidentName = data.getExerciseId(date);
     var facilityName = hospitalNameChooser.next();
     var subject = "HICS-259 HOSPITAL CASUALTY/FATALITY REPORT-" + incidentName;
     var exportedMessage = makeExportedMessage(date, subject);

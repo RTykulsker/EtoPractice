@@ -126,8 +126,8 @@ public class Ics213RrGenerator extends AbstractBasePracticeGenerator {
     final int nLineItems = 3;
     Ics213RRMessage.setLineItemsToDisplay(nLineItems);
 
-    var incidentName = "ETO Weekly Practice";
-    var requestNumber = data.getExerciseId();
+    var incidentName = data.getExerciseId(date);
+    var requestNumber = data.getExerciseId(date);
     var subject = "ICS 213RR- " + incidentName + "- Request #:" + requestNumber;
     var exportedMessage = makeExportedMessage(date, subject);
     var organization = "EmComm Training Organization";

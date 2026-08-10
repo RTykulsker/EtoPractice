@@ -27,12 +27,10 @@ SOFTWARE.
 
 package com.surftools.wimp.practice.generator;
 
-import java.security.MessageDigest;
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
-
-import org.apache.commons.codec.binary.Base32;
 
 import com.surftools.utils.BucketChooser;
 
@@ -49,7 +47,7 @@ public class PracticeData {
   public final BucketChooser<String> priorityChooser;
 
   public enum ExerciseIdMethod {
-    UUID, SHORT_UUID, MID, PHONE, ETOID_5
+    PHONE, ETOID_5
   }
 
   private final Random rng;
@@ -76,22 +74,17 @@ public class PracticeData {
     return getExerciseId(ExerciseIdMethod.PHONE);
   }
 
-  public String getExerciseId() {
-    return getExerciseId(ExerciseIdMethod.ETOID_5);
+//  public String getExerciseId() {
+//    return getExerciseId(ExerciseIdMethod.ETOID_5);
+//  }
+
+  public String getExerciseId(LocalDate exerciseDate) {
+    return "ETOID-" + exerciseDate.toString();
   }
 
   private String getExerciseId(ExerciseIdMethod method) {
     var ret = "";
     switch (method) {
-    case UUID:
-      ret = java.util.UUID.randomUUID().toString();
-      break;
-    case SHORT_UUID:
-      ret = java.util.UUID.randomUUID().toString().substring(9, 23);
-      break;
-    case MID:
-      ret = generateMid(java.util.UUID.randomUUID().toString());
-      break;
     case PHONE:
       var n = (long) (rng.nextDouble() * 9000000000L) + 1000000000L;
       var s = String.valueOf(n);
@@ -105,21 +98,6 @@ public class PracticeData {
     }
 
     return ret;
-  }
-
-  private String generateMid(String string) {
-    try {
-      MessageDigest md = MessageDigest.getInstance("MD5");
-      String stringToHash = string + System.nanoTime();
-      md.update(stringToHash.getBytes());
-      byte[] digest = md.digest();
-      Base32 base32 = new Base32();
-      String encodedString = base32.encodeToString(digest);
-      String subString = encodedString.substring(0, 12);
-      return subString;
-    } catch (Exception e) {
-      throw new RuntimeException("could not generate messageId: " + e.getMessage());
-    }
   }
 
   private static final List<String> emergencyResponseRoles = Arrays.asList("Director of Emergency Management",

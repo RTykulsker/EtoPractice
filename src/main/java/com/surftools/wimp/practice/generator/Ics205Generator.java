@@ -51,7 +51,7 @@ public class Ics205Generator extends AbstractBasePracticeGenerator {
     final int nRadioEntries = 3;
     Ics205Message.setRadioEntriesToDisplay(nRadioEntries);
 
-    var incidentName = "ETO Weekly Practice";
+    var incidentName = data.getExerciseId(date);
     var subject = "ICS 205 - " + incidentName;
     var exportedMessage = makeExportedMessage(date, subject);
 
@@ -67,7 +67,7 @@ public class Ics205Generator extends AbstractBasePracticeGenerator {
     for (var i = nRadioEntries; i < Ics205Message.MAX_RADIO_ENTRIES; ++i) {
       radioItems.add(RadioEntry.EMPTY);
     }
-    var specialInstructions = "Exercise Id: " + data.getExerciseId();
+    var specialInstructions = EXERCISE;
     var approvedBy = data.nameChooser.next();
     var iapPage = String.valueOf(dateRng.nextInt(5, 10));
 

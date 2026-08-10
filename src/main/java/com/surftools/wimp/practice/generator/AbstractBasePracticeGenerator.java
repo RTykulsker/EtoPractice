@@ -43,6 +43,8 @@ import com.surftools.wimp.utils.config.IConfigurationManager;
 
 public abstract class AbstractBasePracticeGenerator implements IGenerator {
 
+  public static final String EXERCISE = "This is an EXERCISE";
+
   private boolean isInitialized = false;
   protected IConfigurationManager cm;
   protected PracticeData data;

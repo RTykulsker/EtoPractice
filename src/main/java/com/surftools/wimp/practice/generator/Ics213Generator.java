@@ -55,7 +55,7 @@ public class Ics213Generator extends AbstractBasePracticeGenerator {
     var exportedMessage = makeExportedMessage(date, subject);
 
     var organization = "EmComm Training Organization";
-    var incidentName = data.getExerciseId();
+    var incidentName = data.getExerciseId(date);
     var formFrom = data.nameChooser.next() + " / " + data.roleChooser.next();
     var formTo = data.nameChooser.next() + " / " + data.roleChooser.next();
 

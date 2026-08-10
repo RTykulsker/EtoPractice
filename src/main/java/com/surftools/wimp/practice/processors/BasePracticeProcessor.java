@@ -709,18 +709,22 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
   }
 
   private String getExerciseId(ExportedMessage ref) {
+    final var EXERCISE_ID = "Exercise Id";
+    final var ETOID = "ETOID";
+
     String fullExerciseId = null;
     var messageType = ref.getMessageType();
     switch (messageType) {
-    case ICS_213:
+    case ICS_213: {
       var m = (Ics213Message) ref;
-      if (m.formMessage.startsWith("Exercise Id")) {
+      if (m.formMessage.startsWith(EXERCISE_ID)) {
         fullExerciseId = m.formMessage;
-      } else if (m.incidentName.startsWith("ETOID")) {
+      } else if (m.incidentName.startsWith(ETOID)) {
         fullExerciseId = m.incidentName;
       } else {
-        fullExerciseId = "unknown";
+        throw new RuntimeException("Don't know how to get exerciseId for: " + ref);
       }
+    }
       break;
     case ICS_213_RR:
       fullExerciseId = ((Ics213RRMessage) ref).requestNumber;
@@ -728,11 +732,28 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
     case HICS_259:
       fullExerciseId = ((Hics259Message) ref).incidentName;
       break;
-    case ICS_205:
-      fullExerciseId = ((Ics205Message) ref).specialInstructions;
+    case ICS_205: {
+      var m = (Ics205Message) ref;
+      if (m.specialInstructions.startsWith(EXERCISE_ID)) {
+        fullExerciseId = m.specialInstructions;
+      } else if (m.incidentName.startsWith(ETOID)) {
+        fullExerciseId = m.incidentName;
+      } else {
+        throw new RuntimeException("Don't know how to get exerciseId for: " + ref);
+      }
+    }
       break;
-    case FIELD_SITUATION:
+    case FIELD_SITUATION: {
       fullExerciseId = ((FieldSituationMessage) ref).additionalComments;
+      var m = (FieldSituationMessage) ref;
+      if (m.additionalComments.startsWith(EXERCISE_ID)) {
+        fullExerciseId = m.additionalComments;
+      } else if (m.task.startsWith(ETOID)) {
+        fullExerciseId = m.task;
+      } else {
+        throw new RuntimeException("Don't know how to get exerciseId for: " + ref);
+      }
+    }
       break;
     case BLOOD_AVAILABILITY:
       fullExerciseId = ((BloodAvailabilityMessage) ref).comments;
@@ -742,7 +763,7 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
     }
 
     if (fullExerciseId == null) {
-      return null;
+      throw new RuntimeException("Don't know how to get exerciseId for: " + ref);
     }
 
     var fields = fullExerciseId.split(" ");
@@ -751,7 +772,7 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
     } else if (fields.length == 1) {
       return fields[0].trim();
     } else {
-      return null;
+      throw new RuntimeException("Don't know how to get exerciseId for: " + ref);
     }
   }
 

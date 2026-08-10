@@ -86,7 +86,7 @@ public class BloodAvailabilityGenerator extends AbstractBasePracticeGenerator {
     var plasmaA = compute(40, multiplier, null);
     var plasmaB = compute(11, multiplier, null);
     var plasmaAB = compute(4, multiplier, zeroOrOne);
-    var comments = data.getExerciseId();
+    var comments = data.getExerciseId(date);
     var approvedBy = data.doubleNameChooser.next();
     var addAttachment = "No";
 
