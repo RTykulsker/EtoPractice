@@ -117,7 +117,7 @@ public class BloodAvailabilityGenerator extends AbstractBasePracticeGenerator {
     var m = (BloodAvailabilityMessage) message;
 
     var sb = new StringBuilder();
-    sb.append(generateInstructionHeader(date, "Complete an General Medical Forms/Blood Availablity Message"));
+    sb.append(generateInstructionHeader(date, "Complete a General Medical Forms/Blood Availablity Message"));
     sb.append(INDENT + "THIS IS AN EXERCISE: (checked)" + NL);
     sb.append(INDENT + "Date/Time: (click in box and accept date/time)" + NL);
     sb.append(INDENT + "Facility Name: " + m.facilityName + NL);

@@ -143,7 +143,7 @@ public class FieldSituationGenerator extends AbstractBasePracticeGenerator {
     var m = (FieldSituationMessage) message;
 
     var sb = new StringBuilder();
-    sb.append(generateInstructionHeader(date, "Complete a Field SituationReport Message"));
+    sb.append(generateInstructionHeader(date, "Complete a Field Situation Report Message"));
 
     sb.append(INDENT + "Setup: agency or group name: " + m.organization + NL);
     sb.append(INDENT + "Precedence: " + m.precedence + NL);

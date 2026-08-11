@@ -162,14 +162,20 @@ public class PracticeJsonMessageDeserializer {
     var position = json.get("position").asText();
     var isExercise = json.get("isExercise").asBoolean();
     var formLocation = deserialize_LatLongPair(json.get("formLocation"));
-    var version = json.get("version").asText();
+
+    var formVersionNode = json.get("version");
+    if (formVersionNode == null) {
+      formVersionNode = json.get("formVersion");
+    }
+    var formVersion = (formVersionNode == null) ? "" : formVersionNode.asText();
+
     var expressVersion = "n/a";
     var dataSource = json.get("dataSource").asText();
 
     var m = new Ics213Message(exportedMessage, organization, incidentName, //
         formFrom, formTo, formSubject, formDate, formTime, //
         formMessage, approvedBy, position, //
-        isExercise, formLocation, version, expressVersion, dataSource);
+        isExercise, formLocation, formVersion, expressVersion, dataSource);
     return m;
   }
 
@@ -250,7 +256,13 @@ public class PracticeJsonMessageDeserializer {
     var approvedBy = json.get("approvedBy").asText();
     var dateTimeApprovedString = json.get("approvedDateTime").asText();
     var iapPageString = json.get("iapPage").asText();
-    var version = json.get("version").asText();
+
+    var formVersionNode = json.get("version");
+    if (formVersionNode == null) {
+      formVersionNode = json.get("formVersion");
+    }
+    var formVersion = (formVersionNode == null) ? "" : formVersionNode.asText();
+
     var expressVersion = "n/a";
 
     var radioEntries = new ArrayList<RadioEntry>();
@@ -283,7 +295,7 @@ public class PracticeJsonMessageDeserializer {
     var m = new Ics205Message(exportedMessage, organization, incidentName, //
         dateTimePreparedString, dateFrom, dateTo, timeFrom, timeTo, //
         specialInstructions, approvedBy, dateTimeApprovedString, iapPageString, //
-        radioEntries, version, expressVersion);
+        radioEntries, formVersion, expressVersion);
 
     return m;
   }
