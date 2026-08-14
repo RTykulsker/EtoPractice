@@ -136,7 +136,7 @@ public class PracticeProcessorTool {
         } else {
           var sb = new StringBuilder();
           if (!nextSchedule.isPractice()) {
-            sb.append(DASHES_72 + "\n\n");
+            sb.append("\n\n" + DASHES_72 + "\n\n");
             var text = """
                 INSTRUCTIONS for next week:
                 Next Thursday is a \"Third Thursday Training Exercise\".
