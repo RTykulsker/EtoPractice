@@ -170,4 +170,31 @@ public class LocationUtils {
         p2.getLongitudeAsDouble());
   }
 
+  public static boolean isValidMaidenhead(String grid) {
+    if (grid == null) {
+      return false;
+    }
+
+    final var pattern = "[a-rA-R]{2}[0-9]{2}[a-xA-X]{2}";
+    return grid.matches(pattern);
+  }
+
+  public static double getLatitudeFromMaidenhead(String grid) {
+    if (!isValidMaidenhead(grid)) {
+      throw new IllegalArgumentException("grid: " + grid + " is not a valid Maidenhead grid string");
+    }
+
+    grid = grid.toUpperCase();
+    double latitude = -90 + 10 * (grid.charAt(1) - 'A') + (grid.charAt(3) - '0') + 2.5 / 60 * (grid.charAt(5) - 'A')
+        + 2.5 / 60 / 2;
+    return latitude;
+  }
+
+  public static double getLongitudeFromMaidenhead(String grid) {
+    grid = grid.toUpperCase();
+    double longitude = -180 + 20 * (grid.charAt(0) - 'A') + 2 * (grid.charAt(2) - '0')
+        + 5.0 / 60 * (grid.charAt(4) - 'A') + 5.0 / 60 / 2;
+    return longitude;
+  }
+
 }
