@@ -313,19 +313,14 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
     if (explanations.size() == 0) {
       ++ppMessageCorrectCount;
       feedback = "Perfect Message!";
-
-      if (hintOnPerfect) {
-        feedback = feedback + "\n\n" + hintContent;
-      }
     } else {
-      feedback = String.join("\n", explanations) + "\n\n" + hintContent;
+      feedback = String.join("\n", explanations);
     }
 
     var feedbackResult = new FeedbackResult(sender, feedbackLocation.getLatitude(), feedbackLocation.getLongitude(),
         explanations.size(), feedback);
     mIdFeedbackMap.put(m.messageId, new FeedbackMessage(feedbackResult, m));
 
-    // var ackText = ackTextMap.get(sender);
     var sb = new StringBuilder();
     sb.append("ACKNOWLEDGEMENTS" + "\n");
     sb.append(ackText);
@@ -335,7 +330,17 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
       outboundMessagePrefixContent = sb.toString();
       outboundMessagePostfixContent = nextInstructions;
 
-      var outboundMessageFeedback = outboundMessagePrefixContent + feedback + outboundMessagePostfixContent;
+      // add hints, but only to outboundMessage
+      var outboundMessageFeedback = new String(feedback);
+      if (explanations.size() == 0) {
+        if (hintOnPerfect) {
+          outboundMessageFeedback = outboundMessageFeedback + "\n\n" + hintContent;
+        }
+      } else {
+        outboundMessageFeedback = outboundMessageFeedback + "\n\n" + hintContent;
+      }
+
+      outboundMessageFeedback = outboundMessagePrefixContent + outboundMessageFeedback + outboundMessagePostfixContent;
       var outboundMessage = new OutboundMessage(outboundMessageSender, sender, //
           makeOutboundMessageSubject(m), outboundMessageFeedback, null);
       outboundMessageList.add(outboundMessage);
