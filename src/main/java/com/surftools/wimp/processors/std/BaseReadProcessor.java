@@ -292,7 +292,6 @@ public abstract class BaseReadProcessor extends AbstractBaseProcessor {
                     source = "UNKNOWN";
                   }
 
-                  break;
                 } else if (fields.length == 2) {// end if 4 fields in X-Location
                   var gridSquare = fields[1];
                   gridSquare = (gridSquare.length() > 6) ? gridSquare.substring(0, 6) : gridSquare;
@@ -301,6 +300,7 @@ public abstract class BaseReadProcessor extends AbstractBaseProcessor {
                     source = "GRID SQUARE";
                   }
                 } // end if 2 fields in X-Location
+                break;
               } // end if X-Location line
             } // end loop over mimeLines
           } // end if mime != null
