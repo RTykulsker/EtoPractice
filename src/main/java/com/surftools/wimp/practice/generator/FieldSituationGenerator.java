@@ -100,7 +100,7 @@ public class FieldSituationGenerator extends AbstractBasePracticeGenerator {
     var powerStatus = statusChooser.next();
     var powerComments = powerStatus.equals(NO) ? "Fort Collins Utilities" : "";
 
-    var powerStable = statusChooser.next();
+    var powerStable = powerStatus.equals(YES) ? statusChooser.next() : UNK;
     var powerStableComments = powerStable.equals(NO) ? "Fort Collins Utilities" : "";
 
     var naturalGasStatus = statusChooser.next();
@@ -191,7 +191,7 @@ public class FieldSituationGenerator extends AbstractBasePracticeGenerator {
     sb.append(INDENT + "NOAA weather radio functioning: " + m.noaaStatus + NL);
     sb.append(INDENT + "NOAA transmitter/frequency if NO: " + m.noaaComments + NL);
     sb.append(INDENT + "NOAA weather radio audio degraded: " + m.noaaAudioDegraded + NL);
-    sb.append(INDENT + "NOAA transmitter/frequency if NO: " + m.noaaAudioDegradedComments + NL);
+    sb.append(INDENT + "NOAA transmitter/frequency if YES: " + m.noaaAudioDegradedComments + NL);
 
     sb.append(INDENT + "Additional Comments: " + m.additionalComments + NL);
     sb.append(INDENT + "POC: " + m.poc + NL);
