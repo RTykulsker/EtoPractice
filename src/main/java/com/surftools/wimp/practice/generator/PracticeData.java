@@ -45,6 +45,7 @@ public class PracticeData {
   public final BucketChooser<String> doubleNameChooser;
   public final BucketChooser<String> deliveryChooser;
   public final BucketChooser<String> priorityChooser;
+  public final BucketChooser<HospitalEntry> hospitalEntryChooser;
 
   public enum ExerciseIdMethod {
     PHONE, ETOID_5
@@ -61,6 +62,7 @@ public class PracticeData {
     doubleNameChooser = new BucketChooser<String>(doubleNames, rng);
     deliveryChooser = new BucketChooser<String>(deliveryList, rng);
     priorityChooser = new BucketChooser<String>(List.of("Low", "Routine", "URGENT"), rng);
+    hospitalEntryChooser = new BucketChooser<HospitalEntry>(hospitalEntries, rng);
 
     for (var name : hospitalNames) {
       var len = name.length();
@@ -73,10 +75,6 @@ public class PracticeData {
   public String getPhoneNumber() {
     return getExerciseId(ExerciseIdMethod.PHONE);
   }
-
-//  public String getExerciseId() {
-//    return getExerciseId(ExerciseIdMethod.ETOID_5);
-//  }
 
   public String getExerciseId(LocalDate exerciseDate) {
     return "ETOID-" + exerciseDate.toString();
@@ -187,4 +185,57 @@ public class PracticeData {
       "Ironwood Memorial Hospital", "Liberty Field Mobile Hospital", "Maplecrest Veterans Hospital",
       "Oceanview Regional Hospital", "Prairie Hill Long-Term Care", "Lakeshore Medical and Imaging");
 
+  record HospitalEntry(String latitude, String longitude, String address, String facilityName, String city,
+      String state, String zip, String contactName, String contactPhone) {
+  };
+
+  List<HospitalEntry> hospitalEntries = List.of(//
+      new HospitalEntry("38.0228", "-107.6714", "100 6th Avenue", "Ouray Municipal Hospital", "Ouray ", "CO", "81427",
+          "Liam Caldwell", "970-596-5252"), //
+
+      new HospitalEntry("38.4783", "-107.8762", "100 East Main Street", "Montrose Municipal Hospital", "Montrose", "CO",
+          "81403", "Mia Turner", "970-240-5252"), //
+
+      new HospitalEntry("38.5458", "-106.9253", "100 West Virginia Avenue", "Gunnison Municipal Hospital", "Gunnison",
+          "CO", "81427", "Noah Whitman", "970-641-5252"), //
+
+      new HospitalEntry("37.2753", "-107.8801", "100 East 2nd Avenue", "Durango Municipal Hospital", "Durango", "CO",
+          "81301", "Ava Winters", "970-385-5252"), //
+
+      new HospitalEntry("39.0639", "-108.5506", "100 North 5th Street", "Grand Junction Municipal Hospital",
+          "Grand Junction", "CO", "81501", "Sophia Barrett", "970-244-5252"), //
+
+      new HospitalEntry("38.0875", "-102.6205", "100 East Parmenter Street", "Lamar Municipal Hospital", "Lamar", "CO",
+          "81052", "Ethan Ridley", "719-336-5252"), //
+
+      new HospitalEntry("39.0328", "-104.4741", "100 Peyton Hwy", "Peyton Municipal Hospital", "Peyton", "CO", "80831",
+          "Isabella Brooks", "719-749-5252"), //
+
+      new HospitalEntry("39.2508", "-106.2925", "100 Grand West Dr", "Leadville Municipal Hospital", "Leadville", "CO",
+          "80429", "Mason Harper", "719-486-5252"), //
+
+      new HospitalEntry("39.2633", "-103.6922", "100 8th Street", "Limon Municipal Hospital", "Limon", "CO", "80826",
+          "Amelia Hayes", "719-775-5252"), //
+
+      new HospitalEntry("39.3061", "-102.2696", "100 15th Street", "Burlington Municipal Hospital", "Burlington", "CO",
+          "80807", "Logan Chandler", "719-346-5252"), //
+
+      new HospitalEntry("39.5505", "-107.3248", "100 Grand Avenue", "Glenwood Springs Municipal Hospital",
+          "Glenwood Springs", "CO", "81601", "Harper Quinn", "970-945-5252"), //
+
+      new HospitalEntry("37.6242", "-104.7833", "100 South Albert Ave", "Walsenburg Municipal Hospital", "Walsenburg",
+          "CO", "81089", "Lucas Grant", "719-738-5252"), //
+
+      new HospitalEntry("37.9853", "-103.5438", "100 Colorado", "La Junta Municipal Hospital", "La Junta", "CO",
+          "81050", "Chloe Mason", "719-384-5252"), //
+
+      new HospitalEntry("40.2503", "-103.7991", "100 North Mason Street", "Fort Collins Municipal Hospital",
+          "Fort Collins", "CO", "81521", "Jackson Hayes", "970-419-5252"), //
+
+      new HospitalEntry("40.4841", "-106.8317", "100 10th Street", "Steamboat Spring Municipal Hospital",
+          "Steamboat Springs", "CO", "80477", "Lily Foster", "970-879-5252"), //
+
+      new HospitalEntry("40.6255", "-103.2077", "100 North 4th Street", "Sterling Municipal Hospital", "Sterling", "CO",
+          "80751", "Oliver Bennett", "970-522-5252") //
+  );
 }

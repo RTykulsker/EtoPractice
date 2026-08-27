@@ -32,6 +32,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -46,6 +47,9 @@ import com.surftools.wimp.core.MessageType;
 import com.surftools.wimp.message.BloodAvailabilityMessage;
 import com.surftools.wimp.message.ExportedMessage;
 import com.surftools.wimp.message.FieldSituationMessage;
+import com.surftools.wimp.message.Hics251Message;
+import com.surftools.wimp.message.Hics251Message.StatusEntry;
+import com.surftools.wimp.message.Hics251Message.StatusType;
 import com.surftools.wimp.message.Hics259Message;
 import com.surftools.wimp.message.Hics259Message.CasualtyEntry;
 import com.surftools.wimp.message.Ics205Message;
@@ -81,6 +85,9 @@ public class PracticeJsonMessageDeserializer {
 
       case FIELD_SITUATION:
         return deserialize_FsrMessage(jsonString);
+
+      case HICS_251:
+        return deserialize_Hics251Message(jsonString);
 
       case HICS_259:
         return deserialize_Hics259Message(jsonString);
@@ -388,6 +395,64 @@ public class PracticeJsonMessageDeserializer {
     return m;
   }
 
+  private ExportedMessage deserialize_Hics251Message(String jsonString)
+      throws JsonMappingException, JsonProcessingException {
+    var json = mapper.readTree(jsonString);
+    var message = deserialize_ExportedMessage(json);
+
+    var incidentName = json.get("incidentName").asText();
+    var pageNumber = json.get("pageNumber").asText();
+    var pageTotal = json.get("pageTotal").asText();
+
+    var operationalPeriod = json.get("incidentName").asText();
+    var opFromDate = json.get("opFromDate").asText();
+    var opFromTime = json.get("opFromTime").asText();
+    var opToDate = json.get("opToDate").asText();
+    var opToTime = json.get("opToTime").asText();
+
+    var departmentName = json.get("departmentName").asText();
+    var contactNumber = json.get("contactNumber").asText();
+
+    var streetAddress = json.get("streetAddress").asText();
+    var city = json.get("city").asText();
+    var state = json.get("state").asText();
+    var zip = json.get("zip").asText();
+
+    var statusEntryMap = new LinkedHashMap<String, StatusEntry>(Hics251Message.SYSTEM_NAMES.size());
+    var jsonStatusEntryMap = json.get("statusEntryMap");
+    for (var systemName : Hics251Message.SYSTEM_NAMES) {
+      var jsonStatusEntry = jsonStatusEntryMap.get(systemName);
+      var statusName = jsonStatusEntry.get("status").asText();
+      var status = StatusType.parse(statusName);
+      var comments = jsonStatusEntry.get("comments").asText();
+      var statusEntry = new StatusEntry(systemName, status, comments);
+      statusEntryMap.put(systemName, statusEntry);
+    }
+
+    var remarks = json.get("remarks").asText();
+    var preparedBy = json.get("preparedBy").asText();
+    var formDateTime = json.get("formDateTime").asText();
+    var facilityName = json.get("facilityName").asText();
+    var radioOperator = json.get("radioOperator").asText();
+    var formLocation = deserialize_LatLongPair(json.get("formLocation"));
+
+    var formVersion = "n/a";
+    var expressVersion = "n/a";
+
+    var m = new Hics251Message(message, //
+        incidentName, pageNumber, pageTotal, //
+        operationalPeriod, opFromDate, opFromTime, opToDate, opToTime, //
+        departmentName, contactNumber, //
+        streetAddress, city, state, zip, //
+        statusEntryMap, //
+        remarks, //
+        preparedBy, formDateTime, facilityName, //
+        radioOperator, formLocation, //
+        formVersion, expressVersion);
+
+    return m;
+  }
+
   private ExportedMessage deserialize_Hics259Message(String jsonString)
       throws JsonMappingException, JsonProcessingException {
     var json = mapper.readTree(jsonString);
@@ -396,7 +461,7 @@ public class PracticeJsonMessageDeserializer {
     var incidentName = json.get("incidentName").asText();
     var formDate = json.get("formDate").asText();
     var formTime = json.get("formTime").asText();
-    ;
+
     var operationalPeriod = json.get("operationalPeriod").asText();
     var opFromDate = json.get("opFromDate").asText();
     var opFromTime = json.get("opFromTime").asText();

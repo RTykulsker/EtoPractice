@@ -49,6 +49,7 @@ public enum MessageType {
   ICS_205("RMS_Express_Form_ICS205 Radio Plan_Viewer.xml", "Ics205"), //
   ICS_213("RMS_Express_Form_ICS213", "Ics213"), //
   ICS_213_RR("RMS_Express_Form_ICS213RR_Viewer.xml", "Ics213RR"), //
+  HICS_251("RMS_Express_Form_HICS 251 Facility Status Report_viewer.xml", "Hics251"), //
   HICS_259("RMS_Express_Form_HICS 259_viewer.xml", "Hics259"), //
   BLOOD_AVAILABILITY("RMS_Express_Form_Blood Availability viewer.xml", "BloodAvailability"), //
   ;
