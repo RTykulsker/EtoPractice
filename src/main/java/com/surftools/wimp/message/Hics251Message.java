@@ -81,6 +81,15 @@ public class Hics251Message extends ExportedMessage {
       }
       return null;
     }
+
+    public static StatusType fromName(String string) {
+      for (var key : StatusType.values()) {
+        if (key.name().equals(string)) {
+          return key;
+        }
+      }
+      return null;
+    }
   };
 
   public record StatusEntry(String systemName, StatusType status, String comments) {

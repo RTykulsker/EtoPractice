@@ -45,7 +45,12 @@ public class Hics251PracticeProcessor extends BasePracticeProcessor {
     var m = (Hics251Message) message;
     var ref = (Hics251Message) referenceMessage;
 
-    count(sts.testStartsWith("Message Subject should start with #EV", ref.subject, m.subject));
+    var refSubject = ref.subject;
+    var firstCommaInSubject = refSubject.indexOf(",");
+    var secondCommaInSubject = refSubject.indexOf(",", firstCommaInSubject + 1);
+    var truncatedRefSubject = (secondCommaInSubject != -1) ? refSubject.substring(0, secondCommaInSubject) : refSubject;
+    count(sts.testStartsWith("Message Subject should start with #EV", truncatedRefSubject, m.subject));
+
     count(sts.test("Message Location should be valid", m.msgLocation.isValid(), m.msgLocation.toString()));
     count(sts.test("Incident name should be #EV", ref.incidentName, m.incidentName));
     count(sts.test("Page Number should be #EV", ref.pageNumber, m.pageNumber));
@@ -70,7 +75,13 @@ public class Hics251PracticeProcessor extends BasePracticeProcessor {
       var refEntry = refStatusEntryMap.get(systemName);
       var mEntry = mStatusEntryMap.get(systemName);
       count(sts.test(systemName + " Status should be #EV", refEntry.status().toString(), mEntry.status().toString()));
-      count(sts.test_2line(systemName + " Comments should be #EV", refEntry.comments(), mEntry.comments()));
+
+      var refStatus = refEntry.status();
+      if (refStatus.generatesComments()) {
+        count(sts.test_2line(systemName + " Comments should be #EV", refEntry.comments(), mEntry.comments()));
+      } else {
+        count(sts.testIfEmpty(systemName + " Comments should be empty", mEntry.comments()));
+      }
     }
 
     count(sts.test_2line("Remarks should be #EV", ref.remarks, m.remarks));

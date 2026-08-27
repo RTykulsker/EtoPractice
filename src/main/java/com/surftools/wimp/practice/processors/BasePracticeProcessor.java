@@ -62,6 +62,7 @@ import com.surftools.wimp.feedback.FeedbackResult;
 import com.surftools.wimp.message.BloodAvailabilityMessage;
 import com.surftools.wimp.message.ExportedMessage;
 import com.surftools.wimp.message.FieldSituationMessage;
+import com.surftools.wimp.message.Hics251Message;
 import com.surftools.wimp.message.Hics259Message;
 import com.surftools.wimp.message.Ics205Message;
 import com.surftools.wimp.message.Ics213Message;
@@ -731,12 +732,19 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
       }
     }
       break;
+
     case ICS_213_RR:
       fullExerciseId = ((Ics213RRMessage) ref).requestNumber;
       break;
+
+    case HICS_251:
+      fullExerciseId = ((Hics251Message) ref).incidentName;
+      break;
+
     case HICS_259:
       fullExerciseId = ((Hics259Message) ref).incidentName;
       break;
+
     case ICS_205: {
       var m = (Ics205Message) ref;
       if (m.specialInstructions.startsWith(EXERCISE_ID)) {
@@ -748,6 +756,7 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
       }
     }
       break;
+
     case FIELD_SITUATION: {
       fullExerciseId = ((FieldSituationMessage) ref).additionalComments;
       var m = (FieldSituationMessage) ref;
@@ -760,9 +769,11 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
       }
     }
       break;
+
     case BLOOD_AVAILABILITY:
       fullExerciseId = ((BloodAvailabilityMessage) ref).comments;
       break;
+
     default:
       throw new RuntimeException("unsupported messageType: " + ref.getMessageType().toString());
     }

@@ -51,7 +51,7 @@ public class BloodAvailabilityGenerator extends AbstractBasePracticeGenerator {
 
     faciltyNameChooser = new BucketChooser<String>(PracticeData.hospitalNames, baseRng);
     facilityAddressChooser = new BucketChooser<String>(streetNames, baseRng);
-    multiplierChooser = new BucketChooser<Double>(List.of(1.0, 0.9, 1.1, .95, 1.05), baseRng);
+    multiplierChooser = new BucketChooser<Double>(List.of(1.0, 0.75, 1.25, 0.50, 1.50), baseRng);
     zeroChooser = new BucketChooser<Double>(List.of(1d, 1d, 1d, 0d), baseRng);
     pairChooser = new BucketChooser<LatLongPair>(latlongs, baseRng);
   }

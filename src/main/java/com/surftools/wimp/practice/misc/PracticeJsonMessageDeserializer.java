@@ -404,7 +404,7 @@ public class PracticeJsonMessageDeserializer {
     var pageNumber = json.get("pageNumber").asText();
     var pageTotal = json.get("pageTotal").asText();
 
-    var operationalPeriod = json.get("incidentName").asText();
+    var operationalPeriod = json.get("operationalPeriod").asText();
     var opFromDate = json.get("opFromDate").asText();
     var opFromTime = json.get("opFromTime").asText();
     var opToDate = json.get("opToDate").asText();
@@ -423,7 +423,7 @@ public class PracticeJsonMessageDeserializer {
     for (var systemName : Hics251Message.SYSTEM_NAMES) {
       var jsonStatusEntry = jsonStatusEntryMap.get(systemName);
       var statusName = jsonStatusEntry.get("status").asText();
-      var status = StatusType.parse(statusName);
+      var status = StatusType.fromName(statusName);
       var comments = jsonStatusEntry.get("comments").asText();
       var statusEntry = new StatusEntry(systemName, status, comments);
       statusEntryMap.put(systemName, statusEntry);

@@ -88,8 +88,8 @@ public class Hics251Generator extends AbstractBasePracticeGenerator {
     // HICS-251 My Incident, my facility, 2026-08-24 19:15
     var subject = "HICS-251 " + incidentName + ", " + facilityName + ", " + date.toString() + " 12:00";
     var exportedMessage = makeExportedMessage(date, subject);
-    var pageNumber = rng(1, 4);
-    var pageTotal = pageNumber + rng(0, 4);
+    var pageNumber = String.valueOf(dateRng.nextInt(1, 4));
+    var pageTotal = String.valueOf(Integer.parseInt(pageNumber) + dateRng.nextInt(0, 4));
 
     var operationalPeriod = String.valueOf(dateRng.nextInt(1, 3));
     var windowOpenDate = date.minusDays(5);
@@ -145,12 +145,12 @@ public class Hics251Generator extends AbstractBasePracticeGenerator {
     sb.append(INDENT + "Operational Period Time To: " + m.opToTime + NL);
     sb.append(NL);
 
-    sb.append("Name of Department: " + m.departmentName + NL);
-    sb.append("Contact Number: " + m.contactNumber + NL);
-    sb.append("Street Address: " + m.streetAddress + NL);
-    sb.append("City: " + m.city + NL);
-    sb.append("State: " + m.state + NL);
-    sb.append("Zip: " + m.zip + NL);
+    sb.append(INDENT + "Name of Department: " + m.departmentName + NL);
+    sb.append(INDENT + "Contact Number: " + m.contactNumber + NL);
+    sb.append(INDENT + "Street Address: " + m.streetAddress + NL);
+    sb.append(INDENT + "City: " + m.city + NL);
+    sb.append(INDENT + "State: " + m.state + NL);
+    sb.append(INDENT + "Zip: " + m.zip + NL);
 
     sb.append(NL);
 
@@ -168,22 +168,18 @@ public class Hics251Generator extends AbstractBasePracticeGenerator {
     sb.append(INDENT + "Facility Name: " + m.facilityName + NL);
 
     sb.append(INDENT + "Radio Operator: <YOUR CALL>" + NL);
-    sb.append(INDENT + " Facility Latitude: " + m.formLocation.getLatitude() + NL);
-    sb.append(INDENT + " Facility Longitude: " + m.formLocation.getLongitude() + NL);
+    sb.append(INDENT + "Facility Latitude: " + m.formLocation.getLatitude() + NL);
+    sb.append(INDENT + "Facility Longitude: " + m.formLocation.getLongitude() + NL);
     sb.append(generateInstructionTail());
 
     return sb.toString();
-  }
-
-  private String rng(int min, int max) {
-    return String.valueOf(dateRng.nextInt(min, max));
   }
 
   public Map<String, StatusEntry> makeStatusEntryMap(String departmentName) {
     var map = new LinkedHashMap<String, StatusEntry>(Hics251Message.SYSTEM_NAMES.size());
     for (var systemName : Hics251Message.SYSTEM_NAMES) {
       var statusType = statusTypeChooser.next();
-      var comments = commentsChooser.get(systemName).next();
+      var comments = statusType.generatesComments() ? commentsChooser.get(systemName).next() : "";
       map.put(systemName, new Hics251Message.StatusEntry(systemName, statusType, comments));
     }
     return map;
