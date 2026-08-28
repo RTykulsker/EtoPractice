@@ -69,6 +69,7 @@ public class Hics251Parser extends AbstractBaseParser {
         var letter = Character.valueOf((char) ('a' + i - 1)).toString();
         var statusString = getStringFromXml("select" + letter);
         var statusType = StatusType.parse(statusString);
+        statusType = statusType == null ? StatusType.NA : statusType;
         var comment = getStringFromXml("comment" + letter);
         var entry = new StatusEntry(systemName, statusType, comment);
         statusEntryMap.put(systemName, entry);
