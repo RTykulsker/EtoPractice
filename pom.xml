@@ -132,6 +132,40 @@
 					<target>${java.version}</target>
 				</configuration>
 			</plugin>
+			
+			<!-- far jar -->
+			<plugin>
+			  <groupId>org.apache.maven.plugins</groupId>
+			  <artifactId>maven-assembly-plugin</artifactId>
+			  <version>3.6.0</version>
+			  <configuration>
+			    <!-- This controls ONLY the fat jar name -->
+			    <finalName>${project.artifactId}</finalName>
+			
+			    <archive>
+			      <manifest>
+			        <mainClass>com.surftools.wimp.practice.tools.PracticeProcessorTool</mainClass>
+			      </manifest>
+			    </archive>
+			
+			    <descriptorRefs>
+			      <descriptorRef>jar-with-dependencies</descriptorRef>
+			    </descriptorRefs>
+			
+			    <!-- Prevents the default "-jar-with-dependencies" suffix -->
+			    <appendAssemblyId>false</appendAssemblyId>
+			  </configuration>
+			
+			  <executions>
+			    <execution>
+			      <id>make-fat-jar</id>
+			      <phase>package</phase>
+			      <goals>
+			        <goal>single</goal>
+			      </goals>
+			    </execution>
+			  </executions>
+			</plugin>
 
 			<!-- mvn package -DskipTests=true -->
 			<plugin>
@@ -181,8 +215,7 @@
 					<include>**/*.properties</include>
 					<include>templates</include>
 					<include>**/*.csv</include>
-				</includes>
-				
+				</includes>				
 
 			</resource>
 		</resources>
