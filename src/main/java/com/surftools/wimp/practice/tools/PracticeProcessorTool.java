@@ -122,7 +122,7 @@ public class PracticeProcessorTool {
       FileUtils.createDirectory(Path.of(exercisesPathName, exerciseYearString, exerciseDateString));
       FileUtils.createDirectory(Path.of(exercisesPathName, exerciseYearString, exerciseDateString, "input"));
 
-      var winlinkCallsign = cm.getAsString(Key.WINLINK_CALLSIGN);
+      var winlinkCallsign = cm.getAsString(Key.WINLINK_NOTIFICATION_SOURCE);
       logger.info("Winlink callsign: " + winlinkCallsign);
 
       final var dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");

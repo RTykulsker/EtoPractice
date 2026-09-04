@@ -36,8 +36,6 @@ import com.surftools.wimp.utils.config.IConfigurationKey;
  *
  */
 public enum Key implements IConfigurationKey {
-  WINLINK_CALLSIGN("winlink.callsign"), // mbo address
-
   PATH_REFERENCE("path.reference"), // dir where reference dirs/files are
   PATH_EXERCISES("path.exercises"), // dir where we find input/, output/ and published/
   PATH_RESOUCE_CONTENT("path.resourceContent"), // FILE for ICS-213 RR generation

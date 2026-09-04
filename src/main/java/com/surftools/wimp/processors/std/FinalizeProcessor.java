@@ -300,8 +300,8 @@ public class FinalizeProcessor extends AbstractBaseProcessor {
       return false;
     }
 
-    var source = cm.getAsString(Key.WINLINK_NOTIFICATION_SOURCE, "ETO-FEEDBACK");
-    var sender = cm.getAsString(Key.WINLINK_NOTIFICATION_SENDER, "ETO-FEEDBACK");
+    var source = cm.getAsString(Key.WINLINK_NOTIFICATION_SOURCE);
+    var sender = cm.getAsString(Key.WINLINK_NOTIFICATION_SENDER);
 
     var subject = cm.getAsString(Key.EMAIL_NOTIFICATION_SUBJECT, "ETO: WLT processings is complete for #DATE#");
     subject = subject.replaceAll("#DATE#", dateString);
