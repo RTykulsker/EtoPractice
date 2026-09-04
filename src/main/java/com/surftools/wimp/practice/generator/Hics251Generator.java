@@ -192,29 +192,29 @@ public class Hics251Generator extends AbstractBasePracticeGenerator {
 
   List<String> remarksList = List.of("Skilled staffing shortages in critical units",
       "Fuel supply duration for backup generators", "Aging HVAC systems requiring major repairs",
-      "Limited surge capacity during mass‑casualty events", "Insufficient backup power for all clinical areas",
+      "Limited surge capacity during mass-casualty events", "Insufficient backup power for all clinical areas",
       "Delayed vendor delivery for medical supplies", "Water supply interruption risks",
-      "Elevator reliability and maintenance backlog", "Insufficient negative‑pressure rooms",
+      "Elevator reliability and maintenance backlog", "Insufficient negative-pressure rooms",
       "IT network redundancy gaps", "Cybersecurity vulnerabilities in legacy systems",
-      "Medication stockpile depletion during emergencies", "Insufficient on‑site food reserves for extended events",
+      "Medication stockpile depletion during emergencies", "Insufficient on-site food reserves for extended events",
       "Structural integrity concerns in older wings", "Limited isolation capacity for infectious disease outbreaks",
       "Staff fatigue and burnout during prolonged incidents", "Inadequate emergency transportation resources",
       "Communication system interoperability issues", "Generator load testing overdue",
-      "Roof integrity concerns during severe weather", "Insufficient PPE reserves for high‑demand periods",
-      "Delayed biomedical equipment servicing", "Limited cold‑chain storage for critical medications",
+      "Roof integrity concerns during severe weather", "Insufficient PPE reserves for high-demand periods",
+      "Delayed biomedical equipment servicing", "Limited cold-chain storage for critical medications",
       "Potential oxygen supply disruptions", "Parking congestion affecting emergency access",
-      "Insufficient shelter‑in‑place supplies", "Hazardous materials storage compliance gaps",
+      "Insufficient shelter-in-place supplies", "Hazardous materials storage compliance gaps",
       "Flooding vulnerability in basement mechanical rooms", "Limited telemedicine capacity during surges",
       "Aging fire suppression systems", "Staff credentialing delays during rapid onboarding",
       "Insufficient backup communication devices", "Potential supply chain disruptions for pharmaceuticals",
       "Inadequate waste disposal capacity during high census", "Cooling tower maintenance overdue",
       "Limited redundancy for imaging equipment", "Potential contamination risks in water distribution",
-      "Insufficient security staffing during high‑risk events", "Aging patient transport equipment",
+      "Insufficient security staffing during high-risk events", "Aging patient transport equipment",
       "Limited emergency triage space", "Potential failure points in medical gas distribution",
       "Delayed replacement of worn flooring in clinical areas", "Insufficient training on new emergency protocols",
       "Backup server capacity nearing limits", "Limited decontamination capability for large incidents",
       "Potential radio communication dead zones", "Insufficient lighting in external evacuation routes",
-      "Delayed repairs to stormwater drainage systems", "Limited capacity for long‑term sheltering of staff");
+      "Delayed repairs to stormwater drainage systems", "Limited capacity for long-term sheltering of staff");
 
   // --- POWER (10) ---
   List<String> powerComments = List.of("breaker panel overheating – estimated 6-hour remediation", //
