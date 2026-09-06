@@ -170,7 +170,7 @@ public class PracticeProcessorTool {
       var windowCloseDate = exerciseDate.plusDays(1);
       cm.putString(Key.EXERCISE_WINDOW_CLOSE, dtf.format(windowCloseDate) + " 08:00");
 
-      cm.putString(Key.PIPELINE_STDIN, "Read,Classifier,Acknowledgement,Deduplication");
+      cm.putString(Key.PIPELINE_STDIN, "Read,Classifier,Filter,Acknowledgement,Deduplication");
       cm.putString(Key.PIPELINE_MAIN, messageType.getPracticeProcessorName());
       cm.putString(Key.PIPELINE_STDOUT, "Write,HistoryMap,ExerciseSummary,ParticipantHistory,Cleanup,Finalize");
 
