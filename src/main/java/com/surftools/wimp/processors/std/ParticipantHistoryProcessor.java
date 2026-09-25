@@ -90,7 +90,186 @@ public class ParticipantHistoryProcessor extends AbstractBaseProcessor {
     }
 
     makeParticipantHistory(db);
+    
+    makeYTDParticipantCountSearchEngine(db);
   }
+
+  private void makeYTDParticipantCountSearchEngine(PersistenceManager db) {
+	  var exerciseYearString = dateString.substring(0, 4);
+	  var ytdDate = LocalDate.of(Integer.valueOf(exerciseYearString), 1, 1);
+
+	  
+	    logger.info("YTD Date: " + ytdDate.toString());
+	    var ret = db.getFilteredExercises(null, ytdDate); // all types, all dates
+	    if (ret.status() != ReturnStatus.OK) {
+	      logger.error("Could not get filteredExercises from database: " + ret.content());
+	      return;
+	    }
+	    @SuppressWarnings("unchecked")
+	    var filteredExercises = (List<Exercise>) ret.data();
+
+	    ret = db.getUsersHistory(filteredExercises);
+	    if (ret.status() != ReturnStatus.OK) {
+	      logger.error("Could not get userHistory from database: " + ret.content());
+	      return;
+	    }
+
+	    @SuppressWarnings("unchecked")
+	    var joins = (List<JoinedUser>) ret.data();
+	    var histories = new ArrayList<ParticipantHistory>(joins.size());
+	    var sb = new StringBuilder();
+	      for (var join : joins) {
+	      if (join.exercises.size() > 0) {
+	        var ph = new ParticipantHistory(join.user.call(), join.exercises.size(), null, null);
+	        sb.append("\t{\"" + join.user.call() + "\": " + join.exercises.size() + "},\n");
+	        histories.add(ph);
+	      } // end if join has exercises
+	    }
+	      var data = sb.toString();
+	    logger.info("Got " + histories.size() + " YTD particpant Histories");
+
+//	    WriteProcessor.writeTable(new ArrayList<IWritableTable>(histories), dateString + "-participantHistory.csv");
+//	    WriteProcessor.writeTable(new ArrayList<IWritableTable>(extendedHistories),
+//	        dateString + "-extendedParticipantHistory.csv");
+//	    WriteProcessor.writeTable(new ArrayList<IWritableTable>(summaries.values()),
+//	        dateString + "-participantSummary.csv");
+//	    if (dogfoodMap.size() > 0) {
+//	      WriteProcessor.writeTable(new ArrayList<IWritableTable>(dogfoodMap.values()), dateString + "-dogfood.csv");
+//	    }
+//	    
+	    
+	    final var template = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ETO Year To Date Exercise Counts as of #DATE#</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 20px;
+        background: #f7f7f7;
+    }
+
+    h1 {
+        text-align: center;
+        margin-bottom: 30px;
+        font-size: 1.8rem;
+    }
+
+    .container {
+        max-width: 420px;
+        margin: auto;
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+
+    label {
+        font-weight: bold;
+        font-size: 1.1rem;
+    }
+
+    input[type="text"] {
+        width: 100%;
+        padding: 14px;
+        margin-top: 8px;
+        margin-bottom: 20px;
+        font-size: 1.1rem;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        box-sizing: border-box; /* prevents overflow */
+    }
+
+    button {
+        width: 100%;
+        padding: 14px;
+        font-size: 1.2rem;
+        background: #0077cc;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+    }
+
+    button:active {
+        background: #005fa3;
+    }
+
+    #result {
+        margin-top: 25px;
+        font-size: 1.3rem;
+        text-align: center;
+        font-weight: bold;
+    }
+</style>
+</head>
+<body>
+
+<h1>ETO Year To Date Exercise Counts as of #DATE#</h1>
+
+<div class="container">
+    <label for="callInput">Call Sign</label>
+    <input type="text" id="callInput" placeholder="Enter call sign">
+
+    <button id="getCountBtn">Get Count</button>
+
+    <div id="result"></div>
+</div>
+
+<script>
+    const exerciseData = {
+        "data": 
+		[
+		#DATA#
+		]
+    };
+
+    function lookupCallSign() {
+        const input = document.getElementById("callInput");
+        const call = input.value.trim().toUpperCase();
+        const resultDiv = document.getElementById("result");
+
+        let found = null;
+
+        for (const entry of exerciseData.data) {
+            if (entry[call] !== undefined) {
+                found = entry[call];
+                break;
+            }
+        }
+
+        resultDiv.textContent = found !== null
+            ? `Count for ${call}: ${found}`
+            : `No count found for ${call}`;
+
+        input.value = "";
+        input.focus();
+    }
+
+    document.getElementById("getCountBtn").addEventListener("click", lookupCallSign);
+
+    document.getElementById("callInput").addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+            lookupCallSign();
+        }
+    });
+</script>
+
+</body>
+</html>
+	    		
+	    		""";
+	    
+	    var content = template.replaceAll("#DATE#", dateString);
+	    content = content.replace("#DATA#", data);
+	    WriteProcessor.writeString(content, Path.of(outputPath.toString(), "ytd-participantCounts.html"));
+	
+}
 
   private void makeParticipantHistory(IPersistenceManager db) {
     var epochDateString = cm.getAsString(Key.PERSISTENCE_EPOCH_DATE);
@@ -149,6 +328,7 @@ public class ParticipantHistoryProcessor extends AbstractBaseProcessor {
     if (dogfoodMap.size() > 0) {
       WriteProcessor.writeTable(new ArrayList<IWritableTable>(dogfoodMap.values()), dateString + "-dogfood.csv");
     }
+    
   }
 
   static record ParticipantHistory(String call, int count, LocalDate firstDate, LocalDate lastDate)
