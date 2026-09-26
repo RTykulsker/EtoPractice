@@ -31,6 +31,7 @@ import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -116,27 +117,18 @@ public class ParticipantHistoryProcessor extends AbstractBaseProcessor {
 
 	    @SuppressWarnings("unchecked")
 	    var joins = (List<JoinedUser>) ret.data();
-	    var histories = new ArrayList<ParticipantHistory>(joins.size());
+	    Collections.sort(joins, (j1,j2) -> j1.user.call().compareTo(j2.user.call()));
+	    var ytdCount = 0;
 	    var sb = new StringBuilder();
 	      for (var join : joins) {
 	      if (join.exercises.size() > 0) {
-	        var ph = new ParticipantHistory(join.user.call(), join.exercises.size(), null, null);
-	        sb.append("\t{\"" + join.user.call() + "\": " + join.exercises.size() + "},\n");
-	        histories.add(ph);
-	      } // end if join has exercises
+	    	  ++ytdCount;
+	         sb.append("{\"" + join.user.call() + "\": " + join.exercises.size() + "},");
+	      } // end if join has exercises	      
 	    }
 	      var data = sb.toString();
-	    logger.info("Got " + histories.size() + " YTD particpant Histories");
+	    logger.info("Got " + ytdCount + " YTD particpant Histories");
 
-//	    WriteProcessor.writeTable(new ArrayList<IWritableTable>(histories), dateString + "-participantHistory.csv");
-//	    WriteProcessor.writeTable(new ArrayList<IWritableTable>(extendedHistories),
-//	        dateString + "-extendedParticipantHistory.csv");
-//	    WriteProcessor.writeTable(new ArrayList<IWritableTable>(summaries.values()),
-//	        dateString + "-participantSummary.csv");
-//	    if (dogfoodMap.size() > 0) {
-//	      WriteProcessor.writeTable(new ArrayList<IWritableTable>(dogfoodMap.values()), dateString + "-dogfood.csv");
-//	    }
-//	    
 	    
 	    final var template = """
 <!DOCTYPE html>
