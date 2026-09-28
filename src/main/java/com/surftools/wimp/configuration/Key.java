@@ -36,105 +36,109 @@ import com.surftools.wimp.utils.config.IConfigurationKey;
  *
  */
 public enum Key implements IConfigurationKey {
-  PATH_REFERENCE("path.reference"), // dir where reference dirs/files are
-  PATH_EXERCISES("path.exercises"), // dir where we find input/, output/ and published/
-  PATH_RESOUCE_CONTENT("path.resourceContent"), // FILE for ICS-213 RR generation
-  PATH_NAG_CONTENT("path.nagContent"), // path to FILE where end-of-year nag is
-  PATH_PUBLICATION("path.publication"), // path to remote folder for publishing results
-  PATH_ARCHIVE("path.archive"), // path to remote folder for archiving entire exercise
-  PATH_SCHEDULE("path.schedule"), // path to the expanded schedule.csv
-  PATH_META_SCHEDULE("path.metaSchedule"), // path to the meta-schedule.xlsx
-  PATH_DOGFOOD("path.dogfood"), // path to csv of eto volunteers
-  PATH_REFERENCE_LEGACY("path.reference.legacy"), // path to read-only legacy reference
-  PATH_HINT_CONTENT("path.hintContent"), // path to FILE where hints for better messages are stored
+	PATH_REFERENCE("path.reference"), // dir where reference dirs/files are
+	PATH_EXERCISES("path.exercises"), // dir where we find input/, output/ and published/
+	PATH_RESOUCE_CONTENT("path.resourceContent"), // FILE for ICS-213 RR generation
+	PATH_NAG_CONTENT("path.nagContent"), // path to FILE where end-of-year nag is
+	PATH_PUBLICATION("path.publication"), // path to remote folder for publishing results
+	PATH_ARCHIVE("path.archive"), // path to remote folder for archiving entire exercise
+	PATH_SCHEDULE("path.schedule"), // path to the expanded schedule.csv
+	PATH_META_SCHEDULE("path.metaSchedule"), // path to the meta-schedule.xlsx
+	PATH_DOGFOOD("path.dogfood"), // path to csv of eto volunteers
+	PATH_REFERENCE_HISTORY("path.reference.history"), // path to all generated references
+	PATH_HINT_CONTENT("path.hintContent"), // path to FILE where hints for better messages are stored
 
-  MAP_TEMPLATE_METHOD("map.template.method"), // "fast" or "slow", default "fast"
+	PATH_REFERENCE_LEGACY("path.reference.legacy"), // path to read-only legacy reference
 
-  GENERATOR_RNG_SEED("generator.rngSeed"), // to get consistent results
-  GENERATOR_N_YEARS("generator.nYears"), // number of years to generate
-  GENERATOR_INSTRUCTION_URL("generator.instruction.url"), // url at the bottom of each instruction
-  GENERATOR_LEGACY_DATE("generator.legacy.date"), // date, before which, we copy from referency-legacy
+	MAP_TEMPLATE_METHOD("map.template.method"), // "fast" or "slow", default "fast"
 
-  ENABLE_FINALIZE("enable.finalize"), // set to true to enable, published, archive, snapshot to cloud, sends email,
-                                      // set on command line
-  ENABLE_FINALIZE_PUBLISHED("enable.finalize.published"), // transfer only published folder to cloud
-  ENABLE_FINALIZE_ARCHIVE("enable.finalize.archive"), // transfer all folders to cloud
-  ENABLE_FINALIZE_EMAIL_INTERNET("enable.finalize.email.internet"), // send email to interested parties via Internet
-  ENABLE_FINALIZE_EMAIL_WINLINK("enable.finalize.email.winlink"), // send email to interested parties via Winlink
-  ENABLE_FINALIZE_SNAPSHOT("enable.finalize.snapshot"), // create a local copy final-yyyy-mm-dd-hh-mm-ss of entire
-                                                        // exercise
-  PERSISTENCE_POSTGRES_UTL("persistence.postgres.url"), //
-  PERSISTENCE_SQLITE_URL("persistence.sqlite.url"), //
-  PERSISTENCE_ALLOW_FUTURE("persistence.allow.future"), // allow/disallow future exercises into db
-  PERSISTENCE_ONLY_USE_ACTIVE("persistence.only.use.active"), // true -> only active; false -> active & inactive
-  PERSISTENCE_MISS_LIMIT("persistence.miss.limit"), // max # of missed exercises before we don't bother any more
-  PERSISTENCE_MISS_SUBJECT("persistence.miss.subject"), // subject for outbound message
-  PERSISTENCE_MISS_BODY_PATH("persistence.miss.body.path"), // path to file containing body for outbound message
-  PERSISTENCE_EPOCH_DATE("persistence.epochDate"), // when does the database go from beta to production
+	GENERATOR_RNG_SEED("generator.rngSeed"), // to get consistent results
+	GENERATOR_N_YEARS("generator.nYears"), // number of years to generate
+	GENERATOR_INSTRUCTION_URL("generator.instruction.url"), // url at the bottom of each instruction
+	GENERATOR_START_DATE("generator.start.date"), // date to start generating instructions
+	GENERATOR_LEGACY_DATE("generator.legacy.date"), // date, before which, we copy from referency-legacy
 
-  EXPECTED_MESSAGE_TYPES("expectedMessageTypes"), // MessageTypes that we will handle
+	ENABLE_FINALIZE("enable.finalize"), // set to true to enable, published, archive, snapshot to cloud, sends email,
+										// set on command line
+	ENABLE_FINALIZE_PUBLISHED("enable.finalize.published"), // transfer only published folder to cloud
+	ENABLE_FINALIZE_ARCHIVE("enable.finalize.archive"), // transfer all folders to cloud
+	ENABLE_FINALIZE_EMAIL_INTERNET("enable.finalize.email.internet"), // send email to interested parties via Internet
+	ENABLE_FINALIZE_EMAIL_WINLINK("enable.finalize.email.winlink"), // send email to interested parties via Winlink
+	ENABLE_FINALIZE_SNAPSHOT("enable.finalize.snapshot"), // create a local copy final-yyyy-mm-dd-hh-mm-ss of entire
+															// exercise
+	PERSISTENCE_POSTGRES_UTL("persistence.postgres.url"), //
+	PERSISTENCE_SQLITE_URL("persistence.sqlite.url"), //
+	PERSISTENCE_ALLOW_FUTURE("persistence.allow.future"), // allow/disallow future exercises into db
+	PERSISTENCE_ONLY_USE_ACTIVE("persistence.only.use.active"), // true -> only active; false -> active & inactive
+	PERSISTENCE_MISS_LIMIT("persistence.miss.limit"), // max # of missed exercises before we don't bother any more
+	PERSISTENCE_MISS_SUBJECT("persistence.miss.subject"), // subject for outbound message
+	PERSISTENCE_MISS_BODY_PATH("persistence.miss.body.path"), // path to file containing body for outbound message
+	PERSISTENCE_EPOCH_DATE("persistence.epochDate"), // when does the database go from beta to production
 
-  ACKNOWLEDGEMENT_SPECIFICATION("acknowledgement.specification"), // what to acknowledge, expected vs unexpectd
-  ACKNOWLEDGEMENT_EXPECTED("acknowledgement.expected"), // content for expected messages
-  ACKNOWLEDGEMENT_UNEXPECTED("acknowledgement.unexpected"), // content for unexpected messages
-  ACKNOWLEDGEMENT_EXTRA_CONTENT("acknowledgement.extraContent"), // extra stuff for each outbound ack message
+	EXPECTED_MESSAGE_TYPES("expectedMessageTypes"), // MessageTypes that we will handle
 
-  FILTER_INCLUDE_SENDERS("filterIncludeSenders"), // comma-delimited list of call signs to filter include
-  FILTER_EXCLUDE_SENDERS("filterExcludeSenders"), // comma-delimited list of call signs to filter exclude
+	ACKNOWLEDGEMENT_SPECIFICATION("acknowledgement.specification"), // what to acknowledge, expected vs unexpectd
+	ACKNOWLEDGEMENT_EXPECTED("acknowledgement.expected"), // content for expected messages
+	ACKNOWLEDGEMENT_UNEXPECTED("acknowledgement.unexpected"), // content for unexpected messages
+	ACKNOWLEDGEMENT_EXTRA_CONTENT("acknowledgement.extraContent"), // extra stuff for each outbound ack message
 
-  DEDUPLICATION_RULES("deduplication.rules"), // json string: {messageTypeName:rule,...}
+	FILTER_INCLUDE_SENDERS("filterIncludeSenders"), // comma-delimited list of call signs to filter include
+	FILTER_EXCLUDE_SENDERS("filterExcludeSenders"), // comma-delimited list of call signs to filter exclude
 
-  PIPELINE_STDIN("pipeline.stdin"), // list of input processors
-  PIPELINE_STDOUT("pipeline.stdout"), // list of output processors
-  PIPELINE_MAIN("pipeline.main"), // list of main processors
+	DEDUPLICATION_RULES("deduplication.rules"), // json string: {messageTypeName:rule,...}
 
-  ALL_FEEDBACK_TEXT_EDITOR("all_feedback.textEditor"), // class name of text editor for AllFeedback
-  BODY_TEXT_EDITOR("body.textEditor"), // class name of text editor for outbound message body
+	PIPELINE_STDIN("pipeline.stdin"), // list of input processors
+	PIPELINE_STDOUT("pipeline.stdout"), // list of output processors
+	PIPELINE_MAIN("pipeline.main"), // list of main processors
 
-  EXERCISE_DATE("exerciseDate"), // for Summarizer
-  EXERCISE_NAME("exerciseName"), // for Summarizer
-  EXERCISE_DESCRIPTION("exerciseDescription"), // for Summarizer
-  EXERCISE_WINDOW_OPEN("exerciseWindowOpen"), //
-  EXERCISE_WINDOW_CLOSE("exerciseWindowClose"), //
+	ALL_FEEDBACK_TEXT_EDITOR("all_feedback.textEditor"), // class name of text editor for AllFeedback
+	BODY_TEXT_EDITOR("body.textEditor"), // class name of text editor for outbound message body
 
-  EMAIL_NOTIFICATION_FROM("email.notification.from"), //
-  EMAIL_NOTIFICATION_TO("email.notification.to"), // comma-delimited list
-  EMAIL_NOTIFICATION_PASSWORD_FILEPATH("email.notification.password.filePath"), // no password in config
-  EMAIL_NOTIFICATION_SUBJECT("email.notification.subject"), // with #DATE# substitution
-  EMAIL_NOTIFICATION_BODY("email.notification.body"), // with #DATE# substitution
+	EXERCISE_DATE("exerciseDate"), // for Summarizer
+	EXERCISE_NAME("exerciseName"), // for Summarizer
+	EXERCISE_DESCRIPTION("exerciseDescription"), // for Summarizer
+	EXERCISE_WINDOW_OPEN("exerciseWindowOpen"), //
+	EXERCISE_WINDOW_CLOSE("exerciseWindowClose"), //
 
-  WINLINK_NOTIFICATION_SOURCE("winlink.notification.source"), // mbo address
-  WINLINK_NOTIFICATION_SENDER("winlink.notification.sender"), // from address
-  WINLINK_NOTIFICATION_HINT_ON_PERFECT("winlink.notification.hint.OnPerfect"), // to send hints even on perfect messages
+	EMAIL_NOTIFICATION_FROM("email.notification.from"), //
+	EMAIL_NOTIFICATION_TO("email.notification.to"), // comma-delimited list
+	EMAIL_NOTIFICATION_PASSWORD_FILEPATH("email.notification.password.filePath"), // no password in config
+	EMAIL_NOTIFICATION_SUBJECT("email.notification.subject"), // with #DATE# substitution
+	EMAIL_NOTIFICATION_BODY("email.notification.body"), // with #DATE# substitution
 
-  OUTBOUND_MESSAGE_SOURCE("outboundMessage.source"), // mbo address
-  OUTBOUND_MESSAGE_SENDER("outboundMessage.sender"), // from address
-  OUTBOUND_MESSAGE_SUBJECT("outboundMessage.subject"), // message subject
-  OUTBOUND_MESSAGE_EXTRA_CONTEXT("outboundMessage.extraContext"), // where to find extra context for specific engine
+	WINLINK_NOTIFICATION_SOURCE("winlink.notification.source"), // mbo address
+	WINLINK_NOTIFICATION_SENDER("winlink.notification.sender"), // from address
+	WINLINK_NOTIFICATION_HINT_ON_PERFECT("winlink.notification.hint.OnPerfect"), // to send hints even on perfect
+																					// messages
 
-  CHART_CONFIG("chartConfig"), // as a JSON blob
+	OUTBOUND_MESSAGE_SOURCE("outboundMessage.source"), // mbo address
+	OUTBOUND_MESSAGE_SENDER("outboundMessage.sender"), // from address
+	OUTBOUND_MESSAGE_SUBJECT("outboundMessage.subject"), // message subject
+	OUTBOUND_MESSAGE_EXTRA_CONTEXT("outboundMessage.extraContext"), // where to find extra context for specific engine
 
-  READ_FILTER_ENABLED("read.filterEnabled"), // to filter in/out messages by sender/from in BaseReadProcessor
+	CHART_CONFIG("chartConfig"), // as a JSON blob
 
-  ;
+	READ_FILTER_ENABLED("read.filterEnabled"), // to filter in/out messages by sender/from in BaseReadProcessor
 
-  private final String key;
+	;
 
-  private Key(String key) {
-    this.key = key;
-  }
+	private final String key;
 
-  public static Key fromString(String string) {
-    for (Key key : Key.values()) {
-      if (key.toString().equals(string)) {
-        return key;
-      }
-    }
-    return null;
-  }
+	private Key(String key) {
+		this.key = key;
+	}
 
-  @Override
-  public String toString() {
-    return key;
-  }
+	public static Key fromString(String string) {
+		for (Key key : Key.values()) {
+			if (key.toString().equals(string)) {
+				return key;
+			}
+		}
+		return null;
+	}
+
+	@Override
+	public String toString() {
+		return key;
+	}
 }

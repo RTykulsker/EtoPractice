@@ -24,7 +24,7 @@ SOFTWARE.
 
 */
 
-package com.surftools.wimp.practice.tools;
+package com.surftools.wimp.practice.tools.old;
 
 import java.io.FileInputStream;
 import java.nio.file.Files;
@@ -59,7 +59,7 @@ import com.surftools.utils.FileUtils;
 import com.surftools.wimp.configuration.Key;
 import com.surftools.wimp.core.IWritableTable;
 import com.surftools.wimp.core.MessageType;
-import com.surftools.wimp.practice.generator.PracticeUtils;
+import com.surftools.wimp.generator.PracticeUtils;
 import com.surftools.wimp.processors.std.WriteProcessor;
 import com.surftools.wimp.schedule.ScheduleManager;
 import com.surftools.wimp.schedule.ScheduleRecord;

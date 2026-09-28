@@ -30,7 +30,7 @@ import java.time.LocalDate;
 
 import com.surftools.wimp.core.IWritableTable;
 import com.surftools.wimp.core.MessageType;
-import com.surftools.wimp.practice.generator.PracticeUtils;
+import com.surftools.wimp.generator.PracticeUtils;
 
 public record ScheduleRecord(String name, LocalDate date, MessageType messageType, boolean isPractice, String extraData)
     implements IWritableTable {

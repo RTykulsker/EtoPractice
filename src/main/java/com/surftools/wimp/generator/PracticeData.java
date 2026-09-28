@@ -25,7 +25,7 @@ SOFTWARE.
 
 */
 
-package com.surftools.wimp.practice.generator;
+package com.surftools.wimp.generator;
 
 import java.time.LocalDate;
 import java.util.Arrays;
