@@ -42,7 +42,7 @@ import org.slf4j.LoggerFactory;
 import com.surftools.utils.FileUtils;
 import com.surftools.wimp.configuration.Key;
 import com.surftools.wimp.core.MessageManager;
-import com.surftools.wimp.practice.misc.PracticeJsonMessageDeserializer;
+import com.surftools.wimp.generator.PracticeJsonMessageDeserializer;
 import com.surftools.wimp.processors.std.PipelineProcessor;
 import com.surftools.wimp.schedule.ScheduleCheckResult;
 import com.surftools.wimp.schedule.ScheduleManager;

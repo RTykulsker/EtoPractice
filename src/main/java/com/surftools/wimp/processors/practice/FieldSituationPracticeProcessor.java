@@ -25,7 +25,7 @@ SOFTWARE.
 
 */
 
-package com.surftools.wimp.practice.processors;
+package com.surftools.wimp.processors.practice;
 
 import com.surftools.wimp.core.IMessageManager;
 import com.surftools.wimp.core.MessageType;

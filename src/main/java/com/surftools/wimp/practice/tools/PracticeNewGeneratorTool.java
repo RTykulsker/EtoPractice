@@ -292,7 +292,6 @@ public class PracticeNewGeneratorTool {
 	}
 
 	private void generateExercises(List<ScheduleRecord> scheduleList) throws Exception {
-
 		var generatorMap = new HashMap<MessageType, IGenerator>();
 		for (var type : MessageType.getAllSupportedTypes()) {
 			var generatorName = "com.surftools.wimp.generator." + type.makeParserName() + "Generator";
