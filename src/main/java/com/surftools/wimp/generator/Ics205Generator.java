@@ -48,7 +48,7 @@ public class Ics205Generator extends AbstractBasePracticeGenerator {
 
 	@Override
 	public Ics205Message generateMessage(LocalDate date, ScheduleRecord schedule) {
-		var dateRng = getRandom(date.toString());
+		setRandomSeed(date.toString());
 		final int nRadioEntries = 3;
 		Ics205Message.setRadioEntriesToDisplay(nRadioEntries);
 
@@ -70,7 +70,7 @@ public class Ics205Generator extends AbstractBasePracticeGenerator {
 		}
 		var specialInstructions = EXERCISE;
 		var approvedBy = data.nameChooser.next();
-		var iapPage = String.valueOf(dateRng.nextInt(5, 10));
+		var iapPage = String.valueOf(baseRng.nextInt(5, 10));
 
 		var m = new Ics205Message(exportedMessage, organization, incidentName, NA, //
 				dateFrom, dateTo, timeFrom, timeTo, //

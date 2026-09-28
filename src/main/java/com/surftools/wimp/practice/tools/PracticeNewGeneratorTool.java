@@ -82,29 +82,49 @@ import com.surftools.wimp.utils.config.impl.PropertyFileConfigurationManager;
  * from GeneratorTool: read the schedule.csv file, generate the reference and
  * instruction files
  * 
- * In detail: reference file: is a json-serialized version of the generated
- * message. It's the answer sheet. instructions file: is the human-readable
- * version of the instructions finalize: means that we are happy, this becomes
- * new reference/ publish/copy to REMOTES, etc.
+ * In detail:
+ * 
+ * reference file: is a json-serialized version of the generated message. It's
+ * the answer sheet.
+ * 
+ * instructions file: is the human-readable version of the instructions
+ * 
+ * finalize: means that we are happy, this becomes new reference/ publish/copy
+ * to REMOTES, etc.
  * 
  * under reference-history/ create reference-generated-TS OR
  * reference-published-TS, where TS is yyyy-mm-dd-hh-mm-ss under this directory
- * copy the meta-schedule.xlsx file write the schedule.csv file create folders
- * instructions/ and new-instructions/ create year folders, 2025/, etc. Also do
- * this in instructions/ and conditionally in new-instructions
  * 
- * 3 values from configuration startDate -- when to start nYears -- number of
- * years legacyDate -- date, before which we COPY instructions and reference,
- * rather than generate
+ * copy the meta-schedule.xlsx file write the schedule.csv file
  * 
- * processing: generate the schedule, per the PracticeScheduleTool, write the
- * schedule.csv generate the exercises, per the PracticeGeneratorTool: if before
- * legacyDate, copy from current reference/ dir if after legacyDate, generate
- * new reference and instructions/ AND new-instructions/ copy/write a marker
- * file in reference: legacy.txt, generated-TS.txt, published-TS.txt
+ * create folders instructions/ and new-instructions/ create year folders,
+ * 2025/, etc.
  * 
- * if finalizing remove old reference/ copy reference-published-TS/ to
- * reference/ copy new-instructions/ to all REMOTE published sinks copy
+ * Also do this in instructions/ and conditionally in new-instructions
+ * 
+ * 3 values from configuration
+ * 
+ * startDate -- when to start
+ * 
+ * nYears -- number of years
+ * 
+ * legacyDate -- date, before which we COPY instructions and reference, rather
+ * than generate
+ * 
+ * processing:
+ * 
+ * generate the schedule, per the PracticeScheduleTool, write the schedule.csv
+ * 
+ * generate the exercises, per the PracticeGeneratorTool:
+ * 
+ * if before legacyDate, copy from current reference/ dir
+ * 
+ * if after legacyDate, generate new reference and instructions/ AND
+ * new-instructions/ copy/write a marker file in reference: legacy.txt,
+ * generated-TS.txt, published-TS.txt
+ * 
+ * if finalizing: 1) remove old reference/ copy reference-published-TS/ to
+ * reference/ 2) copy new-instructions/ to all REMOTE published sinks 3) copy
  * reference-published-TS/ to all REMOTE archive sinks
  */
 public class PracticeNewGeneratorTool {
@@ -252,10 +272,6 @@ public class PracticeNewGeneratorTool {
 		var sheetMap = processExcelFile(metaScheduleFileName, rng);
 		var outputList = generateSchedule(startDate, endDate, sheetMap);
 
-		for (var x : outputList) {
-			logger.debug(x.toString());
-		}
-
 		var schedulePath = Path.of(generationPathString, "schedule.csv");
 		WriteProcessor.writeTable(new ArrayList<IWritableTable>(outputList), schedulePath);
 
@@ -379,6 +395,15 @@ public class PracticeNewGeneratorTool {
 	private void doFinalization() {
 		// TODO Auto-generated method stub
 		logger.warn("### FINALIZATION NOT IMPLEMENTED");
+
+		// copy old-reference publication-history folder
+		// write new publication record
+		// copy publication history to instructions/ and new-instructions/
+		// delete old-reference
+		// copy generationPath to reference
+		// copy new-instructions to all REMOTE publication sinks
+		// copy generation to all REMOTE archive sinks
+		// notify folks via email
 	}
 
 	private Map<String, List<InternalRecord>> processExcelFile(String metaScheduleFileName, Random rng) {

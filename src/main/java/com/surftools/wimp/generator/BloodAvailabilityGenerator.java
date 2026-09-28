@@ -66,9 +66,9 @@ public class BloodAvailabilityGenerator extends AbstractBasePracticeGenerator {
 		var isExercise = true;
 		var formDateTime = NA;
 
-		var dateRng = getRandom(date.toString());
+		setRandomSeed(date.toString());
 
-		var facilityAddress = String.valueOf(dateRng.nextInt(1000, 10_000)) + " " + facilityAddressChooser.next();
+		var facilityAddress = String.valueOf(baseRng.nextInt(1000, 10_000)) + " " + facilityAddressChooser.next();
 		var facilityContactName = data.nameChooser.next();
 		var facilityPhoneNumber = data.getPhoneNumber();
 

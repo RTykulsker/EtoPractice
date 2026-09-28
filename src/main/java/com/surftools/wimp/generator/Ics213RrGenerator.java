@@ -31,7 +31,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Random;
 
 import com.surftools.utils.BucketChooser;
 import com.surftools.wimp.message.ExportedMessage;
@@ -47,7 +46,6 @@ public class Ics213RrGenerator extends AbstractBasePracticeGenerator {
 	private static boolean isInitialized = false;
 	private BucketChooser<ResourceItem> santaChooser;
 	private BucketChooser<BucketChooser<ResourceItem>> resourceChooserChooser;
-	private Random dateRng;
 
 	@Override
 	public void initialize(IConfigurationManager cm) {
@@ -82,7 +80,7 @@ public class Ics213RrGenerator extends AbstractBasePracticeGenerator {
 
 	@Override
 	public Ics213RRMessage generateMessage(LocalDate date, ScheduleRecord schedule) {
-		dateRng = getRandom(date.toString());
+		setRandomSeed(date.toString());
 		final int nLineItems = 3;
 		Ics213RRMessage.setLineItemsToDisplay(nLineItems);
 
@@ -93,7 +91,7 @@ public class Ics213RrGenerator extends AbstractBasePracticeGenerator {
 		var organization = "EmComm Training Organization";
 		var lineItems = getLineItems(date, nLineItems, null, null, schedule);
 		var delivery = data.deliveryChooser.next();
-		var substitutes = dateRng.nextBoolean() ? "substitute as appropriate" : "no substitutes allowed";
+		var substitutes = baseRng.nextBoolean() ? "substitute as appropriate" : "no substitutes allowed";
 		var requestedBy = data.doubleNameChooser.next() + " / " + data.shortRoleChooser.next();
 		var priority = data.priorityChooser.next();
 		var approvedBy = data.doubleNameChooser.next();
@@ -167,13 +165,13 @@ public class Ics213RrGenerator extends AbstractBasePracticeGenerator {
 		var minQty = minInt == null ? 1 : minInt.intValue();
 		var maxQty = maxInt == null ? 100 : maxInt.intValue();
 
-		var timeString = dateRng.nextInt(10, 18) + ":00";
+		var timeString = baseRng.nextInt(10, 18) + ":00";
 
 		for (var i = 0; i < Ics213RRMessage.MAX_LINE_ITEMS; ++i) {
 			if (i < desiredCount) {
 				var resource = chooser.next();
 				if (resource.qty.equals("0")) {
-					var qty = String.valueOf(dateRng.nextInt(minQty, maxQty));
+					var qty = String.valueOf(baseRng.nextInt(minQty, maxQty));
 					resource = new ResourceItem(resource.key, qty, resource.kind, resource.type, resource.description);
 				}
 				var lineItem = new LineItem(resource.qty, resource.kind, resource.type, resource.description, //

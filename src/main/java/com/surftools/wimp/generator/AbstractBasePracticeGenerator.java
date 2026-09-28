@@ -49,7 +49,7 @@ public abstract class AbstractBasePracticeGenerator implements IGenerator {
 	protected IConfigurationManager cm;
 	protected PracticeData data;
 	protected Random baseRng;
-	private String rngSeed;
+	private String baseSeed;
 
 	protected static final String NA = "n/a";
 	protected static final String NL = "\n";
@@ -67,18 +67,22 @@ public abstract class AbstractBasePracticeGenerator implements IGenerator {
 		if (!isInitialized) {
 			this.cm = cm;
 
-			rngSeed = cm.getAsString(Key.GENERATOR_RNG_SEED, "2025");
-			baseRng = new Random(rngSeed.hashCode());
+			baseSeed = cm.getAsString(Key.GENERATOR_RNG_SEED, "2025");
+			baseRng = new Random(baseSeed.hashCode());
 			data = new PracticeData(baseRng);
 
 			isInitialized = true;
 		}
 	}
 
-	protected Random getRandom(String exerciseDate) {
-		var rng = new Random((rngSeed.hashCode() << 32) + exerciseDate.hashCode());
-		return rng;
+	protected void setRandomSeed(String exerciseDate) {
+		baseRng.setSeed(baseSeed.hashCode() << 32 + exerciseDate.hashCode());
 	}
+
+//	protected Random getRandom(String exerciseDate) {
+//		var rng = new Random((baseSeed.hashCode() << 32) + exerciseDate.hashCode());
+//		return rng;
+//	}
 
 	protected String makeMessageId(String prefix, LocalDateTime dateTime) {
 		final var dtf = DateTimeFormatter.ofPattern("MMddHHmmss");

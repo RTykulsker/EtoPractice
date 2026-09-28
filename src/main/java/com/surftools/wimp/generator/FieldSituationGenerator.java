@@ -48,7 +48,7 @@ public class FieldSituationGenerator extends AbstractBasePracticeGenerator {
 	public FieldSituationMessage generateMessage(LocalDate date, ScheduleRecord schedule) {
 		var subject = "//WL2K R/ Routine/ Field Situation Report";
 		var exportedMessage = makeExportedMessage(date, subject);
-		var dateRng = getRandom(date.toString());
+		setRandomSeed(date.toString());
 
 		var organization = "EmComm Training Organization";
 		var precedence = "R/ Routine";
@@ -69,7 +69,7 @@ public class FieldSituationGenerator extends AbstractBasePracticeGenerator {
 		final var YES = "YES";
 		final var NO = "NO";
 		final var UNK = "Unknown - N/A";
-		var statusChooser = new BucketChooser<String>(List.of(YES, NO, UNK), dateRng);
+		var statusChooser = new BucketChooser<String>(List.of(YES, NO, UNK), baseRng);
 
 		var landlineStatus = statusChooser.next();
 		var landlineComments = landlineStatus.equals(NO) ? "CenturyLink" : "";

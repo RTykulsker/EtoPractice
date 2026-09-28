@@ -70,7 +70,7 @@ public class Hics259Generator extends AbstractBasePracticeGenerator {
 
 	@Override
 	public Hics259Message generateMessage(LocalDate date, ScheduleRecord schedule) {
-		dateRng = getRandom(date.toString());
+		setRandomSeed(date.toString());
 
 		var incidentName = data.getExerciseId(date);
 		var facilityName = hospitalNameChooser.next();
