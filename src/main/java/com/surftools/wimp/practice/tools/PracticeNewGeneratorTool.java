@@ -209,12 +209,6 @@ public class PracticeNewGeneratorTool {
 			System.exit(1);
 		}
 
-		if (enableFinalize) {
-			// TODO; if can't initialize, exit
-
-			logger.warn("### FINALIZATION NOT IMPLEMENTED");
-		}
-
 		var rngSeedString = cm.getAsString(Key.GENERATOR_RNG_SEED, "2025");
 		var rngSeed = Long.valueOf(rngSeedString);
 		logger.info("rngSeed: " + rngSeed);
@@ -390,21 +384,23 @@ public class PracticeNewGeneratorTool {
 				} // end try over stream
 			} // end if before legacyDate
 		} // end loop over schedules
-	}
+	} // end function generateExercises
 
 	private void doFinalization() {
-		// TODO Auto-generated method stub
-		logger.warn("### FINALIZATION NOT IMPLEMENTED");
+		logger.info("### BEGIN FINALIZATION");
 
 		// copy old-reference publication-history folder
 		// write new publication record
 		// copy publication history to instructions/ and new-instructions/
 		// delete old-reference
 		// copy generationPath to reference
+		// copy schedule.csv to resources
 		// copy new-instructions to all REMOTE publication sinks
 		// copy generation to all REMOTE archive sinks
 		// notify folks via email
-	}
+
+		logger.info("### END FINALIZATION");
+	} // end function doFinalization
 
 	private Map<String, List<InternalRecord>> processExcelFile(String metaScheduleFileName, Random rng) {
 		logger.info("processing Excel file: " + metaScheduleFileName);

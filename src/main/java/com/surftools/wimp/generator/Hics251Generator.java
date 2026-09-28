@@ -34,7 +34,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 
 import com.surftools.utils.BucketChooser;
 import com.surftools.utils.location.LatLongPair;
@@ -49,7 +48,6 @@ public class Hics251Generator extends AbstractBasePracticeGenerator {
 
 	private boolean isInitialized = false;
 	private BucketChooser<String> hospitalNameChooser;
-	private Random dateRng;
 	private BucketChooser<String> departmentNameChooser;
 	private BucketChooser<StatusType> statusTypeChooser;
 	private BucketChooser<String> remarksChooser;
@@ -89,10 +87,10 @@ public class Hics251Generator extends AbstractBasePracticeGenerator {
 		// HICS-251 My Incident, my facility, 2026-08-24 19:15
 		var subject = "HICS-251 " + incidentName + ", " + facilityName + ", " + date.toString() + " 12:00";
 		var exportedMessage = makeExportedMessage(date, subject);
-		var pageNumber = String.valueOf(dateRng.nextInt(1, 4));
-		var pageTotal = String.valueOf(Integer.parseInt(pageNumber) + dateRng.nextInt(0, 4));
+		var pageNumber = String.valueOf(baseRng.nextInt(1, 4));
+		var pageTotal = String.valueOf(Integer.parseInt(pageNumber) + baseRng.nextInt(0, 4));
 
-		var operationalPeriod = String.valueOf(dateRng.nextInt(1, 3));
+		var operationalPeriod = String.valueOf(baseRng.nextInt(1, 3));
 		var windowOpenDate = date.minusDays(5);
 		var windowCloseDate = date.plusDays(1);
 
@@ -105,7 +103,7 @@ public class Hics251Generator extends AbstractBasePracticeGenerator {
 		var departmentName = departmentNameChooser.next();
 		var hospitalEntry = data.hospitalEntryChooser.next();
 		var contactNumber = hospitalEntry.contactPhone();
-		var streetAddress = dateRng.nextInt(1, 10) + hospitalEntry.address();
+		var streetAddress = baseRng.nextInt(1, 10) + hospitalEntry.address();
 		var city = hospitalEntry.city();
 		var state = hospitalEntry.state();
 		var zip = hospitalEntry.zip();
@@ -135,7 +133,7 @@ public class Hics251Generator extends AbstractBasePracticeGenerator {
 		var m = (Hics251Message) message;
 
 		var sb = new StringBuilder(); // exercise instructions
-		sb.append("Task: Complete a HICS 251 – FACILITY SYSTEM STATUS REPORT Message" + NL + NL);
+		sb.append("Complete a HICS 251 – FACILITY SYSTEM STATUS REPORT Message" + NL + NL);
 		sb.append(INDENT + "Incident name: " + m.incidentName + NL);
 		sb.append(INDENT + "Page: " + m.pageNumber + " Of " + m.pageTotal + NL);
 		sb.append(NL);

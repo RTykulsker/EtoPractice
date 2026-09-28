@@ -33,7 +33,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 
 import com.surftools.utils.BucketChooser;
 import com.surftools.wimp.message.ExportedMessage;
@@ -47,7 +46,6 @@ public class Hics259Generator extends AbstractBasePracticeGenerator {
 	private boolean isInitialized = false;
 	private Map<CasualtyType, BucketChooser<String>> casualtyTypeChooserMap;
 	private BucketChooser<String> hospitalNameChooser;
-	private Random dateRng;
 
 	@Override
 	public void initialize(IConfigurationManager cm) {
@@ -77,7 +75,7 @@ public class Hics259Generator extends AbstractBasePracticeGenerator {
 		var subject = "HICS-259 HOSPITAL CASUALTY/FATALITY REPORT-" + incidentName;
 		var exportedMessage = makeExportedMessage(date, subject);
 
-		var operationalPeriod = String.valueOf(dateRng.nextInt(1, 3));
+		var operationalPeriod = String.valueOf(baseRng.nextInt(1, 3));
 		var windowOpenDate = date.minusDays(5);
 		var windowCloseDate = date.plusDays(1);
 
@@ -105,7 +103,7 @@ public class Hics259Generator extends AbstractBasePracticeGenerator {
 		var m = (Hics259Message) message;
 
 		var sb = new StringBuilder(); // exercise instructions
-		sb.append("Task: Complete an HICS 259 Hospital Casualty/Fatality Report Message" + NL + NL);
+		sb.append("Complete an HICS 259 Hospital Casualty/Fatality Report Message" + NL + NL);
 		sb.append(INDENT + "Incident name: " + m.incidentName + NL);
 		sb.append(INDENT + "Date: (click in box and accept date)" + NL);
 		sb.append(INDENT + "Time: (click in box and accept time)" + NL);
@@ -115,17 +113,17 @@ public class Hics259Generator extends AbstractBasePracticeGenerator {
 		sb.append(INDENT + "Operational Period Time From: " + m.opFromTime + NL);
 		sb.append(INDENT + "Operational Period Time To: " + m.opToTime + NL);
 
-		sb.append("Number Of Casualties" + NL);
+		sb.append(INDENT + "Number Of Casualties" + NL);
 
 		for (var key : Hics259Message.CASUALTY_KEYS) {
 			var entry = m.casualtyMap.get(key);
-			sb.append(INDENT + key + NL);
-			sb.append(INDENT2 + "Adult: " + entry.adultCount() + NL);
-			sb.append(INDENT2 + "Pediatric: " + entry.childCount() + NL);
-			sb.append(INDENT2 + "Comments: " + entry.comment() + NL);
+			sb.append(INDENT2 + key + NL);
+			sb.append(INDENT3 + "Adult: " + entry.adultCount() + NL);
+			sb.append(INDENT3 + "Pediatric: " + entry.childCount() + NL);
+			sb.append(INDENT3 + "Comments: " + entry.comment() + NL);
 		}
-		sb.append("Prepared by: " + m.patientTrackingManager + NL);
-		sb.append("Facility Name: " + m.facilityName + NL);
+		sb.append(INDENT + "Prepared by: " + m.patientTrackingManager + NL);
+		sb.append(INDENT + "Facility Name: " + m.facilityName + NL);
 
 		sb.append(generateInstructionTail(enableFinalize, now));
 
@@ -238,7 +236,7 @@ public class Hics259Generator extends AbstractBasePracticeGenerator {
 			"Transferred - discharge shelter coordination");
 
 	private String rng(int min, int max) {
-		return String.valueOf(dateRng.nextInt(min, max));
+		return String.valueOf(baseRng.nextInt(min, max));
 	}
 
 	public Map<String, CasualtyEntry> makeCasualtyMap() {
