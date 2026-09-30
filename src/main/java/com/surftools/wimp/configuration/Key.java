@@ -38,25 +38,14 @@ import com.surftools.wimp.utils.config.IConfigurationKey;
 public enum Key implements IConfigurationKey {
 	PATH_REFERENCE("path.reference"), // dir where reference dirs/files are
 	PATH_EXERCISES("path.exercises"), // dir where we find input/, output/ and published/
-	PATH_RESOUCE_CONTENT("path.resourceContent"), // FILE for ICS-213 RR generation
 	PATH_NAG_CONTENT("path.nagContent"), // path to FILE where end-of-year nag is
 	PATH_PUBLICATION("path.publication"), // path to remote folder for publishing results
 	PATH_ARCHIVE("path.archive"), // path to remote folder for archiving entire exercise
 	PATH_SCHEDULE("path.schedule"), // path to the expanded schedule.csv
-	PATH_META_SCHEDULE("path.metaSchedule"), // path to the meta-schedule.xlsx
 	PATH_DOGFOOD("path.dogfood"), // path to csv of eto volunteers
-	PATH_REFERENCE_HISTORY("path.reference.history"), // path to all generated references
 	PATH_HINT_CONTENT("path.hintContent"), // path to FILE where hints for better messages are stored
 
-	PATH_REFERENCE_LEGACY("path.reference.legacy"), // path to read-only legacy reference
-
 	MAP_TEMPLATE_METHOD("map.template.method"), // "fast" or "slow", default "fast"
-
-	GENERATOR_RNG_SEED("generator.rngSeed"), // to get consistent results
-	GENERATOR_N_YEARS("generator.nYears"), // number of years to generate
-	GENERATOR_INSTRUCTION_URL("generator.instruction.url"), // url at the bottom of each instruction
-	GENERATOR_START_DATE("generator.start.date"), // date to start generating instructions
-	GENERATOR_LEGACY_DATE("generator.legacy.date"), // date, before which, we copy from referency-legacy
 
 	ENABLE_FINALIZE("enable.finalize"), // set to true to enable, published, archive, snapshot to cloud, sends email,
 										// set on command line
@@ -110,7 +99,6 @@ public enum Key implements IConfigurationKey {
 	WINLINK_NOTIFICATION_SENDER("winlink.notification.sender"), // from address
 	WINLINK_NOTIFICATION_HINT_ON_PERFECT("winlink.notification.hint.OnPerfect"), // to send hints even on perfect
 																					// messages
-
 	OUTBOUND_MESSAGE_SOURCE("outboundMessage.source"), // mbo address
 	OUTBOUND_MESSAGE_SENDER("outboundMessage.sender"), // from address
 	OUTBOUND_MESSAGE_SUBJECT("outboundMessage.subject"), // message subject

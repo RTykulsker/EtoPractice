@@ -29,9 +29,9 @@ package com.surftools.wimp.practice.tools;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -42,9 +42,19 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Random;
 import java.util.stream.Stream;
 
+import javax.mail.Authenticator;
+import javax.mail.Message;
+import javax.mail.PasswordAuthentication;
+import javax.mail.Session;
+import javax.mail.Transport;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
+
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
@@ -59,7 +69,7 @@ import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.surftools.utils.BucketChooser;
 import com.surftools.utils.FileUtils;
-import com.surftools.wimp.configuration.Key;
+import com.surftools.wimp.configuration.GenKey;
 import com.surftools.wimp.core.IWritableTable;
 import com.surftools.wimp.core.MessageType;
 import com.surftools.wimp.generator.IGenerator;
@@ -123,12 +133,16 @@ import com.surftools.wimp.utils.config.impl.PropertyFileConfigurationManager;
  * new-instructions/ copy/write a marker file in reference: legacy.txt,
  * generated-TS.txt, published-TS.txt
  * 
- * if finalizing: 1) remove old reference/ copy reference-published-TS/ to
- * reference/ 2) copy new-instructions/ to all REMOTE published sinks 3) copy
- * reference-published-TS/ to all REMOTE archive sinks
+ * if finalizing:
+ * 
+ * 1) remove old reference/ copy reference-published-TS/ to reference/
+ * 
+ * 2) copy new-instructions/ to all REMOTE published sinks
+ * 
+ * 3) copy reference-published-TS/ to all REMOTE archive sinks
  */
-public class PracticeNewGeneratorTool {
-	private static final Logger logger = LoggerFactory.getLogger(PracticeNewGeneratorTool.class);
+public class PracticeGeneratorTool {
+	private static final Logger logger = LoggerFactory.getLogger(PracticeGeneratorTool.class);
 
 	private static final String SHEET_SCHEDULE = "schedule";
 	private static final String SHEET_OVERRIDE = "override";
@@ -159,11 +173,12 @@ public class PracticeNewGeneratorTool {
 	private Path newInstructionsPath; // path to where we conditionally write instructions
 	private Path oldReferencePath;
 	private String oldReferencePathString;
+	private String commitMessage;
 
 	private Random rng;
 
 	public static void main(String[] args) {
-		var app = new PracticeNewGeneratorTool();
+		var app = new PracticeGeneratorTool();
 		CmdLineParser parser = new CmdLineParser(app);
 		try {
 			parser.parseArgument(args);
@@ -189,7 +204,7 @@ public class PracticeNewGeneratorTool {
 	}
 
 	private void initialize() throws Exception {
-		cm = new PropertyFileConfigurationManager(configurationFileName, Key.values());
+		cm = new PropertyFileConfigurationManager(configurationFileName, GenKey.values());
 
 		var timestampFormatter = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
 		now = LocalDateTime.now();
@@ -198,57 +213,79 @@ public class PracticeNewGeneratorTool {
 		logger.info("enableFinalize: " + enableFinalize);
 		logger.info("timestamp: " + timestampString);
 
-		var referencePathString = cm.getAsString(Key.PATH_REFERENCE);
+		var referencePathString = cm.getAsString(GenKey.PATH_REFERENCE);
 		var referencePath = Path.of(referencePathString);
 		logger.info("referencePath: " + referencePath.toString());
 
-		var metaScheduleFileName = cm.getAsString(Key.PATH_META_SCHEDULE);
+		var metaScheduleFileName = cm.getAsString(GenKey.PATH_META_SCHEDULE);
 		var metaScheduleFile = new File(metaScheduleFileName);
 		if (!metaScheduleFile.exists()) {
-			logger.error(Key.PATH_META_SCHEDULE + " file: " + metaScheduleFileName + " not found. Exiting!");
+			logger.error(GenKey.PATH_META_SCHEDULE + " file: " + metaScheduleFileName + " not found. Exiting!");
 			System.exit(1);
 		}
 
-		var rngSeedString = cm.getAsString(Key.GENERATOR_RNG_SEED, "2025");
+		var rngSeedString = cm.getAsString(GenKey.GENERATOR_RNG_SEED, "2025");
 		var rngSeed = Long.valueOf(rngSeedString);
 		logger.info("rngSeed: " + rngSeed);
 		rng = new Random(rngSeed);
 
-		oldReferencePathString = cm.getAsString(Key.PATH_REFERENCE);
+		oldReferencePathString = cm.getAsString(GenKey.PATH_REFERENCE);
 		oldReferencePath = Path.of(oldReferencePathString);
 		var oldReferenceDir = oldReferencePath.toFile();
 		if (!oldReferenceDir.exists()) {
-			logger.error(Key.PATH_REFERENCE + ": " + oldReferencePathString + " doesn't exist. Exiting!");
+			logger.error(GenKey.PATH_REFERENCE + ": " + oldReferencePathString + " doesn't exist. Exiting!");
 			System.exit(1);
 		}
 
+		getCommitMessage();
 	}
 
-	private List<ScheduleRecord> makeSchedule() throws IOException {
-		var startDateString = cm.getAsString(Key.GENERATOR_START_DATE, "2025-01-01");
+	private void getCommitMessage() throws Exception {
+		var commitMessagePathString = cm.getAsString(GenKey.PATH_COMMIT_MESSAGE);
+		commitMessage = Files.readString(Path.of(commitMessagePathString));
+		logger.info("commitMessage: " + commitMessage);
+		var commitSha1Hash = DigestUtils.sha1Hex(commitMessage);
+
+		var oldHistoryPath = Path.of(oldReferencePathString, "publication-history");
+		var oldHistoryDir = oldHistoryPath.toFile();
+		var files = oldHistoryDir.listFiles();
+
+		for (var file : files) {
+			var path = file.toPath();
+			var fileContents = Files.readString(path);
+			var fileSha1Hash = DigestUtils.sha1Hex(fileContents);
+			if (commitSha1Hash.equals(fileSha1Hash)) {
+				logger.error("### commit message is not unique. Collides with: " + path.toString() + ". Exiting!");
+				System.exit(1);
+			}
+		}
+	}
+
+	private List<ScheduleRecord> makeSchedule() throws Exception {
+		var startDateString = cm.getAsString(GenKey.GENERATOR_START_DATE, "2025-01-01");
 		startDate = LocalDate.parse(startDateString);
 		logger.info("startDate: " + startDate.toString());
 
-		var nYears = cm.getAsInt(Key.GENERATOR_N_YEARS, 5);
+		var nYears = cm.getAsInt(GenKey.GENERATOR_N_YEARS, 5);
 		logger.info("nYears: " + nYears);
 
 		endDate = startDate.plusYears(nYears);
 		logger.info("endDate: " + endDate);
 
-		var legecyDateString = cm.getAsString(Key.GENERATOR_LEGACY_DATE);
+		var legecyDateString = cm.getAsString(GenKey.GENERATOR_LEGACY_DATE);
 		if (legecyDateString == null || legecyDateString.strip().isEmpty()) {
-			logger.error(Key.GENERATOR_LEGACY_DATE.toString() + " must be provided");
+			logger.error(GenKey.GENERATOR_LEGACY_DATE.toString() + " must be provided");
 			System.exit(1);
 		}
 
 		legacyDate = LocalDate.parse(legecyDateString);
 		logger.info("legacyDate: " + legacyDate.toString());
 
-		var historyPathString = cm.getAsString(Key.PATH_REFERENCE_HISTORY);
+		var historyPathString = cm.getAsString(GenKey.PATH_REFERENCE_HISTORY);
 		var historyPath = Path.of(historyPathString);
 		var historyDir = historyPath.toFile();
 		if (!historyDir.exists() || !historyDir.isDirectory()) {
-			logger.error(Key.PATH_REFERENCE_HISTORY.toString() + " doesn't exist or isn't a directory. Exiting!");
+			logger.error(GenKey.PATH_REFERENCE_HISTORY.toString() + " doesn't exist or isn't a directory. Exiting!");
 			System.exit(1);
 		}
 
@@ -258,10 +295,10 @@ public class PracticeNewGeneratorTool {
 
 		makeDirectories();
 
-		var metaSchedulePath = Path.of(cm.getAsString(Key.PATH_META_SCHEDULE));
+		var metaSchedulePath = Path.of(cm.getAsString(GenKey.PATH_META_SCHEDULE));
 		Files.copy(metaSchedulePath, Path.of(generationPathString, metaSchedulePath.getFileName().toString()));
 
-		var metaScheduleFileName = cm.getAsString(Key.PATH_META_SCHEDULE);
+		var metaScheduleFileName = cm.getAsString(GenKey.PATH_META_SCHEDULE);
 
 		var sheetMap = processExcelFile(metaScheduleFileName, rng);
 		var outputList = generateSchedule(startDate, endDate, sheetMap);
@@ -277,9 +314,12 @@ public class PracticeNewGeneratorTool {
 		return outputList;
 	}
 
-	private void makeDirectories() {
+	private void makeDirectories() throws Exception {
 		logger.info("generating exercises in " + generationPathString);
 		FileUtils.makeDirIfNeeded(generationPath);
+
+		Files.copy(Path.of(cm.getAsString(GenKey.PATH_COMMIT_MESSAGE)),
+				Path.of(generationPathString, "commit-message.txt"));
 
 		instructionsPath = Path.of(generationPathString, "instructions");
 		FileUtils.makeDirIfNeeded(instructionsPath);
@@ -342,7 +382,7 @@ public class PracticeNewGeneratorTool {
 
 				var markerString = messageType.toString() + "-" + ((enableFinalize) ? "published" : "generated") + "-"
 						+ timestampString + ".txt";
-				Files.writeString(Path.of(referencePath.toString(), markerString), "");
+				Files.writeString(Path.of(referencePath.toString(), markerString), commitMessage);
 
 				var ord = PracticeUtils.getOrdinalDayOfWeek(date);
 				var ordName = PracticeUtils.getOrdinalLabel(ord);
@@ -386,18 +426,40 @@ public class PracticeNewGeneratorTool {
 		} // end loop over schedules
 	} // end function generateExercises
 
-	private void doFinalization() {
+	private void doFinalization() throws Exception {
 		logger.info("### BEGIN FINALIZATION");
 
 		// copy old-reference publication-history folder
+		var oldPubHistoryPath = Path.of(oldReferencePathString, "publication-history");
+		var newPubHistoryPath = Path.of(generationPathString, "publication-history");
+		FileUtils.copyDirectory(oldPubHistoryPath, newPubHistoryPath);
+		logger.info("copied " + oldPubHistoryPath.toString() + " to " + newPubHistoryPath);
+
 		// write new publication record
+		var markerString = "published-" + timestampString + ".txt";
+		Files.writeString(Path.of(newPubHistoryPath.toString(), markerString), commitMessage);
+		logger.info("wrote publication record: " + markerString + " to " + newPubHistoryPath.toString());
+
 		// copy publication history to instructions/ and new-instructions/
+		FileUtils.copyDirectory(newPubHistoryPath, Path.of(instructionsPath.toString(), "publication-history"));
+		FileUtils.copyDirectory(newPubHistoryPath, Path.of(newInstructionsPath.toString(), "publication-history"));
+		logger.info("copied publication-history to instructions/ and new-instructions/");
+
+		// copy schedule.csv to resources
+		var oldSchedulePathString = cm.getAsString(GenKey.PATH_SCHEDULE);
+		Files.copy(Path.of(generationPathString, "schedule.csv"), Path.of(oldSchedulePathString),
+				StandardCopyOption.REPLACE_EXISTING);
+		logger.info("copied schedule.csv to " + oldSchedulePathString);
+
+		// copy new-instructions to all REMOTE publication sinks
+
+		// copy generation to all REMOTE archive sinks
+
+		// notify folks via email
+		sendEmailNotification();
+
 		// delete old-reference
 		// copy generationPath to reference
-		// copy schedule.csv to resources
-		// copy new-instructions to all REMOTE publication sinks
-		// copy generation to all REMOTE archive sinks
-		// notify folks via email
 
 		logger.info("### END FINALIZATION");
 	} // end function doFinalization
@@ -638,5 +700,58 @@ public class PracticeNewGeneratorTool {
 
 	record InternalRecord(String name, int ordinalDayOfWeek, DayOfWeek dayOfWeek, Month month, Integer year,
 			BucketChooser<MessageType> chooser, boolean isPractice, String extraData) {
+	}
+
+	private void sendEmailNotification() throws Exception {
+		// TODO Auto-generated method stub
+
+		String username = cm.getAsString(GenKey.EMAIL_NOTIFICATION_FROM);
+
+		// see myaccount.google.com/apppasswords
+		String appPassword = Files.readString(Path.of(cm.getAsString(GenKey.PATH_EMAIL_PASSWORD)));
+
+		// TODO
+		String subject = "tbd";
+		String body = "tbd";
+
+		Properties props = new Properties();
+		props.put("mail.smtp.auth", "true");
+		props.put("mail.smtp.starttls.enable", "true");
+		props.put("mail.smtp.host", "smtp.gmail.com");
+		props.put("mail.smtp.port", "587");
+
+		Session session = Session.getInstance(props, new Authenticator() {
+			@Override
+			protected PasswordAuthentication getPasswordAuthentication() {
+				return new PasswordAuthentication(username, appPassword);
+			}
+		});
+
+		var from = cm.getAsString(GenKey.EMAIL_NOTIFICATION_FROM);
+		logger.info("email notification from: " + from);
+
+		var recipients = cm.getAsString(GenKey.EMAIL_NOTIFICATION_TO);
+		logger.info("email notification to: " + recipients);
+
+//		String[] recipients = {
+//			    "a@example.com",
+//			    "b@example.com",
+//			    "c@example.com"
+//			};
+//
+//			message.setRecipients(
+//			    Message.RecipientType.TO,
+//			    InternetAddress.parse(String.join(",", recipients))
+//			);
+
+		Message message = new MimeMessage(session);
+		message.setFrom(new InternetAddress(from));
+		message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(recipients));
+		message.setSubject(subject);
+		message.setText(body);
+
+		Transport.send(message);
+		System.out.println("Email sent.");
+
 	}
 }

@@ -37,7 +37,7 @@ import java.util.Map;
 import java.util.Random;
 
 import com.surftools.utils.location.LatLongPair;
-import com.surftools.wimp.configuration.Key;
+import com.surftools.wimp.configuration.GenKey;
 import com.surftools.wimp.message.ExportedMessage;
 import com.surftools.wimp.utils.config.IConfigurationManager;
 
@@ -67,7 +67,7 @@ public abstract class AbstractBasePracticeGenerator implements IGenerator {
 		if (!isInitialized) {
 			this.cm = cm;
 
-			baseSeed = cm.getAsString(Key.GENERATOR_RNG_SEED, "2025");
+			baseSeed = cm.getAsString(GenKey.GENERATOR_RNG_SEED, "2025");
 			baseRng = new Random(baseSeed.hashCode());
 			data = new PracticeData(baseRng);
 
