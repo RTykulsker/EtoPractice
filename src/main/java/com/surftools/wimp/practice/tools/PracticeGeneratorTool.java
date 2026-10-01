@@ -42,23 +42,11 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Random;
 import java.util.stream.Stream;
 
-import javax.mail.Authenticator;
-import javax.mail.Message;
-import javax.mail.PasswordAuthentication;
-import javax.mail.Session;
-import javax.mail.Transport;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeMessage;
-
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellType;
-import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
@@ -68,6 +56,7 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.surftools.utils.BucketChooser;
+import com.surftools.utils.ExcelUtils;
 import com.surftools.utils.FileUtils;
 import com.surftools.wimp.configuration.GenKey;
 import com.surftools.wimp.core.IWritableTable;
@@ -76,6 +65,7 @@ import com.surftools.wimp.generator.IGenerator;
 import com.surftools.wimp.generator.PracticeUtils;
 import com.surftools.wimp.processors.std.WriteProcessor;
 import com.surftools.wimp.schedule.ScheduleRecord;
+import com.surftools.wimp.service.email.EmailService;
 import com.surftools.wimp.utils.config.IConfigurationManager;
 import com.surftools.wimp.utils.config.impl.PropertyFileConfigurationManager;
 
@@ -257,6 +247,9 @@ public class PracticeGeneratorTool {
 		Files.copy(Path.of(cm.getAsString(GenKey.PATH_COMMIT_MESSAGE)),
 				Path.of(generationPathString, "commit-message.txt"));
 
+		Files.copy(Path.of(cm.getAsString(GenKey.PATH_ROOT), configurationFileName),
+				Path.of(generationPathString, configurationFileName.split("/")[1]));
+
 		instructionsPath = Path.of(generationPathString, "instructions");
 		FileUtils.makeDirIfNeeded(instructionsPath);
 
@@ -392,7 +385,11 @@ public class PracticeGeneratorTool {
 		// copy generation to all REMOTE archive sinks
 
 		// notify folks via email
-		sendEmailNotification();
+		var body = "Date: " + now.toLocalDate().toString() //
+				+ ", Time: " + now.toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "\n" //
+				+ commitMessage;
+
+		EmailService.sendSimpleEmail(cm, "New ETO Practice Instructions published!", body);
 
 		// delete old-reference
 		// copy generationPath to reference
@@ -431,11 +428,11 @@ public class PracticeGeneratorTool {
 					}
 
 					var cnp = "sheet: " + sheetName + ", row: " + rowNumber + ", could not parse ";
-					var name = getStringValue(row, 0);
+					var name = ExcelUtils.getStringValue(row, 0);
 
-					var extraData = getStringValue(row, 6);
+					var extraData = ExcelUtils.getStringValue(row, 6);
 
-					var ordinalString = getStringValue(row, 1);
+					var ordinalString = ExcelUtils.getStringValue(row, 1);
 					int ordinal = -1;
 					try {
 						var d = Double.parseDouble(ordinalString);
@@ -445,7 +442,7 @@ public class PracticeGeneratorTool {
 						System.exit(1);
 					}
 
-					var dowString = getStringValue(row, 2);
+					var dowString = ExcelUtils.getStringValue(row, 2);
 					var dow = DayOfWeek.valueOf(dowString.toUpperCase());
 					if (dow == null) {
 						logger.error(cnp + "Day of Week: " + dowString);
@@ -453,7 +450,7 @@ public class PracticeGeneratorTool {
 					}
 
 					var month = (Month) null;
-					var monthString = getStringValue(row, 3);
+					var monthString = ExcelUtils.getStringValue(row, 3);
 					if (monthString != null && monthString.strip().length() > 0) {
 						try {
 							month = Month.valueOf(monthString);
@@ -467,7 +464,7 @@ public class PracticeGeneratorTool {
 						}
 					}
 
-					var yearString = getStringValue(row, 4);
+					var yearString = ExcelUtils.getStringValue(row, 4);
 					Integer year = null;
 					if (yearString != null && yearString.strip().length() > 1) {
 						try {
@@ -489,7 +486,7 @@ public class PracticeGeneratorTool {
 						}
 					}
 
-					var messageTypesString = getStringValue(row, 5);
+					var messageTypesString = ExcelUtils.getStringValue(row, 5);
 					BucketChooser<MessageType> chooser = null;
 					if (sheetName != SHEET_PROHIBITED) {
 						var messageTypeList = new ArrayList<MessageType>();
@@ -527,43 +524,6 @@ public class PracticeGeneratorTool {
 		}
 
 		return map;
-	}
-
-	protected String getStringValue(Row row, int columnIndex) {
-		Cell cell = row.getCell(columnIndex);
-		if (cell == null) {
-			return "";
-		}
-
-		switch (cell.getCellType()) {
-		case BLANK:
-			return "";
-
-		case BOOLEAN:
-			return Boolean.toString(cell.getBooleanCellValue());
-
-		case FORMULA: {
-			CellType cachedCellType = cell.getCachedFormulaResultType();
-			if (cachedCellType == CellType.STRING) {
-				return cell.getStringCellValue().strip();
-			} else if (cachedCellType == CellType.NUMERIC) {
-				return Double.toString(cell.getNumericCellValue());
-			} else if (cachedCellType == CellType.BOOLEAN) {
-				return Boolean.toString(cell.getBooleanCellValue());
-			}
-		}
-
-		case NUMERIC:
-			return Double.toString(cell.getNumericCellValue());
-
-		case STRING:
-			return cell.getStringCellValue().strip();
-
-		default:
-			logger.error("Unsupported type: " + cell.getCellType().name() + " on row: " + row.getRowNum() + ", col: "
-					+ columnIndex);
-			return "";
-		}
 	}
 
 	protected List<ScheduleRecord> generateSchedule(LocalDate startDate, LocalDate endDate,
@@ -636,43 +596,5 @@ public class PracticeGeneratorTool {
 
 	record InternalRecord(String name, int ordinalDayOfWeek, DayOfWeek dayOfWeek, Month month, Integer year,
 			BucketChooser<MessageType> chooser, boolean isPractice, String extraData) {
-	}
-
-	private void sendEmailNotification() throws Exception {
-		String username = cm.getAsString(GenKey.EMAIL_NOTIFICATION_FROM);
-
-		// see myaccount.google.com/apppasswords
-		String appPassword = Files.readString(Path.of(cm.getAsString(GenKey.PATH_EMAIL_PASSWORD)));
-
-		String subject = "New ETO Practice Instructions published!";
-		String body = "Date: " + now.toLocalDate().toString() //
-				+ ", Time: " + now.toLocalTime().toString() + "\n" //
-				+ commitMessage;
-
-		Properties props = new Properties();
-		props.put("mail.smtp.auth", "true");
-		props.put("mail.smtp.starttls.enable", "true");
-		props.put("mail.smtp.host", "smtp.gmail.com");
-		props.put("mail.smtp.port", "587");
-
-		Session session = Session.getInstance(props, new Authenticator() {
-			@Override
-			protected PasswordAuthentication getPasswordAuthentication() {
-				return new PasswordAuthentication(username, appPassword);
-			}
-		});
-
-		var from = cm.getAsString(GenKey.EMAIL_NOTIFICATION_FROM);
-		var recipients = cm.getAsString(GenKey.EMAIL_NOTIFICATION_TO);
-
-		Message message = new MimeMessage(session);
-		message.setFrom(new InternetAddress(from));
-		message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(recipients));
-		message.setSubject(subject);
-		message.setText(body);
-
-		Transport.send(message);
-		logger.info("Email(s) sent to: " + recipients);
-
 	}
 }
