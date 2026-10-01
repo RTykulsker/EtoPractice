@@ -381,14 +381,20 @@ public class PracticeGeneratorTool {
 		logger.info("copied schedule.csv to " + oldSchedulePathString);
 
 		// copy new-instructions to all REMOTE publication sinks
+		var publishingPathsString = cm.getAsString(GenKey.PATH_PUBLICATION).split(",");
+		for (var publishingPathString : publishingPathsString) {
+			var publishingPath = Path.of(publishingPathString);
+			FileUtils.copyDirectory(newInstructionsPath, publishingPath);
+			logger.info("Published (new) instructions to: " + publishingPathString);
+		}
 
 		// copy generation to all REMOTE archive sinks
 
 		// notify folks via email
-		var body = "Date: " + now.toLocalDate().toString() //
+		var body = "Published Date: " + now.toLocalDate().toString() //
 				+ ", Time: " + now.toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "\n" //
+				+ ", New Instructions (Legacy Date) on or after: " + legacyDate.toString() + "\n" //
 				+ commitMessage;
-
 		EmailService.sendSimpleEmail(cm, "New ETO Practice Instructions published!", body);
 
 		// delete old-reference
