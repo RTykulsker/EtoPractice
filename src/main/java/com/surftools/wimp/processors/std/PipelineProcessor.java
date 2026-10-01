@@ -41,83 +41,82 @@ import com.surftools.wimp.utils.config.IConfigurationManager;
 import com.surftools.wimp.utils.config.impl.PropertyFileConfigurationManager;
 
 public class PipelineProcessor extends AbstractBaseProcessor {
-  private static final Logger logger = LoggerFactory.getLogger(PipelineProcessor.class);
+	private static final Logger logger = LoggerFactory.getLogger(PipelineProcessor.class);
 
-  // the processors that make up the pipeline
-  private List<IProcessor> processors;
+	// the processors that make up the pipeline
+	private List<IProcessor> processors;
 
-  // default no-args constructor
-  public PipelineProcessor() {
-  }
+	// default no-args constructor
+	public PipelineProcessor() {
+	}
 
-  // code-golfing constructor
-  public PipelineProcessor(String configurationFileName) throws Exception {
-    initialize(new PropertyFileConfigurationManager(configurationFileName, Key.values()), null);
-    process();
-    postProcess();
-  }
+	// code-golfing constructor
+	public PipelineProcessor(String configurationFileName) throws Exception {
+		initialize(new PropertyFileConfigurationManager(configurationFileName, Key.values()), null);
+		process();
+		postProcess();
+	}
 
-  @Override
-  public void initialize(IConfigurationManager cm, IMessageManager _mm) {
-    if (_mm == null) {
-      _mm = new MessageManager();
-    }
-    super.initialize(cm, _mm);
+	@Override
+	public void initialize(IConfigurationManager cm, IMessageManager _mm) {
+		if (_mm == null) {
+			_mm = new MessageManager();
+		}
+		super.initialize(cm, _mm);
 
-    var stdin = cm.getAsString(Key.PIPELINE_STDIN, "Read,Classifier,Acknowledgement,Deduplication,Filter");
-    var main = cm.getAsString(Key.PIPELINE_MAIN, ""); // exercise-specific processors go here!
-    var stdout = cm.getAsString(Key.PIPELINE_STDOUT, "Write,MissingDestination,Summary");
-    var processorString = String.join(",", List.of(stdin, main, stdout));
-    var processorNames = Arrays.stream(processorString.split(",")).filter(s -> isValidProcessorName(s)).toList();
-    processors = processorNames.stream().map(pn -> findProcessor(pn)).toList();
-    logger.info("Processors: " + String.join(",", processorNames));
+		var stdin = cm.getAsString(Key.PIPELINE_STDIN, "Read,Classifier,Acknowledgement,Deduplication,Filter");
+		var main = cm.getAsString(Key.PIPELINE_MAIN, ""); // exercise-specific processors go here!
+		var stdout = cm.getAsString(Key.PIPELINE_STDOUT, "Write,MissingDestination,Summary");
+		var processorString = String.join(",", List.of(stdin, main, stdout));
+		var processorNames = Arrays.stream(processorString.split(",")).filter(s -> isValidProcessorName(s)).toList();
+		processors = processorNames.stream().map(pn -> findProcessor(pn)).toList();
+		logger.info("Processors: " + String.join(",", processorNames));
 
-    processors.stream().forEach(p -> p.initialize(cm, mm));
-  }
+		processors.stream().forEach(p -> p.initialize(cm, mm));
+	}
 
-  @Override
-  public void process() {
-    processors.stream().forEach(p -> p.process());
-  }
+	@Override
+	public void process() {
+		processors.stream().forEach(p -> p.process());
+	}
 
-  @Override
-  public void postProcess() {
-    processors.stream().forEach(p -> p.postProcess());
-  }
+	@Override
+	public void postProcess() {
+		processors.stream().forEach(p -> p.postProcess());
+	}
 
-  private boolean isValidProcessorName(String s) {
-    return s != null && !s.isEmpty() && !s.equals("(null");
-  }
+	private boolean isValidProcessorName(String s) {
+		return s != null && !s.isEmpty() && !s.equals("(null");
+	}
 
-  private IProcessor findProcessor(String processorName) {
-    // this seems a good balance between streams and code-golfing
-    final var PREFIXES = List.of( //
-        "com.surftools.wimp.processors.std.", //
-        "com.surftools.wimp.practice.processors.", //
-        "com.surftools.wimp.practice.processors.exercise.", //
-        "");
-    final var SUFFIXES = List.of(//
-        "Processor", //
-        "PracticeProcessor", //
-        "");
+	private IProcessor findProcessor(String processorName) {
+		// this seems a good balance between streams and code-golfing
+		final var PREFIXES = List.of( //
+				"com.surftools.wimp.processors.std.", //
+				"com.surftools.wimp.processors.practice.", //
+				"");
+		final var SUFFIXES = List.of(//
+				"Processor", //
+				"PracticeProcessor", //
+				"");
 
-    IProcessor processor = null;
-    for (var prefix : PREFIXES) {
-      for (var suffix : SUFFIXES) {
-        var className = prefix + processorName + suffix;
-        logger.debug("searching for className: " + className);
-        try {
-          var clazz = Class.forName(className);
-          if (clazz != null) {
-            processor = (IProcessor) clazz.getDeclaredConstructor().newInstance();
-            logger.debug("found  className: " + className);
-            return processor;
-          }
-        } catch (Exception e) {
-          ;
-        }
-      } // end loop over suffixes
-    } // end loop over prefixes
-    throw new RuntimeException("Could not find a processor for: " + processorName);
-  }
+		IProcessor processor = null;
+		for (var prefix : PREFIXES) {
+			for (var suffix : SUFFIXES) {
+				var className = prefix + processorName + suffix;
+				logger.debug("searching for className: " + className);
+				try {
+					var clazz = Class.forName(className);
+					if (clazz != null) {
+						processor = (IProcessor) clazz.getDeclaredConstructor().newInstance();
+						logger.debug("found  className: " + className);
+						return processor;
+					}
+				} catch (Exception e) {
+					;
+				}
+			} // end loop over suffixes
+		} // end loop over prefixes
+		throw new RuntimeException("Could not find a processor for: " + processorName);
+	}
 }

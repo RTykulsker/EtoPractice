@@ -55,285 +55,286 @@ import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import ch.qos.logback.core.FileAppender;
 
 public class PracticeProcessorTool {
-  public static final String REFERENCE_MESSAGE_KEY = "referenceMessage";
-  public static final String INSTRUCTIONS_KEY = "instructions";
-  public static final String CONFIGURATION_FILE_KEY = "configurationFileName";
+	public static final String REFERENCE_MESSAGE_KEY = "referenceMessage";
+	public static final String INSTRUCTIONS_KEY = "instructions";
+	public static final String CONFIGURATION_FILE_KEY = "configurationFileName";
 
-  static {
-    System.setProperty("logback.configurationFile", "resources/logback.xml");
-  }
+	static {
+		System.setProperty("logback.configurationFile", "resources/logback.xml");
+	}
 
-  private static final Logger logger = LoggerFactory.getLogger(PracticeProcessorTool.class);
+	private static final Logger logger = LoggerFactory.getLogger(PracticeProcessorTool.class);
 
-  @Option(name = "--exerciseDate", usage = "date of practice exercise in yyyy-MM-dd format", required = true)
-  private String exerciseDateString = null;
+	@Option(name = "--exerciseDate", usage = "date of practice exercise in yyyy-MM-dd format", required = true)
+	private String exerciseDateString = null;
 
-  @Option(name = "--enableFinalize", usage = "to rename output,  email to ETO folks upon completion", required = false)
-  private boolean enableFinalize = false;
+	@Option(name = "--enableFinalize", usage = "to rename output,  email to ETO folks upon completion", required = false)
+	private boolean enableFinalize = false;
 
-  @Option(name = "--config", usage = "practice onfiguration file name", required = true)
-  private String configurationFileName;
+	@Option(name = "--config", usage = "practice onfiguration file name", required = true)
+	private String configurationFileName;
 
-  private ScheduleCheckResult checkResult;
-  private ScheduleRecord scheduleRecord;
+	private ScheduleCheckResult checkResult;
+	private ScheduleRecord scheduleRecord;
 
-  public static final String DASHES_72 = "---------------------------------------------------------------------";
+	public static final String DASHES_72 = "---------------------------------------------------------------------";
 
-  public static void main(String[] args) {
-    var tool = new PracticeProcessorTool();
-    CmdLineParser parser = new CmdLineParser(tool);
-    try {
-      parser.parseArgument(args);
-      tool.run();
-    } catch (Exception e) {
-      e.printStackTrace(System.err);
-      parser.printUsage(System.err);
-    }
-  }
+	public static void main(String[] args) {
+		var tool = new PracticeProcessorTool();
+		CmdLineParser parser = new CmdLineParser(tool);
+		try {
+			parser.parseArgument(args);
+			tool.run();
+		} catch (Exception e) {
+			e.printStackTrace(System.err);
+			parser.printUsage(System.err);
+		}
+	}
 
-  public void run() {
-    try {
-      var cm = new PropertyFileConfigurationManager(configurationFileName, Key.values());
-      exerciseDateString = parse(exerciseDateString, cm);
-      addDatedLogger(cm);
+	public void run() {
+		try {
+			var cm = new PropertyFileConfigurationManager(configurationFileName, Key.values());
+			exerciseDateString = parse(exerciseDateString, cm);
+			addDatedLogger(cm);
 
-      logger.info("begin run");
-      var exerciseDate = LocalDate.parse(exerciseDateString);
+			logger.info("begin run");
+			var exerciseDate = LocalDate.parse(exerciseDateString);
 
-      var messageType = scheduleRecord.messageType();
-      var dayOfWeek = scheduleRecord.date().getDayOfWeek().toString();
-      logger.info("Exercise Date: " + exerciseDate.toString() + ", " + dayOfWeek + ",  exercise message type: "
-          + messageType.toString());
+			var messageType = scheduleRecord.messageType();
+			var dayOfWeek = scheduleRecord.date().getDayOfWeek().toString();
+			logger.info("Exercise Date: " + exerciseDate.toString() + ", " + dayOfWeek + ",  exercise message type: "
+					+ messageType.toString());
 
-      var exercisesPathName = cm.getAsString(Key.PATH_EXERCISES);
-      logger.info("exercises home" + exercisesPathName);
+			var exercisesPathName = cm.getAsString(Key.PATH_EXERCISES);
+			logger.info("exercises home" + exercisesPathName);
 
-      // fail fast on reading reference
-      var referencePathName = cm.getAsString(Key.PATH_REFERENCE);
-      logger.info("reference home: " + referencePathName);
-      var exerciseYearString = String.valueOf(exerciseDate.getYear());
-      var referencePath = Path.of(referencePathName, exerciseYearString, exerciseDateString,
-          exerciseDateString + "-reference.json");
-      var jsonString = copyReferenceFilesToInputIfNeededAndRead(referencePath, exerciseYearString, cm);
-      var deserializer = new PracticeJsonMessageDeserializer();
-      var referenceMessage = deserializer.deserialize(jsonString, messageType);
+			// make exercises folder if needed
+			var exerciseYearString = String.valueOf(exerciseDate.getYear());
+			FileUtils.createDirectory(Path.of(exercisesPathName, exerciseYearString, exerciseDateString));
+			FileUtils.createDirectory(Path.of(exercisesPathName, exerciseYearString, exerciseDateString, "input"));
 
-      // make exercises folder if needed
-      FileUtils.createDirectory(Path.of(exercisesPathName, exerciseYearString, exerciseDateString));
-      FileUtils.createDirectory(Path.of(exercisesPathName, exerciseYearString, exerciseDateString, "input"));
+			// fail fast on reading reference
+			var referencePathName = cm.getAsString(Key.PATH_REFERENCE);
+			logger.info("reference home: " + referencePathName);
+			var referencePath = Path.of(referencePathName, exerciseYearString, exerciseDateString,
+					exerciseDateString + "-reference.json");
+			var jsonString = copyReferenceFilesToInputIfNeededAndRead(referencePath, exerciseYearString, cm);
+			var deserializer = new PracticeJsonMessageDeserializer();
+			var referenceMessage = deserializer.deserialize(jsonString, messageType);
 
-      var winlinkCallsign = cm.getAsString(Key.WINLINK_NOTIFICATION_SOURCE);
-      logger.info("Winlink callsign: " + winlinkCallsign);
+			var winlinkCallsign = cm.getAsString(Key.WINLINK_NOTIFICATION_SOURCE);
+			logger.info("Winlink callsign: " + winlinkCallsign);
 
-      final var dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+			final var dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-      var instructionText = "";
-      var nextSchedule = checkResult.nextOutput();
-      if (nextSchedule != null) {
-        var nextExerciseDate = nextSchedule.date();
-        if (nextExerciseDate == null) {
-          instructionText = "No instructions for next exercise are currently available";
-        } else {
-          var sb = new StringBuilder();
-          if (!nextSchedule.isPractice()) {
-            sb.append("\n\n" + DASHES_72 + "\n\n");
-            var text = """
-                INSTRUCTIONS for next week:
-                Next Thursday is a \"Third Thursday Training Exercise\".
-                These instructions are simply too large for a Winlink messages,
-                so look for instructions on our web site at https://emcomm-training.org/Winlink_Thursdays.html
-                            """;
-            sb.append(text);
-          } else {
-            var nextExerciseYear = nextExerciseDate.getYear();
-            var nextExerciseDateString = dtf.format(nextExerciseDate);
-            var instructionPath = Path.of(referencePathName, String.valueOf(nextExerciseYear), nextExerciseDateString,
-                nextExerciseDateString + "-instructions.txt");
-            instructionText = Files.readString(instructionPath);
-            sb.append("\n\n" + DASHES_72 + "\n\n");
-            sb.append("INSTRUCTIONS for " + nextExerciseDateString + "\n\n");
-            sb.append(instructionText);
-            sb.append("\n\n");
-          }
-          instructionText = sb.toString();
-        } // end if normal practice
-      } // end if nextSchedule != null
+			var instructionText = "";
+			var nextSchedule = checkResult.nextOutput();
+			if (nextSchedule != null) {
+				var nextExerciseDate = nextSchedule.date();
+				if (nextExerciseDate == null) {
+					instructionText = "No instructions for next exercise are currently available";
+				} else {
+					var sb = new StringBuilder();
+					if (!nextSchedule.isPractice()) {
+						sb.append("\n\n" + DASHES_72 + "\n\n");
+						var text = """
+								INSTRUCTIONS for next week:
+								Next Thursday is a \"Third Thursday Training Exercise\".
+								These instructions are simply too large for a Winlink messages,
+								so look for instructions on our web site at https://emcomm-training.org/Winlink_Thursdays.html
+								            """;
+						sb.append(text);
+					} else {
+						var nextExerciseYear = nextExerciseDate.getYear();
+						var nextExerciseDateString = dtf.format(nextExerciseDate);
+						var instructionPath = Path.of(referencePathName, String.valueOf(nextExerciseYear),
+								nextExerciseDateString, nextExerciseDateString + "-instructions.txt");
+						instructionText = Files.readString(instructionPath);
+						sb.append("\n\n" + DASHES_72 + "\n\n");
+						sb.append("INSTRUCTIONS for " + nextExerciseDateString + "\n\n");
+						sb.append(instructionText);
+						sb.append("\n\n");
+					}
+					instructionText = sb.toString();
+				} // end if normal practice
+			} // end if nextSchedule != null
 
-      // create the rest of our configuration on the fly
-      cm.putString(Key.EXERCISE_DATE, exerciseDateString);
-      cm.putString(Key.EXERCISE_NAME, "ETO Weekly Practice for " + exerciseDateString);
+			// create the rest of our configuration on the fly
+			cm.putString(Key.EXERCISE_DATE, exerciseDateString);
+			cm.putString(Key.EXERCISE_NAME, "ETO Weekly Practice for " + exerciseDateString);
 
-      cm.putString(Key.EXPECTED_MESSAGE_TYPES, messageType.toString());
+			cm.putString(Key.EXPECTED_MESSAGE_TYPES, messageType.toString());
 
-      var windowOpenDate = exerciseDate.minusDays(5);
-      cm.putString(Key.EXERCISE_WINDOW_OPEN, dtf.format(windowOpenDate) + " 00:00");
-      var windowCloseDate = exerciseDate.plusDays(1);
-      cm.putString(Key.EXERCISE_WINDOW_CLOSE, dtf.format(windowCloseDate) + " 08:00");
+			var windowOpenDate = exerciseDate.minusDays(5);
+			cm.putString(Key.EXERCISE_WINDOW_OPEN, dtf.format(windowOpenDate) + " 00:00");
+			var windowCloseDate = exerciseDate.plusDays(1);
+			cm.putString(Key.EXERCISE_WINDOW_CLOSE, dtf.format(windowCloseDate) + " 08:00");
 
-      cm.putString(Key.PIPELINE_STDIN, "Read,Classifier,Filter,Acknowledgement,Deduplication");
-      cm.putString(Key.PIPELINE_MAIN, messageType.getPracticeProcessorName());
-      cm.putString(Key.PIPELINE_STDOUT, "Write,HistoryMap,ExerciseSummary,ParticipantHistory,Cleanup,Finalize");
+			cm.putString(Key.PIPELINE_STDIN, "Read,Classifier,Filter,Acknowledgement,Deduplication");
+			cm.putString(Key.PIPELINE_MAIN, messageType.getPracticeProcessorName());
+			cm.putString(Key.PIPELINE_STDOUT, "Write,HistoryMap,ExerciseSummary,ParticipantHistory,Cleanup,Finalize");
 
-      var edPrefix = "com.surftools.wimp.practice.misc.Practice";
-      cm.putString(Key.ALL_FEEDBACK_TEXT_EDITOR, edPrefix + "AllFeedbackTextEditor");
-      cm.putString(Key.BODY_TEXT_EDITOR, edPrefix + "BodyTextEditor");
+			var edPrefix = "com.surftools.wimp.practice.misc.Practice";
+			cm.putString(Key.ALL_FEEDBACK_TEXT_EDITOR, edPrefix + "AllFeedbackTextEditor");
+			cm.putString(Key.BODY_TEXT_EDITOR, edPrefix + "BodyTextEditor");
 
-      cm.putString(Key.OUTBOUND_MESSAGE_SOURCE, winlinkCallsign);
-      cm.putString(Key.OUTBOUND_MESSAGE_SENDER, "ETO-PRACTICE");
-      cm.putString(Key.OUTBOUND_MESSAGE_SUBJECT, "ETO Practice Exercise Feedback");
+			cm.putString(Key.OUTBOUND_MESSAGE_SOURCE, winlinkCallsign);
+			cm.putString(Key.OUTBOUND_MESSAGE_SENDER, "ETO-PRACTICE");
+			cm.putString(Key.OUTBOUND_MESSAGE_SUBJECT, "ETO Practice Exercise Feedback");
 
-      cm.putBoolean(Key.ENABLE_FINALIZE, enableFinalize);
+			cm.putBoolean(Key.ENABLE_FINALIZE, enableFinalize);
 
-      var mm = new MessageManager();
-      mm.putContextObject(REFERENCE_MESSAGE_KEY, referenceMessage);
-      mm.putContextObject(INSTRUCTIONS_KEY, instructionText);
-      mm.putContextObject(CONFIGURATION_FILE_KEY, configurationFileName);
+			var mm = new MessageManager();
+			mm.putContextObject(REFERENCE_MESSAGE_KEY, referenceMessage);
+			mm.putContextObject(INSTRUCTIONS_KEY, instructionText);
+			mm.putContextObject(CONFIGURATION_FILE_KEY, configurationFileName);
 
-      var pipeline = new PipelineProcessor();
-      pipeline.initialize(cm, mm);
-      pipeline.process();
-      pipeline.postProcess();
+			var pipeline = new PipelineProcessor();
+			pipeline.initialize(cm, mm);
+			pipeline.process();
+			pipeline.postProcess();
 
-    } catch (Exception e) {
-      logger.error("Exception: " + e.getLocalizedMessage());
-      e.printStackTrace();
-    }
-    logger.info("end run");
-  }
+		} catch (Exception e) {
+			logger.error("Exception: " + e.getLocalizedMessage());
+			e.printStackTrace();
+		}
+		logger.info("end run");
+	}
 
-  /**
-   * copy all files in the referencePath (for the given exerciseDate) to input
-   *
-   * this allows for a durable copy (after finalization) if reference is
-   * regenerated
-   *
-   * @param referenceFilePath
-   * @param exerciseYearString
-   * @param cm
-   * @return -- the content of the referenceFile as a String
-   */
-  private String copyReferenceFilesToInputIfNeededAndRead(Path referenceFilePath, String exerciseYearString,
-      IConfigurationManager cm) {
-    var parentPath = referenceFilePath.getParent();
-    var inputPath = Path.of(cm.getAsString(Key.PATH_EXERCISES), exerciseYearString, exerciseDateString, "input");
-    try (Stream<Path> stream = Files.list(parentPath)) {
-      var refFiles = stream.filter(Files::isRegularFile).toList();
-      for (var refFile : refFiles) {
-        var fileName = refFile.getFileName().toString();
-        var inputFilePath = Path.of(inputPath.toString(), fileName);
-        var inputFile = inputFilePath.toFile();
-        if (inputFile.exists()) {
-          logger.info("reference file: " + fileName + " already exists in input, skipping");
-        } else {
-          Files.copy(refFile, inputFilePath);
-          logger.info("reference file: " + fileName + " copied to input");
-        }
-      }
-    } catch (Exception e) {
-      logger.error("Exception copying reference files for: " + referenceFilePath.toString() + ", " + e.getMessage());
-    }
+	/**
+	 * copy all files in the referencePath (for the given exerciseDate) to input
+	 *
+	 * this allows for a durable copy (after finalization) if reference is
+	 * regenerated
+	 *
+	 * @param referenceFilePath
+	 * @param exerciseYearString
+	 * @param cm
+	 * @return -- the content of the referenceFile as a String
+	 */
+	private String copyReferenceFilesToInputIfNeededAndRead(Path referenceFilePath, String exerciseYearString,
+			IConfigurationManager cm) {
+		var parentPath = referenceFilePath.getParent();
+		var inputPath = Path.of(cm.getAsString(Key.PATH_EXERCISES), exerciseYearString, exerciseDateString, "input");
+		try (Stream<Path> stream = Files.list(parentPath)) {
+			var refFiles = stream.filter(Files::isRegularFile).toList();
+			for (var refFile : refFiles) {
+				var fileName = refFile.getFileName().toString();
+				var inputFilePath = Path.of(inputPath.toString(), fileName);
+				var inputFile = inputFilePath.toFile();
+				if (inputFile.exists()) {
+					logger.info("reference file: " + fileName + " already exists in input, skipping");
+				} else {
+					Files.copy(refFile, inputFilePath);
+					logger.info("reference file: " + fileName + " copied to input");
+				}
+			}
+		} catch (Exception e) {
+			logger.error(
+					"Exception copying reference files for: " + referenceFilePath.toString() + ", " + e.getMessage());
+		}
 
-    var refFilePath = Path.of(inputPath.toString(), exerciseDateString + "-reference.json");
-    var jsonString = (String) null;
-    try {
-      jsonString = Files.readString(refFilePath);
-    } catch (Exception e) {
-      logger.error("Exception reading reference file: " + refFilePath.toString() + ", " + e.getMessage());
-    }
-    return jsonString;
-  }
+		var refFilePath = Path.of(inputPath.toString(), exerciseDateString + "-reference.json");
+		var jsonString = (String) null;
+		try {
+			jsonString = Files.readString(refFilePath);
+		} catch (Exception e) {
+			logger.error("Exception reading reference file: " + refFilePath.toString() + ", " + e.getMessage());
+		}
+		return jsonString;
+	}
 
-  @SuppressWarnings({ "rawtypes", "unchecked" })
-  private void addDatedLogger(IConfigurationManager cm) {
-    // Get the LoggerContext
-    LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	private void addDatedLogger(IConfigurationManager cm) {
+		// Get the LoggerContext
+		LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
 
-    // Create a PatternLayoutEncoder
-    PatternLayoutEncoder encoder = new PatternLayoutEncoder();
-    encoder.setContext(loggerContext);
-    encoder.setPattern("%d{HH:mm:ss.SSS} %-5level %class{0}.%M - %msg%n");
-    encoder.start();
+		// Create a PatternLayoutEncoder
+		PatternLayoutEncoder encoder = new PatternLayoutEncoder();
+		encoder.setContext(loggerContext);
+		encoder.setPattern("%d{HH:mm:ss.SSS} %-5level %class{0}.%M - %msg%n");
+		encoder.start();
 
-    // Create a FileAppender
-    FileAppender fileAppender = new FileAppender();
-    fileAppender.setContext(loggerContext);
-    fileAppender.setAppend(false);
+		// Create a FileAppender
+		FileAppender fileAppender = new FileAppender();
+		fileAppender.setContext(loggerContext);
+		fileAppender.setAppend(false);
 
-    var date = LocalDate.parse(exerciseDateString);
-    var exerciseYear = date.getYear();
-    var exerciseYearString = String.valueOf(exerciseYear);
+		var date = LocalDate.parse(exerciseDateString);
+		var exerciseYear = date.getYear();
+		var exerciseYearString = String.valueOf(exerciseYear);
 
-    var exercisesPathName = cm.getAsString(Key.PATH_EXERCISES);
-    var exercisePath = Path.of(exercisesPathName, exerciseYearString, exerciseDateString);
-    var exercisePathName = exercisePath.toString();
-    var outputPath = Path.of(exercisePathName, "output");
-    FileUtils.deleteDirectory(outputPath);
-    FileUtils.makeDirIfNeeded(outputPath.toString());
-    var outputPathName = outputPath.toString();
-    var logPath = Path.of(outputPathName, exerciseDateString + "-log.txt");
-    fileAppender.setFile(logPath.toString());
+		var exercisesPathName = cm.getAsString(Key.PATH_EXERCISES);
+		var exercisePath = Path.of(exercisesPathName, exerciseYearString, exerciseDateString);
+		var exercisePathName = exercisePath.toString();
+		var outputPath = Path.of(exercisePathName, "output");
+		FileUtils.deleteDirectory(outputPath);
+		FileUtils.makeDirIfNeeded(outputPath.toString());
+		var outputPathName = outputPath.toString();
+		var logPath = Path.of(outputPathName, exerciseDateString + "-log.txt");
+		fileAppender.setFile(logPath.toString());
 
-    fileAppender.setEncoder(encoder);
-    fileAppender.start();
+		fileAppender.setEncoder(encoder);
+		fileAppender.start();
 
-    // Cast to Logback's Logger to access addAppender()
-    var rootLogger = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
-    rootLogger.addAppender(fileAppender);
-  }
+		// Cast to Logback's Logger to access addAppender()
+		var rootLogger = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
+		rootLogger.addAppender(fileAppender);
+	}
 
-  /**
-   * return a date string if passed a known symbolic value
-   *
-   * @param input
-   * @param cm
-   * @return
-   */
-  private String parse(String input, IConfigurationManager cm) {
-    if (input == null) {
-      logger.error("Can not parse exerciseDate: " + input);
-      System.exit(1);
-    }
+	/**
+	 * return a date string if passed a known symbolic value
+	 *
+	 * @param input
+	 * @param cm
+	 * @return
+	 */
+	private String parse(String input, IConfigurationManager cm) {
+		if (input == null) {
+			logger.error("Can not parse exerciseDate: " + input);
+			System.exit(1);
+		}
 
-    var date = LocalDate.now();
+		var date = LocalDate.now();
 
-    final var knownSet = Set.of("last", "current", "today", "this", "next");
-    var s = input.toLowerCase();
-    if (!knownSet.contains(s)) {
-      try {
-        date = LocalDate.parse(input);
-      } catch (Exception e) {
-        logger.error("Can not parse exerciseDate: " + input);
-        System.exit(1);
-      }
-    }
-    var scheduleManager = new ScheduleManager(cm);
-    checkResult = scheduleManager.check(date);
+		final var knownSet = Set.of("last", "current", "today", "this", "next");
+		var s = input.toLowerCase();
+		if (!knownSet.contains(s)) {
+			try {
+				date = LocalDate.parse(input);
+			} catch (Exception e) {
+				logger.error("Can not parse exerciseDate: " + input);
+				System.exit(1);
+			}
+		}
+		var scheduleManager = new ScheduleManager(cm);
+		checkResult = scheduleManager.check(date);
 
-    if (s.equals("last")) {
-      if (checkResult.lastOutput() == null) {
-        logger.error("No exercise scheduled for: " + input);
-        System.exit(1);
-      }
-      scheduleRecord = checkResult.lastOutput();
+		if (s.equals("last")) {
+			if (checkResult.lastOutput() == null) {
+				logger.error("No exercise scheduled for: " + input);
+				System.exit(1);
+			}
+			scheduleRecord = checkResult.lastOutput();
 
-      if (!scheduleRecord.isPractice()) {
-        logger.error("Last exercise date: " + scheduleRecord.date().toString() + " not a practice type");
-        System.exit(1);
-      }
-    } else if (s.equals("next")) {
-      if (checkResult.nextOutput() == null) {
-        logger.error("No exercise scheduled for: " + input);
-        System.exit(1);
-      }
-      scheduleRecord = checkResult.nextOutput();
-    } else {
-      if (checkResult.thisOuput() == null) {
-        logger.error("No exercise scheduled for: " + input);
-        System.exit(1);
-      }
-      scheduleRecord = checkResult.thisOuput();
-    }
+			if (!scheduleRecord.isPractice()) {
+				logger.error("Last exercise date: " + scheduleRecord.date().toString() + " not a practice type");
+				System.exit(1);
+			}
+		} else if (s.equals("next")) {
+			if (checkResult.nextOutput() == null) {
+				logger.error("No exercise scheduled for: " + input);
+				System.exit(1);
+			}
+			scheduleRecord = checkResult.nextOutput();
+		} else {
+			if (checkResult.thisOuput() == null) {
+				logger.error("No exercise scheduled for: " + input);
+				System.exit(1);
+			}
+			scheduleRecord = checkResult.thisOuput();
+		}
 
-    return scheduleRecord.date().toString();
-  }
+		return scheduleRecord.date().toString();
+	}
 }

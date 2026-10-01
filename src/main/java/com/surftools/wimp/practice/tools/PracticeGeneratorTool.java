@@ -75,7 +75,6 @@ import com.surftools.wimp.core.MessageType;
 import com.surftools.wimp.generator.IGenerator;
 import com.surftools.wimp.generator.PracticeUtils;
 import com.surftools.wimp.processors.std.WriteProcessor;
-import com.surftools.wimp.schedule.ScheduleManager;
 import com.surftools.wimp.schedule.ScheduleRecord;
 import com.surftools.wimp.utils.config.IConfigurationManager;
 import com.surftools.wimp.utils.config.impl.PropertyFileConfigurationManager;
@@ -305,11 +304,6 @@ public class PracticeGeneratorTool {
 
 		var schedulePath = Path.of(generationPathString, "schedule.csv");
 		WriteProcessor.writeTable(new ArrayList<IWritableTable>(outputList), schedulePath);
-
-		var today = LocalDate.now();
-		var scheduleManager = new ScheduleManager(cm);
-		var searchResult = scheduleManager.check(today);
-		logger.info("searchResult: " + searchResult);
 
 		return outputList;
 	}

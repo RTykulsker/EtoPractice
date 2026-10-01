@@ -36,7 +36,7 @@ import java.util.TreeMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.surftools.wimp.configuration.GenKey;
+import com.surftools.wimp.configuration.Key;
 import com.surftools.wimp.processors.std.ReadProcessor;
 import com.surftools.wimp.utils.config.IConfigurationManager;
 
@@ -64,7 +64,7 @@ public class ScheduleManager {
 	protected List<ScheduleRecord> readSchedule(IConfigurationManager cm) {
 		var list = new ArrayList<ScheduleRecord>();
 
-		var schedulePathName = cm.getAsString(GenKey.PATH_SCHEDULE);
+		var schedulePathName = cm.getAsString(Key.PATH_SCHEDULE);
 		var schedulePath = Path.of(schedulePathName);
 		var fieldsList = ReadProcessor.readCsvFileIntoFieldsArray(schedulePath, ',', true, 1);
 		for (var fields : fieldsList) {
