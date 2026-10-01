@@ -96,7 +96,7 @@ public class PracticeGeneratorTool {
 	private LocalDateTime now;
 	private LocalDate startDate;
 	private LocalDate endDate;
-	private LocalDate legacyDate;
+	private LocalDate cutoverDate;
 
 	private String generationPathString; // path string to top-level of where we write stuff
 	private Path generationPath; // path to top-level of where we write stuff
@@ -203,14 +203,15 @@ public class PracticeGeneratorTool {
 		endDate = startDate.plusYears(nYears);
 		logger.info("endDate: " + endDate);
 
-		var legecyDateString = cm.getAsString(GenKey.GENERATOR_LEGACY_DATE);
-		if (legecyDateString == null || legecyDateString.strip().isEmpty()) {
-			logger.error(GenKey.GENERATOR_LEGACY_DATE.toString() + " must be provided");
+		var cutoverDateString = cm.getAsString(GenKey.GENERATOR_CUTOVER_DATE);
+		if (cutoverDateString == null || cutoverDateString.strip().isEmpty()) {
+			logger.error(GenKey.GENERATOR_CUTOVER_DATE.toString() + " must be provided");
 			System.exit(1);
 		}
 
-		legacyDate = LocalDate.parse(legecyDateString);
-		logger.info("legacyDate: " + legacyDate.toString());
+		commitMessage += "\n" + "Cutover Date: " + cutoverDateString;
+		cutoverDate = LocalDate.parse(cutoverDateString);
+		logger.info("cutoverDate: " + cutoverDate.toString());
 
 		var historyPathString = cm.getAsString(GenKey.PATH_REFERENCE_HISTORY);
 		var historyPath = Path.of(historyPathString);
@@ -258,13 +259,13 @@ public class PracticeGeneratorTool {
 
 		var startYear = startDate.getYear();
 		var endYear = endDate.getYear();
-		var legacyYear = legacyDate.getYear();
+		var cutoverYear = cutoverDate.getYear();
 
 		for (var year = startYear; year <= endYear; ++year) {
 			var yearString = String.valueOf(year);
 			FileUtils.makeDirIfNeeded(generationPath, yearString);
 			FileUtils.makeDirIfNeeded(instructionsPath, yearString);
-			if (year >= legacyYear) {
+			if (year >= cutoverYear) {
 				FileUtils.makeDirIfNeeded(newInstructionsPath, yearString);
 			}
 		}
@@ -298,15 +299,15 @@ public class PracticeGeneratorTool {
 
 			var newInstructionPath = Path.of(newInstructionsPath.toString(), exerciseYear, date.toString());
 
-			if (legacyDate != null && date.isAfter(legacyDate)) {
-				// after legacy date: generate!
+			if (cutoverDate != null && date.isAfter(cutoverDate)) {
+				// after cutoverDate: generate!
 				var messageType = schedule.messageType();
 				var generator = generatorMap.get(messageType);
 				var m = generator.generateMessage(date, schedule);
 				var instructions = generator.generateIntructions(m, date, schedule, enableFinalize, now);
 
 				var objectMapper = JsonMapper.builder().addModule(new JavaTimeModule()).build();
-				var json = objectMapper.writeValueAsString(m);
+				var json = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(m);
 				Files.writeString(Path.of(referencePath.toString(), DTF.format(date) + "-reference.json"), json);
 
 				var markerString = messageType.toString() + "-" + ((enableFinalize) ? "published" : "generated") + "-"
@@ -332,8 +333,8 @@ public class PracticeGeneratorTool {
 				var oldPath = Path.of(oldReferencePathString, exerciseYear, date.toString());
 				var oldDir = oldPath.toFile();
 				if (!oldDir.exists()) {
-					logger.warn("reference dir: " + oldPath.toString() + " doesn't exist, but before legacyDate: "
-							+ legacyDate.toString() + ", skipping");
+					logger.warn("reference dir: " + oldPath.toString() + " doesn't exist, but before cutoverDate: "
+							+ cutoverDate.toString() + ", skipping");
 					continue;
 				}
 				try (Stream<Path> stream = Files.list(oldPath)) {
@@ -351,7 +352,7 @@ public class PracticeGeneratorTool {
 						Files.copy(path, newPath);
 					} // end loop over path in paths
 				} // end try over stream
-			} // end if before legacyDate
+			} // end if before cutoverDate
 		} // end loop over schedules
 	} // end function generateExercises
 
@@ -389,16 +390,24 @@ public class PracticeGeneratorTool {
 		}
 
 		// copy generation to all REMOTE archive sinks
+		var archivingPathsString = cm.getAsString(GenKey.PATH_ARCHIVE).split(",");
+		for (var archivingPathString : archivingPathsString) {
+			var archivingPath = Path.of(archivingPathString, "reference-history-" + timestampString);
+			FileUtils.copyDirectory(generationPath, archivingPath);
+			logger.info("Archived to: " + archivingPath.toString());
+		}
 
 		// notify folks via email
 		var body = "Published Date: " + now.toLocalDate().toString() //
 				+ ", Time: " + now.toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "\n" //
-				+ ", New Instructions (Legacy Date) on or after: " + legacyDate.toString() + "\n" //
 				+ commitMessage;
 		EmailService.sendSimpleEmail(cm, "New ETO Practice Instructions published!", body);
 
 		// delete old-reference
+		FileUtils.deleteDirectory(oldReferencePath);
+
 		// copy generationPath to reference
+		FileUtils.copyDirectory(generationPath, oldReferencePath);
 
 		logger.info("### END FINALIZATION");
 	} // end function doFinalization

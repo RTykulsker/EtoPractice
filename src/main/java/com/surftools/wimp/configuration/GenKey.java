@@ -54,7 +54,7 @@ public enum GenKey implements IConfigurationKey {
 	GENERATOR_N_YEARS("generator.nYears"), // number of years to generate
 	GENERATOR_INSTRUCTION_URL("generator.instruction.url"), // url at the bottom of each instruction
 	GENERATOR_START_DATE("generator.start.date"), // date to start generating instructions
-	GENERATOR_LEGACY_DATE("generator.legacy.date"), // date, before which, we copy from referency-legacy
+	GENERATOR_CUTOVER_DATE("generator.cutover.date"), // date, <= copy, > generate
 
 	EMAIL_NOTIFICATION_FROM("email.notification.from"), //
 	EMAIL_NOTIFICATION_TO("email.notification.to"), // comma-delimited list
