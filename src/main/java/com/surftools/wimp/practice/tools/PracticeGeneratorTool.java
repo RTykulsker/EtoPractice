@@ -81,64 +81,6 @@ import com.surftools.wimp.utils.config.impl.PropertyFileConfigurationManager;
 
 /**
  * 2nd Generation tool to generate exercise, combining previous
- * PracticeScheduleTool and PracticeGeneratorTool
- * 
- * In brief
- * 
- * from ScheduleTool: read the meta-schedule.xlsx file; generate the
- * schedule.csv file
- * 
- * from GeneratorTool: read the schedule.csv file, generate the reference and
- * instruction files
- * 
- * In detail:
- * 
- * reference file: is a json-serialized version of the generated message. It's
- * the answer sheet.
- * 
- * instructions file: is the human-readable version of the instructions
- * 
- * finalize: means that we are happy, this becomes new reference/ publish/copy
- * to REMOTES, etc.
- * 
- * under reference-history/ create reference-generated-TS OR
- * reference-published-TS, where TS is yyyy-mm-dd-hh-mm-ss under this directory
- * 
- * copy the meta-schedule.xlsx file write the schedule.csv file
- * 
- * create folders instructions/ and new-instructions/ create year folders,
- * 2025/, etc.
- * 
- * Also do this in instructions/ and conditionally in new-instructions
- * 
- * 3 values from configuration
- * 
- * startDate -- when to start
- * 
- * nYears -- number of years
- * 
- * legacyDate -- date, before which we COPY instructions and reference, rather
- * than generate
- * 
- * processing:
- * 
- * generate the schedule, per the PracticeScheduleTool, write the schedule.csv
- * 
- * generate the exercises, per the PracticeGeneratorTool:
- * 
- * if before legacyDate, copy from current reference/ dir
- * 
- * if after legacyDate, generate new reference and instructions/ AND
- * new-instructions/ copy/write a marker file in reference: legacy.txt,
- * generated-TS.txt, published-TS.txt
- * 
- * if finalizing:
- * 
- * 1) remove old reference/ copy reference-published-TS/ to reference/
- * 
- * 2) copy new-instructions/ to all REMOTE published sinks
- * 
- * 3) copy reference-published-TS/ to all REMOTE archive sinks
  */
 public class PracticeGeneratorTool {
 	private static final Logger logger = LoggerFactory.getLogger(PracticeGeneratorTool.class);
@@ -697,16 +639,15 @@ public class PracticeGeneratorTool {
 	}
 
 	private void sendEmailNotification() throws Exception {
-		// TODO Auto-generated method stub
-
 		String username = cm.getAsString(GenKey.EMAIL_NOTIFICATION_FROM);
 
 		// see myaccount.google.com/apppasswords
 		String appPassword = Files.readString(Path.of(cm.getAsString(GenKey.PATH_EMAIL_PASSWORD)));
 
-		// TODO
-		String subject = "tbd";
-		String body = "tbd";
+		String subject = "New ETO Practice Instructions published!";
+		String body = "Date: " + now.toLocalDate().toString() //
+				+ ", Time: " + now.toLocalTime().toString() + "\n" //
+				+ commitMessage;
 
 		Properties props = new Properties();
 		props.put("mail.smtp.auth", "true");
@@ -722,21 +663,7 @@ public class PracticeGeneratorTool {
 		});
 
 		var from = cm.getAsString(GenKey.EMAIL_NOTIFICATION_FROM);
-		logger.info("email notification from: " + from);
-
 		var recipients = cm.getAsString(GenKey.EMAIL_NOTIFICATION_TO);
-		logger.info("email notification to: " + recipients);
-
-//		String[] recipients = {
-//			    "a@example.com",
-//			    "b@example.com",
-//			    "c@example.com"
-//			};
-//
-//			message.setRecipients(
-//			    Message.RecipientType.TO,
-//			    InternetAddress.parse(String.join(",", recipients))
-//			);
 
 		Message message = new MimeMessage(session);
 		message.setFrom(new InternetAddress(from));
@@ -745,7 +672,7 @@ public class PracticeGeneratorTool {
 		message.setText(body);
 
 		Transport.send(message);
-		System.out.println("Email sent.");
+		logger.info("Email(s) sent to: " + recipients);
 
 	}
 }
