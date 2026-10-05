@@ -147,8 +147,9 @@ public class PracticeProcessorTool {
 					} else {
 						var nextExerciseYear = nextExerciseDate.getYear();
 						var nextExerciseDateString = dtf.format(nextExerciseDate);
-						var instructionPath = Path.of(referencePathName, String.valueOf(nextExerciseYear),
-								nextExerciseDateString, nextExerciseDateString + "-instructions.txt");
+						var instructionPath = Path.of(referencePathName, "instructions",
+								String.valueOf(nextExerciseYear), nextExerciseDateString,
+								nextExerciseDateString + "-instructions.txt");
 						instructionText = Files.readString(instructionPath);
 						sb.append("\n\n" + DASHES_72 + "\n\n");
 						sb.append("INSTRUCTIONS for " + nextExerciseDateString + "\n\n");

@@ -87,7 +87,6 @@ public class Ics205Generator extends AbstractBasePracticeGenerator {
 		var sb = new StringBuilder();
 		sb.append(generateInstructionHeader(date, "Complete an ICS-205 Incident Radio Communications Plan Message"));
 
-		sb.append("Use the following values when completing the form:" + NL);
 		sb.append(INDENT + "Setup: agency or group name: " + m.organization + NL);
 		sb.append(INDENT + "Incident name: " + m.incidentName + NL);
 		sb.append(INDENT + "Date/Time: (click in box and accept date/time)" + NL);

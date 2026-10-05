@@ -170,6 +170,7 @@ public class Hics251Generator extends AbstractBasePracticeGenerator {
 		sb.append(INDENT + "Radio Operator: <YOUR CALL>" + NL);
 		sb.append(INDENT + "Facility Latitude: " + m.formLocation.getLatitude() + NL);
 		sb.append(INDENT + "Facility Longitude: " + m.formLocation.getLongitude() + NL);
+		sb.append(INDENT + "Leave the 'Attach CSV data file to message?'as No" + NL);
 		sb.append(generateInstructionTail(enableFinalize, now));
 
 		return sb.toString();

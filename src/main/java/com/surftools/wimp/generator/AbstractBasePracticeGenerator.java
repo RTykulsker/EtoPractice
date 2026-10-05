@@ -140,7 +140,9 @@ public abstract class AbstractBasePracticeGenerator implements IGenerator {
 	protected String generateInstructionTail(boolean enableFinalize, LocalDateTime now) {
 		var sb = new StringBuilder();
 		sb.append(NL);
-		sb.append("Ensure that you have a valid and appropriate Latitude and Longitude." + NL);
+		sb.append(
+				"Ensure that you have a valid and appropriate Latitude and Longitude. See https://emcomm-training.org/Santa-2023/ETO-Location-Notes.pdf for details."
+						+ NL);
 		sb.append(NL);
 		sb.append("Send the message via the Session type of your choice to ETO-PRACTICE." + NL);
 		sb.append(NL);
