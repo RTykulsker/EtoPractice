@@ -137,6 +137,8 @@ public class PracticeGeneratorTool {
 	private void initialize() throws Exception {
 		cm = new PropertyFileConfigurationManager(configurationFileName, GenKey.values());
 
+		getCommitMessage();
+
 		var timestampFormatter = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
 		now = LocalDateTime.now();
 		timestampString = timestampFormatter.format(now);
@@ -168,15 +170,18 @@ public class PracticeGeneratorTool {
 			System.exit(1);
 		}
 
-		getCommitMessage();
 	}
 
 	private void getCommitMessage() throws Exception {
 		var commitMessagePathString = cm.getAsString(GenKey.PATH_COMMIT_MESSAGE);
+		var cutoverDateString = cm.getAsString(GenKey.GENERATOR_CUTOVER_DATE);
 		commitMessage = Files.readString(Path.of(commitMessagePathString));
-		logger.info("commitMessage: " + commitMessage);
+		commitMessage += "\nCutover Date: " + cutoverDateString;
+		logger.info("commitMessage:\n" + commitMessage + "\n");
 		var commitSha1Hash = DigestUtils.sha1Hex(commitMessage);
+		logger.info("commit hash: " + commitSha1Hash);
 
+		oldReferencePathString = cm.getAsString(GenKey.PATH_REFERENCE);
 		var oldHistoryPath = Path.of(oldReferencePathString, "publication-history");
 		var oldHistoryDir = oldHistoryPath.toFile();
 		var files = oldHistoryDir.listFiles();
@@ -188,6 +193,9 @@ public class PracticeGeneratorTool {
 			if (commitSha1Hash.equals(fileSha1Hash)) {
 				logger.error("### commit message is not unique. Collides with: " + path.toString() + ". Exiting!");
 				System.exit(1);
+			} else {
+				logger.debug("old file: " + path.toString() + "\ncontents: " + fileContents + "\nhash: " + fileSha1Hash
+						+ "\n");
 			}
 		}
 	}
@@ -197,11 +205,14 @@ public class PracticeGeneratorTool {
 		startDate = LocalDate.parse(startDateString);
 		logger.info("startDate: " + startDate.toString());
 
-		var nYears = cm.getAsInt(GenKey.GENERATOR_N_YEARS, 5);
-		logger.info("nYears: " + nYears);
+		var endDateString = cm.getAsString(GenKey.GENERATOR_END_DATE);
+		endDate = LocalDate.parse(endDateString);
+		logger.info("endDate: " + endDate.toString());
 
-		endDate = startDate.plusYears(nYears);
-		logger.info("endDate: " + endDate);
+		if (endDate.isBefore(startDate)) {
+			logger.error("endDate is before startDate! Exiting!");
+			System.exit(1);
+		}
 
 		var cutoverDateString = cm.getAsString(GenKey.GENERATOR_CUTOVER_DATE);
 		if (cutoverDateString == null || cutoverDateString.strip().isEmpty()) {
@@ -327,31 +338,48 @@ public class PracticeGeneratorTool {
 						instructions);
 			} else {
 				// copy old reference.json, plus marker file from (old) reference
-				// copy old instructions in reference, to instructions/
-				// DO NOT COPY OLD instructions to new instructions
-
-				var oldPath = Path.of(oldReferencePathString, exerciseYear, date.toString());
-				var oldDir = oldPath.toFile();
-				if (!oldDir.exists()) {
-					logger.warn("reference dir: " + oldPath.toString() + " doesn't exist, but before cutoverDate: "
-							+ cutoverDate.toString() + ", skipping");
+				var oldReferencePath = Path.of(oldReferencePathString, exerciseYear, date.toString());
+				var oldReferenceDir = oldReferencePath.toFile();
+				if (!oldReferenceDir.exists()) {
+					logger.warn("reference dir: " + oldReferencePath.toString()
+							+ " doesn't exist, but before cutoverDate: " + cutoverDate.toString() + ", skipping");
 					continue;
 				}
-				try (Stream<Path> stream = Files.list(oldPath)) {
+
+				try (Stream<Path> stream = Files.list(oldReferencePath)) {
 					var paths = stream.filter(Files::isRegularFile) // Filters out subdirectories
 							.toList();
 
 					for (var path : paths) {
 						var fileName = path.getFileName().toString();
-						Path newPath = null;
-						if (fileName.contains("instruction")) {
-							newPath = Path.of(instructionPath.toString(), fileName);
-						} else {
-							newPath = Path.of(referencePath.toString(), fileName);
-						}
+						Path newPath = Path.of(referencePath.toString(), fileName);
 						Files.copy(path, newPath);
+						logger.info("copied: " + path.toString() + " to " + newPath.toString());
 					} // end loop over path in paths
 				} // end try over stream
+
+				// copy old instructions in reference, to instructions/
+				// DO NOT COPY OLD instructions to new instructions
+				var oldInstructionPath = Path.of(oldReferencePathString, "instructions", exerciseYear, date.toString());
+				var olsInstructionDir = oldInstructionPath.toFile();
+				if (!olsInstructionDir.exists()) {
+					logger.warn("instructions dir: " + oldInstructionPath.toString()
+							+ " doesn't exist, but before cutoverDate: " + cutoverDate.toString() + ", skipping");
+					continue;
+				}
+
+				try (Stream<Path> stream = Files.list(oldInstructionPath)) {
+					var paths = stream.filter(Files::isRegularFile) // Filters out subdirectories
+							.toList();
+
+					for (var path : paths) {
+						var fileName = path.getFileName().toString();
+						Path newPath = Path.of(instructionPath.toString(), fileName);
+						Files.copy(path, newPath);
+						logger.info("copied: " + path.toString() + " to " + newPath.toString());
+					} // end loop over path in paths
+				} // end try over stream
+
 			} // end if before cutoverDate
 		} // end loop over schedules
 	} // end function generateExercises

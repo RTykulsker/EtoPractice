@@ -51,9 +51,8 @@ public enum GenKey implements IConfigurationKey {
 	PATH_ARCHIVE("path.archive"), // list of paths to remote folder for archiving entire exercise
 
 	GENERATOR_RNG_SEED("generator.rngSeed"), // to get consistent results
-	GENERATOR_N_YEARS("generator.nYears"), // number of years to generate
-	GENERATOR_INSTRUCTION_URL("generator.instruction.url"), // url at the bottom of each instruction
 	GENERATOR_START_DATE("generator.start.date"), // date to start generating instructions
+	GENERATOR_END_DATE("generator.end.date"), // date to end generating instructions
 	GENERATOR_CUTOVER_DATE("generator.cutover.date"), // date, <= copy, > generate
 
 	EMAIL_NOTIFICATION_FROM("email.notification.from"), //
