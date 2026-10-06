@@ -220,7 +220,6 @@ public class PracticeGeneratorTool {
 			System.exit(1);
 		}
 
-		commitMessage += "\n" + "Cutover Date: " + cutoverDateString;
 		cutoverDate = LocalDate.parse(cutoverDateString);
 		logger.info("cutoverDate: " + cutoverDate.toString());
 
@@ -354,7 +353,7 @@ public class PracticeGeneratorTool {
 						var fileName = path.getFileName().toString();
 						Path newPath = Path.of(referencePath.toString(), fileName);
 						Files.copy(path, newPath);
-						logger.info("copied: " + path.toString() + " to " + newPath.toString());
+						logger.debug("copied: " + path.toString() + " to " + newPath.toString());
 					} // end loop over path in paths
 				} // end try over stream
 
@@ -376,7 +375,7 @@ public class PracticeGeneratorTool {
 						var fileName = path.getFileName().toString();
 						Path newPath = Path.of(instructionPath.toString(), fileName);
 						Files.copy(path, newPath);
-						logger.info("copied: " + path.toString() + " to " + newPath.toString());
+						logger.debug("copied: " + path.toString() + " to " + newPath.toString());
 					} // end loop over path in paths
 				} // end try over stream
 
@@ -386,6 +385,12 @@ public class PracticeGeneratorTool {
 
 	private void doFinalization() throws Exception {
 		logger.info("### BEGIN FINALIZATION");
+
+		// make zip file
+		var historyPathString = cm.getAsString(GenKey.PATH_REFERENCE_HISTORY);
+		var zipFilePath = Path.of(historyPathString, "reference-published-" + timestampString + ".zip");
+		FileUtils.zipDirectory(generationPath, zipFilePath);
+		logger.info("created zip file: " + zipFilePath.toString());
 
 		// copy old-reference publication-history folder
 		var oldPubHistoryPath = Path.of(oldReferencePathString, "publication-history");
