@@ -31,11 +31,14 @@ import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 /**
  * static methods to support basic file operations
@@ -44,95 +47,127 @@ import java.nio.file.attribute.BasicFileAttributes;
  *
  */
 public class FileUtils {
-  public static Path makeDirIfNeeded(String dirString) {
-    File dirFile = new File(dirString);
-    if (dirFile.isAbsolute()) {
-      if (!dirFile.exists()) {
-        boolean ok = dirFile.mkdirs();
-        if (!ok) {
-          throw new RuntimeException("dir path for: " + dirString + " not found and can't be created");
-        }
-      }
-      return Path.of(dirString);
-    }
-    return null;
-  }
+	public static Path makeDirIfNeeded(String dirString) {
+		File dirFile = new File(dirString);
+		if (dirFile.isAbsolute()) {
+			if (!dirFile.exists()) {
+				boolean ok = dirFile.mkdirs();
+				if (!ok) {
+					throw new RuntimeException("dir path for: " + dirString + " not found and can't be created");
+				}
+			}
+			return Path.of(dirString);
+		}
+		return null;
+	}
 
-  public static Path makeDirIfNeeded(Path pathName) {
-    return makeDirIfNeeded(pathName.toString());
-  }
+	public static Path makeDirIfNeeded(Path pathName) {
+		return makeDirIfNeeded(pathName.toString());
+	}
 
-  public static Path makeDirIfNeeded(Path pathName, String dirName) {
-    return makeDirIfNeeded(Path.of(pathName.toString(), dirName));
-  }
+	public static Path makeDirIfNeeded(Path pathName, String dirName) {
+		return makeDirIfNeeded(Path.of(pathName.toString(), dirName));
+	}
 
-  /**
-   * (recursively) create directory
-   *
-   * @param path
-   */
-  public static Path createDirectory(Path path) {
-    try {
-      return Files.createDirectories(path);
-    } catch (Exception e) {
-      throw new RuntimeException("exception creating directory: " + path.toString() + ", " + e.getLocalizedMessage());
-    }
-  }
+	/**
+	 * (recursively) create directory
+	 *
+	 * @param path
+	 */
+	public static Path createDirectory(Path path) {
+		try {
+			return Files.createDirectories(path);
+		} catch (Exception e) {
+			throw new RuntimeException(
+					"exception creating directory: " + path.toString() + ", " + e.getLocalizedMessage());
+		}
+	}
 
-  /**
-   * recursively remove directory and all contents
-   *
-   * @param path
-   */
-  public static void deleteDirectory(Path path) {
-    try {
-      if (Files.exists(path)) {
-        Files //
-            .walk(path) //
-            .map(Path::toFile) //
-            .sorted((o1, o2) -> -o1.compareTo(o2)) //
-            .forEach(File::delete);
-      }
-    } catch (Exception e) {
-      throw new RuntimeException("exception deleting directory: " + path.toString() + ", " + e.getLocalizedMessage());
-    }
-  }
+	/**
+	 * recursively remove directory and all contents
+	 *
+	 * @param path
+	 */
+	public static void deleteDirectory(Path path) {
+		try {
+			if (Files.exists(path)) {
+				Files //
+						.walk(path) //
+						.map(Path::toFile) //
+						.sorted((o1, o2) -> -o1.compareTo(o2)) //
+						.forEach(File::delete);
+			}
+		} catch (Exception e) {
+			throw new RuntimeException(
+					"exception deleting directory: " + path.toString() + ", " + e.getLocalizedMessage());
+		}
+	}
 
-  /**
-   * recursively copy directory
-   *
-   * @param sourceDir
-   * @param targetDir
-   */
-  public static void copyDirectory(Path sourceDir, Path targetDir) {
-    try {
-      Files.walkFileTree(sourceDir, new SimpleFileVisitor<Path>() {
-        @Override
-        public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-          Path targetPath = targetDir.resolve(sourceDir.relativize(dir));
-          if (!Files.exists(targetPath)) {
-            Files.createDirectories(targetPath);
-          }
-          return FileVisitResult.CONTINUE;
-        }
+	/**
+	 * recursively copy directory
+	 *
+	 * @param sourceDir
+	 * @param targetDir
+	 */
+	public static void copyDirectory(Path sourceDir, Path targetDir) {
+		try {
+			Files.walkFileTree(sourceDir, new SimpleFileVisitor<Path>() {
+				@Override
+				public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+					Path targetPath = targetDir.resolve(sourceDir.relativize(dir));
+					if (!Files.exists(targetPath)) {
+						Files.createDirectories(targetPath);
+					}
+					return FileVisitResult.CONTINUE;
+				}
 
-        @Override
-        public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-          Files.copy(file, targetDir.resolve(sourceDir.relativize(file)), REPLACE_EXISTING);
-          return FileVisitResult.CONTINUE;
-        }
+				@Override
+				public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+					Files.copy(file, targetDir.resolve(sourceDir.relativize(file)), REPLACE_EXISTING);
+					return FileVisitResult.CONTINUE;
+				}
 
-        @Override
-        public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
-          // Handle errors during file visits, e.g., print error and continue or terminate
-          System.err.println("Failed to visit file: " + file + " - " + exc.getMessage());
-          return FileVisitResult.CONTINUE; // or FileVisitResult.TERMINATE;
-        }
-      });
-    } catch (IOException e) {
-      throw new RuntimeException(
-          "exception copying directory: " + sourceDir.toString() + ", " + e.getLocalizedMessage());
-    }
-  }
+				@Override
+				public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
+					// Handle errors during file visits, e.g., print error and continue or terminate
+					System.err.println("Failed to visit file: " + file + " - " + exc.getMessage());
+					return FileVisitResult.CONTINUE; // or FileVisitResult.TERMINATE;
+				}
+			});
+		} catch (IOException e) {
+			throw new RuntimeException(
+					"exception copying directory: " + sourceDir.toString() + ", " + e.getLocalizedMessage());
+		}
+	}
+
+	public static void zipDirectory(Path sourceDir, Path zipFile) throws IOException {
+		// Create the ZipOutputStream wrapped inside a standard file stream
+		try (OutputStream fos = Files.newOutputStream(zipFile); ZipOutputStream zos = new ZipOutputStream(fos)) {
+
+			// Walk through all files and subfolders in the source directory
+			Files.walkFileTree(sourceDir, new SimpleFileVisitor<Path>() {
+				@Override
+				public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+					// Create a relative path to ensure the zip file structure matches the folder
+					// structure
+					Path targetFile = sourceDir.relativize(file);
+
+					// Zip entries require forward slashes ('/') for cross-platform compatibility
+					String entryName = targetFile.toString().replace('\\', '/');
+
+					// Begin a new entry inside the zip file
+					zos.putNextEntry(new ZipEntry(entryName));
+
+					// Copy the bytes of the file directly into the ZipOutputStream
+					Files.copy(file, zos);
+
+					// Close the current entry
+					zos.closeEntry();
+
+					return FileVisitResult.CONTINUE;
+				} // end visitFile
+			}); // end walk
+		} // end try
+	}
 
 }
