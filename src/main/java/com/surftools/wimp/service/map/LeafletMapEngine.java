@@ -546,8 +546,8 @@ public class LeafletMapEngine extends MapService {
 
 			  <style>
 			    #map {
-			      height: 100vh;
-			      width: 100vw;
+			      height: 98vh;
+			      width: 98vw;
 			    }
 
 			    /* Legend-control hybrid */
@@ -717,7 +717,7 @@ public class LeafletMapEngine extends MapService {
 			    // ------------------------------------------------------------
 			    // Initialize map (Canvas renderer enabled)
 			    // ------------------------------------------------------------
-			    const map = L.map("map", { preferCanvas: true }).setView([50, -100], 4);
+			    const map = L.map("map", { preferCanvas: true }).setView([40, -100], 4);
 
 			    // ------------------------------------------------------------
 			    // BASEMAPS (ONLY OSM + USGS)
