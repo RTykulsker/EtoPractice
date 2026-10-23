@@ -26,6 +26,6 @@ SOFTWARE.
 
 package com.surftools.wimp.schedule;
 
-public record ScheduleCheckResult(ScheduleRecord lastOutput, ScheduleRecord thisOuput,
-    ScheduleRecord nextOutput) {
+public record ScheduleCheckResult(ScheduleRecord lastOutput, ScheduleRecord thisOuput, ScheduleRecord nextOutput,
+		ScheduleRecord nextNextOutput) {
 }

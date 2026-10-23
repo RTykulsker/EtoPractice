@@ -101,6 +101,12 @@ public class ScheduleManager {
 
 		var higherEntry = dateScheduleMap.higherEntry(date);
 		var nextOutput = higherEntry == null ? null : dateScheduleMap.higherEntry(date).getValue();
-		return new ScheduleCheckResult(lastOutput, thisOutput, nextOutput);
+
+		ScheduleRecord nextNextOutput = null;
+		if (nextOutput != null) {
+			var nextHigherEntry = dateScheduleMap.higherEntry(nextOutput.date());
+			nextNextOutput = nextHigherEntry == null ? null : dateScheduleMap.higherEntry(nextOutput.date()).getValue();
+		}
+		return new ScheduleCheckResult(lastOutput, thisOutput, nextOutput, nextNextOutput);
 	}
 }

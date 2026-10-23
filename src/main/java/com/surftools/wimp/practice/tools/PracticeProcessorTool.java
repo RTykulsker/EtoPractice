@@ -94,6 +94,7 @@ public class PracticeProcessorTool {
 	public void run() {
 		try {
 			var cm = new PropertyFileConfigurationManager(configurationFileName, Key.values());
+			var originalExerciseDateString = exerciseDateString;
 			exerciseDateString = parse(exerciseDateString, cm);
 			addDatedLogger(cm);
 
@@ -145,6 +146,11 @@ public class PracticeProcessorTool {
 								            """;
 						sb.append(text);
 					} else {
+						// we *probably* don't want this week,
+						if (originalExerciseDateString.equals("next")) {
+							nextSchedule = checkResult.nextNextOutput();
+							nextExerciseDate = checkResult.nextNextOutput().date();
+						}
 						var nextExerciseYear = nextExerciseDate.getYear();
 						var nextExerciseDateString = dtf.format(nextExerciseDate);
 						var instructionPath = Path.of(referencePathName, "instructions",
