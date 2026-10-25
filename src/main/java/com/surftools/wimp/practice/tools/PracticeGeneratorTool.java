@@ -47,6 +47,7 @@ import java.util.stream.Stream;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
@@ -75,10 +76,10 @@ import com.surftools.wimp.utils.config.impl.PropertyFileConfigurationManager;
 public class PracticeGeneratorTool {
 	private static final Logger logger = LoggerFactory.getLogger(PracticeGeneratorTool.class);
 
+	private static final String SHEET_POOL = "pool";
 	private static final String SHEET_SCHEDULE = "schedule";
 	private static final String SHEET_OVERRIDE = "override";
-	private static final String SHEET_PROHIBITED = "prohibited";
-	private static final List<String> REQUIRED_SHEET_NAMES = List.of(SHEET_SCHEDULE, SHEET_OVERRIDE, SHEET_PROHIBITED);
+	private static final List<String> REQUIRED_SHEET_NAMES = List.of(SHEET_SCHEDULE, SHEET_OVERRIDE);
 
 	static {
 		System.setProperty("logback.configurationFile", "resources/logback.xml");
@@ -106,6 +107,9 @@ public class PracticeGeneratorTool {
 	private String oldReferencePathString;
 	private String commitMessage;
 
+	private Map<String, BucketChooser<MessageType>> poolNameMessageTypeChooserTable;
+	private Map<MessageType, Integer> messageTypeCountMap;
+
 	private Random rng;
 
 	public static void main(String[] args) {
@@ -126,6 +130,11 @@ public class PracticeGeneratorTool {
 		initialize();
 		var schedule = makeSchedule();
 		generateExercises(schedule);
+
+		messageTypeCountMap.forEach(
+				(key, value) -> logger.info("message Type: " + key + ", generated " + value + " new messages"));
+		var generatedCount = messageTypeCountMap.values().stream().mapToInt(Integer::intValue).sum();
+		logger.info("generated " + generatedCount + " total new messages");
 
 		if (enableFinalize) {
 			doFinalization();
@@ -294,10 +303,6 @@ public class PracticeGeneratorTool {
 
 		final DateTimeFormatter DTF = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 		for (var schedule : scheduleList) {
-			if (!schedule.isPractice()) {
-				continue;
-			}
-
 			var date = schedule.date();
 			var exerciseYear = String.valueOf(date.getYear());
 
@@ -313,6 +318,16 @@ public class PracticeGeneratorTool {
 				// after cutoverDate: generate!
 				var messageType = schedule.messageType();
 				var generator = generatorMap.get(messageType);
+
+				var ord = PracticeUtils.getOrdinalDayOfWeek(date);
+				var ordName = PracticeUtils.getOrdinalLabel(ord);
+				logger.info("generated date: " + date + ", " + ordName + " " + date.getDayOfWeek().toString() + ", "
+						+ messageType.name());
+
+				if (!schedule.isPractice()) {
+					continue;
+				}
+
 				var m = generator.generateMessage(date, schedule);
 				var instructions = generator.generateIntructions(m, date, schedule, enableFinalize, now);
 
@@ -323,11 +338,6 @@ public class PracticeGeneratorTool {
 				var markerString = messageType.toString() + "-" + ((enableFinalize) ? "published" : "generated") + "-"
 						+ timestampString + ".txt";
 				Files.writeString(Path.of(referencePath.toString(), markerString), commitMessage);
-
-				var ord = PracticeUtils.getOrdinalDayOfWeek(date);
-				var ordName = PracticeUtils.getOrdinalLabel(ord);
-				logger.info("generated date: " + date + ", " + ordName + " " + date.getDayOfWeek().toString() + ", "
-						+ messageType.name());
 
 				Files.writeString(Path.of(instructionPath.toString(), DTF.format(date) + "-instructions.txt"),
 						instructions);
@@ -453,10 +463,15 @@ public class PracticeGeneratorTool {
 		var startYear = startDate.getYear();
 		var endYear = endDate.getYear();
 
-		var messageTypeListChooserMap = new HashMap<ArrayList<MessageType>, BucketChooser<MessageType>>();
-
 		try (var fis = new FileInputStream(file);
 				var workbook = file.getName().endsWith(".xlsx") ? new XSSFWorkbook(fis) : new HSSFWorkbook(fis)) {
+
+			var poolSheet = workbook.getSheet(SHEET_POOL);
+			if (poolSheet == null) {
+				logger.error("sheet: " + poolSheet + " not found in file: " + metaScheduleFileName);
+				System.exit(1);
+			}
+			makePoolNameMessageTypeChooserMap(poolSheet);
 
 			for (var sheetName : REQUIRED_SHEET_NAMES) {
 				var list = new ArrayList<InternalRecord>();
@@ -534,30 +549,34 @@ public class PracticeGeneratorTool {
 						}
 					}
 
-					var messageTypesString = ExcelUtils.getStringValue(row, 5);
-					BucketChooser<MessageType> chooser = null;
-					if (sheetName != SHEET_PROHIBITED) {
+					var poolName = ExcelUtils.getStringValue(row, 5);
+					var chooser = poolNameMessageTypeChooserTable.get(poolName);
+
+					if (chooser == null) { // create a chooser on the fly
+						var messageTypesString = poolName.split(",");
 						var messageTypeList = new ArrayList<MessageType>();
-						var fields = messageTypesString.split(",");
-						for (var field : fields) {
-							field = field.strip().toUpperCase();
-							var messageType = MessageType.valueOf(field);
-							if (messageType == null) {
-								logger.error(cnp + "messageType: " + field + ", not a MessageType");
-								System.exit(1);
-							} else {
-								messageTypeList.add(messageType);
+						for (var messageTypeString : messageTypesString) {
+							messageTypeString = messageTypeString.strip();
+							if (messageTypeString.isEmpty()) {
+								continue;
 							}
+							var messageType = MessageType.fromString(messageTypeString);
+							if (messageType == null) {
+								logger.error("could not find messageType for: " + messageTypeString + ", in pool: "
+										+ poolName);
+								System.exit(1);
+							}
+							messageTypeList.add(messageType);
 						} // end loop over fields
 						Collections.sort(messageTypeList);
-						chooser = messageTypeListChooserMap.get(messageTypeList);
-						if (chooser == null) {
-							chooser = new BucketChooser<MessageType>(messageTypeList, rng);
-							messageTypeListChooserMap.put(messageTypeList, chooser);
-						}
-					} // end if not prohibited sheet
+						chooser = new BucketChooser<MessageType>(messageTypeList, rng);
+						var newPoolName = String.join(",", messageTypeList.stream().map(s -> s.toString()).toList());
+						poolNameMessageTypeChooserTable.put(newPoolName, chooser);
+						logger.info("created DYNAMIC pool: " + poolName + ", with " + messageTypeList.size()
+								+ " entries; " + newPoolName);
+					}
 
-					var isPractice = !sheetName.equals(SHEET_PROHIBITED);
+					var isPractice = !(chooser.size() == 1 && chooser.next().equals(MessageType.CUSTOM));
 					var internalRecord = new InternalRecord(name, ordinal, dow, month, year, chooser, isPractice,
 							extraData);
 					list.add(internalRecord);
@@ -574,9 +593,43 @@ public class PracticeGeneratorTool {
 		return map;
 	}
 
+	private void makePoolNameMessageTypeChooserMap(Sheet poolSheet) {
+		poolNameMessageTypeChooserTable = new HashMap<>();
+
+		int rowNumber = 0;
+		for (var row : poolSheet) {
+			++rowNumber;
+			if (rowNumber == 1) { // skip header row
+				continue;
+			}
+
+			var poolName = ExcelUtils.getStringValue(row, 0);
+			var messageTypesString = ExcelUtils.getStringValue(row, 1).split(",");
+			var messageTypeList = new ArrayList<MessageType>();
+			for (var messageTypeString : messageTypesString) {
+				messageTypeString = messageTypeString.strip();
+				if (messageTypeString.isEmpty()) {
+					continue;
+				}
+				var messageType = MessageType.fromString(messageTypeString.toLowerCase());
+				if (messageType == null) {
+					logger.error("could not find messageType for: " + messageTypeString + ", in pool: " + poolName);
+					System.exit(1);
+				}
+				messageTypeList.add(messageType);
+			} // end loop over fields
+			var chooser = new BucketChooser<MessageType>(messageTypeList, rng);
+			poolNameMessageTypeChooserTable.put(poolName, chooser);
+			Collections.sort(messageTypeList);
+			logger.info("created pool: " + poolName + ", with " + messageTypeList.size() + " entries; "
+					+ String.join(",", messageTypeList.stream().map(s -> s.toString()).toList()));
+		} // loop over rows
+	}
+
 	protected List<ScheduleRecord> generateSchedule(LocalDate startDate, LocalDate endDate,
 			Map<String, List<InternalRecord>> inputMap) {
 
+		messageTypeCountMap = new HashMap<>();
 		var matches = new ArrayList<InternalRecord>();
 		var dateScheduleRecordMap = new HashMap<LocalDate, ScheduleRecord>();
 
@@ -623,7 +676,13 @@ public class PracticeGeneratorTool {
 				if (matches.size() == 1) {
 					var input = matches.get(0);
 					var chooser = input.chooser;
-					var messageType = (sheetName.equals(SHEET_PROHIBITED)) ? null : chooser.next();
+					var messageType = chooser.next();
+
+					if (date.isAfter(cutoverDate)) {
+						messageTypeCountMap.put(messageType,
+								1 + messageTypeCountMap.getOrDefault(messageType, Integer.valueOf(0)));
+					}
+
 					var output = new ScheduleRecord(input.name, date, messageType, input.isPractice, input.extraData);
 
 					var previousOutput = dateScheduleRecordMap.get(date);
