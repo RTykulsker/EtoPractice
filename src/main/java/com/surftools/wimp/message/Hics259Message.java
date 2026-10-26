@@ -31,123 +31,129 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.surftools.wimp.core.MessageType;
 
 // support HICS 259 message
 
+@JsonIgnoreProperties({ "messageId", "from", "source", "to", "toList", "ccList", "msgDateTime", "msgLocation",
+		"msgLocationSource", "msgLocationSource", "mime", "plainContent", "attachments", "sortDateTime", "mapLocation",
+		"isP2p", "fileName", "lines", "formVersion", "expressVersion", "dataSource", "headers", "multiMessageComment",
+		"values", "mimeLines", "formDate", "formTime" })
 public class Hics259Message extends ExportedMessage {
 
-  public static final List<String> CASUALTY_KEYS = List.of("Patients seen", "Waiting to be seen", "Admitted",
-      "Critical care bed", "Medical/surgical bed", "Pediatric Bed", "Discharged", "Transferred", "Expired");
+	public static final List<String> CASUALTY_KEYS = List.of("Patients seen", "Waiting to be seen", "Admitted",
+			"Critical care bed", "Medical/surgical bed", "Pediatric Bed", "Discharged", "Transferred", "Expired");
 
-  public record CasualtyEntry(String adultCount, String childCount, String comment) {
-  };
+	public record CasualtyEntry(String adultCount, String childCount, String comment) {
+	};
 
-  public final String incidentName;
-  public final String formDate;
-  public final String formTime;
+	public final String incidentName;
+	public final String formDate;
+	public final String formTime;
 
-  public final String operationalPeriod;
-  public final String opFromDate;
-  public final String opFromTime;
-  public final String opToDate;
-  public final String opToTime;
+	public final String operationalPeriod;
+	public final String opFromDate;
+	public final String opFromTime;
+	public final String opToDate;
+	public final String opToTime;
 
-  public final Map<String, CasualtyEntry> casualtyMap;
+	public final Map<String, CasualtyEntry> casualtyMap;
 
-  public final String patientTrackingManager;
-  public final String facilityName;
+	public final String patientTrackingManager;
+	public final String facilityName;
 
-  public Hics259Message(ExportedMessage exportedMessage, //
-      String incidentName, String formDate, String formTime, //
-      String operationalPeriod, String opFromDate, String opFromTime, String opToDate, String opToTime, //
-      Map<String, CasualtyEntry> casualtyMap, //
-      String patientTrackingManager, String facilityName, String formVersion, String expressVersion) {
+	public Hics259Message(ExportedMessage exportedMessage, //
+			String incidentName, String formDate, String formTime, //
+			String operationalPeriod, String opFromDate, String opFromTime, String opToDate, String opToTime, //
+			Map<String, CasualtyEntry> casualtyMap, //
+			String patientTrackingManager, String facilityName, String formVersion, String expressVersion) {
 
-    super(exportedMessage);
+		super(exportedMessage);
 
-    this.incidentName = incidentName;
-    this.formDate = formDate;
-    this.formTime = formTime;
+		this.incidentName = incidentName;
+		this.formDate = formDate;
+		this.formTime = formTime;
 
-    this.operationalPeriod = operationalPeriod;
-    this.opFromDate = opFromDate;
-    this.opFromTime = opFromTime;
-    this.opToDate = opToDate;
-    this.opToTime = opToTime;
+		this.operationalPeriod = operationalPeriod;
+		this.opFromDate = opFromDate;
+		this.opFromTime = opFromTime;
+		this.opToDate = opToDate;
+		this.opToTime = opToTime;
 
-    this.casualtyMap = casualtyMap;
+		this.casualtyMap = casualtyMap;
 
-    this.patientTrackingManager = patientTrackingManager;
-    this.facilityName = facilityName;
+		this.patientTrackingManager = patientTrackingManager;
+		this.facilityName = facilityName;
 
-    setParsedFields(formVersion, expressVersion);
-  }
+		setParsedFields(formVersion, expressVersion);
+	}
 
-  public static String[] getStaticHeaders() {
+	public static String[] getStaticHeaders() {
 
-    var firstList = List.of("MessageId", "From", "To", "Subject", "Date", "Time", "Msg Location", //
-        "Incident Name", "Form Date/Time", //
-        "Op Period #", "Op From", "Op To" //
-    );
+		var firstList = List.of("MessageId", "From", "To", "Subject", "Date", "Time", "Msg Location", //
+				"Incident Name", "Form Date/Time", //
+				"Op Period #", "Op From", "Op To" //
+		);
 
-    var casualtyList = new ArrayList<String>();
-    for (var key : CASUALTY_KEYS) {
-      casualtyList.add(key + ": Adult");
-      casualtyList.add(key + ": Pediatric");
-      casualtyList.add(key + ": Comments");
-    }
+		var casualtyList = new ArrayList<String>();
+		for (var key : CASUALTY_KEYS) {
+			casualtyList.add(key + ": Adult");
+			casualtyList.add(key + ": Pediatric");
+			casualtyList.add(key + ": Comments");
+		}
 
-    var lastList = List.of("Patient Tracking Manager", "Facility Name", //
-        "Form Version", "Express Version", "File Name");
+		var lastList = List.of("Patient Tracking Manager", "Facility Name", //
+				"Form Version", "Express Version", "File Name");
 
-    var resultList = new ArrayList<String>(firstList.size() + casualtyList.size() + lastList.size());
-    resultList.addAll(firstList);
-    resultList.addAll(casualtyList);
-    resultList.addAll(lastList);
-    return resultList.toArray(new String[0]);
-  }
+		var resultList = new ArrayList<String>(firstList.size() + casualtyList.size() + lastList.size());
+		resultList.addAll(firstList);
+		resultList.addAll(casualtyList);
+		resultList.addAll(lastList);
+		return resultList.toArray(new String[0]);
+	}
 
-  @Override
-  public String[] getHeaders() {
-    return getStaticHeaders();
-  }
+	@Override
+	public String[] getHeaders() {
+		return getStaticHeaders();
+	}
 
-  @Override
-  public String[] getValues() {
-    var date = sortDateTime == null ? "" : sortDateTime.toLocalDate().toString();
-    var time = sortDateTime == null ? "" : sortDateTime.toLocalTime().toString();
+	@Override
+	public String[] getValues() {
+		var date = sortDateTime == null ? "" : sortDateTime.toLocalDate().toString();
+		var time = sortDateTime == null ? "" : sortDateTime.toLocalTime().toString();
 
-    var firstList = List.of(messageId, from, to, subject, date, time, msgLocation == null ? "" : msgLocation.toString(), //
-        incidentName, formDate + " " + formTime, //
-        operationalPeriod, opFromDate + " " + opFromTime, //
-        opToDate + " " + opToTime);//
+		var firstList = List.of(messageId, from, to, subject, date, time,
+				msgLocation == null ? "" : msgLocation.toString(), //
+				incidentName, formDate + " " + formTime, //
+				operationalPeriod, opFromDate + " " + opFromTime, //
+				opToDate + " " + opToTime);//
 
-    var casualtyList = new ArrayList<String>();
-    for (var key : CASUALTY_KEYS) {
-      var entry = casualtyMap.getOrDefault(key, new CasualtyEntry("", "", ""));
-      casualtyList.add(entry.adultCount);
-      casualtyList.add(entry.childCount);
-      casualtyList.add(entry.comment);
-    }
+		var casualtyList = new ArrayList<String>();
+		for (var key : CASUALTY_KEYS) {
+			var entry = casualtyMap.getOrDefault(key, new CasualtyEntry("", "", ""));
+			casualtyList.add(entry.adultCount);
+			casualtyList.add(entry.childCount);
+			casualtyList.add(entry.comment);
+		}
 
-    var lastList = List.of(patientTrackingManager, facilityName, //
-        formVersion, expressVersion, fileName);
+		var lastList = List.of(patientTrackingManager, facilityName, //
+				formVersion, expressVersion, fileName);
 
-    var resultList = new ArrayList<String>(firstList.size() + casualtyList.size() + lastList.size());
-    resultList.addAll(firstList);
-    resultList.addAll(casualtyList);
-    resultList.addAll(lastList);
-    return resultList.toArray(new String[0]);
-  }
+		var resultList = new ArrayList<String>(firstList.size() + casualtyList.size() + lastList.size());
+		resultList.addAll(firstList);
+		resultList.addAll(casualtyList);
+		resultList.addAll(lastList);
+		return resultList.toArray(new String[0]);
+	}
 
-  @Override
-  public MessageType getMessageType() {
-    return MessageType.HICS_259;
-  }
+	@Override
+	public MessageType getMessageType() {
+		return MessageType.HICS_259;
+	}
 
-  @Override
-  public String getMultiMessageComment() {
-    return "";
-  }
+	@Override
+	public String getMultiMessageComment() {
+		return "";
+	}
 }

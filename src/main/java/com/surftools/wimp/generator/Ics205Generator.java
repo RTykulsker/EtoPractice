@@ -66,7 +66,8 @@ public class Ics205Generator extends AbstractBasePracticeGenerator {
 		var timeTo = "08:00 UTC";
 		var radioItems = makeRadioEntries(nRadioEntries, date);
 		for (var i = nRadioEntries; i < Ics205Message.MAX_RADIO_ENTRIES; ++i) {
-			radioItems.add(RadioEntry.EMPTY);
+//			radioItems.add(RadioEntry.EMPTY);
+			radioItems.add(null);
 		}
 		var specialInstructions = EXERCISE;
 		var approvedBy = data.nameChooser.next();
@@ -98,7 +99,7 @@ public class Ics205Generator extends AbstractBasePracticeGenerator {
 		sb.append(INDENT + "Basic Radio Channel Use:" + NL);
 		var lineNumber = 0;
 		for (var item : m.radioEntries) {
-			if (item.isEmpty()) {
+			if (item == null || item.isEmpty()) {
 				break;
 			}
 

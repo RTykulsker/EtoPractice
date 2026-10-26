@@ -27,95 +27,101 @@ SOFTWARE.
 
 package com.surftools.wimp.message;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.surftools.utils.location.LatLongPair;
 import com.surftools.wimp.core.MessageType;
 
+@JsonIgnoreProperties({ "messageId", "from", "source", "to", "toList", "ccList", "msgDateTime", "msgLocation",
+		"msgLocationSource", "msgLocationSource", "mime", "plainContent", "attachments", "sortDateTime", "mapLocation",
+		"isP2p", "fileName", "lines", "formVersion", "expressVersion", "dataSource", "headers", "multiMessageComment",
+		"values", "mimeLines", "formDate", "formTime", "formLocation" })
 public class Ics213Message extends ExportedMessage {
-  public final String organization;
-  public final String incidentName;
+	public final String organization;
+	public final String incidentName;
 
-  public final String formFrom;
-  public final String formTo;
-  public final String formSubject;
-  public final String formDate; // I'm not going to try to parse these
-  public final String formTime; // I/m not going to try to parse this either
-  public final String formMessage;
-  public final String approvedBy;
-  public final String position;
+	public final String formFrom;
+	public final String formTo;
+	public final String formSubject;
+	public final String formDate; // I'm not going to try to parse these
+	public final String formTime; // I/m not going to try to parse this either
+	public final String formMessage;
+	public final String approvedBy;
+	public final String position;
 
-  public final boolean isExercise;
-  public final LatLongPair formLocation;
-  public final String dataSource;
+	public final boolean isExercise;
+	public final LatLongPair formLocation;
+	public final String dataSource;
 
-  public Ics213Message(ExportedMessage exportedMessage, String organization, String incidentName, //
-      String formFrom, String formTo, String formSubject, String formDate, String formTime, //
-      String formMessage, String approvedBy, String position, //
-      boolean isExercise, LatLongPair formLocation, String formVersion, String expressVersion, String dataSource) {
-    super(exportedMessage);
-    this.organization = organization;
-    this.incidentName = incidentName;
+	public Ics213Message(ExportedMessage exportedMessage, String organization, String incidentName, //
+			String formFrom, String formTo, String formSubject, String formDate, String formTime, //
+			String formMessage, String approvedBy, String position, //
+			boolean isExercise, LatLongPair formLocation, String formVersion, String expressVersion,
+			String dataSource) {
+		super(exportedMessage);
+		this.organization = organization;
+		this.incidentName = incidentName;
 
-    this.formFrom = formFrom;
-    this.formTo = formTo;
-    this.formSubject = formSubject;
-    this.formDate = formDate;
-    this.formTime = formTime;
+		this.formFrom = formFrom;
+		this.formTo = formTo;
+		this.formSubject = formSubject;
+		this.formDate = formDate;
+		this.formTime = formTime;
 
-    this.formMessage = formMessage;
-    this.approvedBy = approvedBy;
-    this.position = position;
+		this.formMessage = formMessage;
+		this.approvedBy = approvedBy;
+		this.position = position;
 
-    this.isExercise = isExercise;
-    this.formLocation = formLocation != null ? formLocation : LatLongPair.INVALID;
-    this.dataSource = dataSource;
+		this.isExercise = isExercise;
+		this.formLocation = formLocation != null ? formLocation : LatLongPair.INVALID;
+		this.dataSource = dataSource;
 
-    this.mapLocation = (formLocation != null && formLocation.isValid()) ? formLocation : mapLocation;
-    setParsedFields(formVersion, expressVersion);
-  }
+		this.mapLocation = (formLocation != null && formLocation.isValid()) ? formLocation : mapLocation;
+		setParsedFields(formVersion, expressVersion);
+	}
 
-  @Override
-  public String[] getHeaders() {
-    return getStaticHeaders();
-  }
+	@Override
+	public String[] getHeaders() {
+		return getStaticHeaders();
+	}
 
-  public static String[] getStaticHeaders() {
-    return new String[] { "MessageId", "From", "To", "Subject", "Date", "Time", //
-        "Latitude", "Longitude", "Msg Location", "Form Location", //
-        "Organization", "IncidentName", //
-        "Form From", "Form To", "Form Subject", "Form Date", "Form Time", //
-        "Form Message", "Approved By", "Position/Title", "Is Exercise", "FormVersion", "Express Version", "Data Source",
-        "File Name" };
-  }
+	public static String[] getStaticHeaders() {
+		return new String[] { "MessageId", "From", "To", "Subject", "Date", "Time", //
+				"Latitude", "Longitude", "Msg Location", "Form Location", //
+				"Organization", "IncidentName", //
+				"Form From", "Form To", "Form Subject", "Form Date", "Form Time", //
+				"Form Message", "Approved By", "Position/Title", "Is Exercise", "FormVersion", "Express Version",
+				"Data Source", "File Name" };
+	}
 
-  @Override
-  public String[] getValues() {
-    var date = sortDateTime == null ? "" : sortDateTime.toLocalDate().toString();
-    var time = sortDateTime == null ? "" : sortDateTime.toLocalTime().toString();
+	@Override
+	public String[] getValues() {
+		var date = sortDateTime == null ? "" : sortDateTime.toLocalDate().toString();
+		var time = sortDateTime == null ? "" : sortDateTime.toLocalTime().toString();
 
-    // prefer form location to message location
-    var location = formLocation;
-    if (location == null || !location.isValid()) {
-      location = mapLocation;
-    }
-    var lat = location == null ? "" : location.getLatitude();
-    var lon = location == null ? "" : location.getLongitude();
+		// prefer form location to message location
+		var location = formLocation;
+		if (location == null || !location.isValid()) {
+			location = mapLocation;
+		}
+		var lat = location == null ? "" : location.getLatitude();
+		var lon = location == null ? "" : location.getLongitude();
 
-    return new String[] { messageId, from, to, subject, date, time, //
-        lat, lon, mapLocation == null ? "" : mapLocation.toString(), //
-        formLocation == null ? "" : formLocation.toString(), //
-        organization, incidentName, //
-        formFrom, formTo, formSubject, formDate, formTime, //
-        formMessage, approvedBy, position, String.valueOf(isExercise), formVersion, expressVersion, dataSource,
-        fileName };
-  }
+		return new String[] { messageId, from, to, subject, date, time, //
+				lat, lon, mapLocation == null ? "" : mapLocation.toString(), //
+				formLocation == null ? "" : formLocation.toString(), //
+				organization, incidentName, //
+				formFrom, formTo, formSubject, formDate, formTime, //
+				formMessage, approvedBy, position, String.valueOf(isExercise), formVersion, expressVersion, dataSource,
+				fileName };
+	}
 
-  @Override
-  public MessageType getMessageType() {
-    return MessageType.ICS_213;
-  }
+	@Override
+	public MessageType getMessageType() {
+		return MessageType.ICS_213;
+	}
 
-  @Override
-  public String getMultiMessageComment() {
-    return formMessage;
-  }
+	@Override
+	public String getMultiMessageComment() {
+		return formMessage;
+	}
 }

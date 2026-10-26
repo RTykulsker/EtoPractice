@@ -32,6 +32,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.surftools.utils.location.LatLongPair;
 import com.surftools.wimp.core.IMessage;
 import com.surftools.wimp.core.IWritableTable;
@@ -46,207 +47,211 @@ import com.surftools.wimp.core.MessageType;
  * @author bobt
  *
  */
+@JsonIgnoreProperties({ "messageId", "from", "source", "to", "toList", "ccList", "msgDateTime", "msgLocation",
+		"msgLocationSource", "msgLocationSource", "mime", "plainContent", "attachments", "sortDateTime", "mapLocation",
+		"isP2p", "fileName", "lines", "formVersion", "expressVersion", "dataSource", "headers", "multiMessageComment",
+		"values", "mimeLines" })
 public class ExportedMessage implements IMessage, IWritableTable {
-  public record ExportedKey(String from, String messageId) {
-  };
+	public record ExportedKey(String from, String messageId) {
+	};
 
-  public static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm");
+	public static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm");
 
-  public final String messageId;
-  public final String from; // aka sender, which can be a tactical address
-  public final String source; // "owner" of the Winlink Express instance, license holder, with password
-  public final String to;
-  public final String toList;
-  public final String ccList;
-  public final String subject;
+	public final String messageId;
+	public final String from; // aka sender, which can be a tactical address
+	public final String source; // "owner" of the Winlink Express instance, license holder, with password
+	public final String to;
+	public final String toList;
+	public final String ccList;
+	public final String subject;
 
-  public final LocalDateTime msgDateTime; // date/time (UTC) from message meta-data
-  public LatLongPair msgLocation; // location from message meta-data; may or may not be present
-  public final String msgLocationSource;
+	public final LocalDateTime msgDateTime; // date/time (UTC) from message meta-data
+	public LatLongPair msgLocation; // location from message meta-data; may or may not be present
+	public final String msgLocationSource;
 
-  public final String mime;
-  public final String plainContent;
-  public final Map<String, byte[]> attachments;
+	public final String mime;
+	public final String plainContent;
+	public final Map<String, byte[]> attachments;
 
-  public LocalDateTime sortDateTime; // date/time used for sorting
-  public LatLongPair mapLocation; // location used for mapping
+	public LocalDateTime sortDateTime; // date/time used for sorting
+	public LatLongPair mapLocation; // location used for mapping
 
-  public final boolean isP2p;
-  public final String fileName;
-  public final List<String> lines;
+	public final boolean isP2p;
+	public final String fileName;
+	public final List<String> lines;
 
-  // these variables aren't known at contructor time, only after a message is
-  // parsed
-  public String formVersion;
-  public String expressVersion;
+	// these variables aren't known at contructor time, only after a message is
+	// parsed
+	public String formVersion;
+	public String expressVersion;
 
-  @Override
-  public int hashCode() {
-    final int prime = 31;
-    int result = 1;
-    result = prime * result + ((messageId == null) ? 0 : messageId.hashCode());
-    return result;
-  }
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((messageId == null) ? 0 : messageId.hashCode());
+		return result;
+	}
 
-  @Override
-  public boolean equals(Object obj) {
-    if (this == obj) {
-      return true;
-    }
-    if (obj == null) {
-      return false;
-    }
-    if (getClass() != obj.getClass()) {
-      return false;
-    }
-    ExportedMessage other = (ExportedMessage) obj;
-    if (messageId == null) {
-      if (other.messageId != null) {
-        return false;
-      }
-    } else if (!messageId.equals(other.messageId)) {
-      return false;
-    }
-    return true;
-  }
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (obj == null) {
+			return false;
+		}
+		if (getClass() != obj.getClass()) {
+			return false;
+		}
+		ExportedMessage other = (ExportedMessage) obj;
+		if (messageId == null) {
+			if (other.messageId != null) {
+				return false;
+			}
+		} else if (!messageId.equals(other.messageId)) {
+			return false;
+		}
+		return true;
+	}
 
-  public ExportedMessage(String messageId, String from, String source, String to, String toList, String ccList, //
-      String subject, LocalDateTime dateTime, //
-      LatLongPair location, String locationSource, //
-      String mime, String plainContent, Map<String, byte[]> attachments, boolean isP2p, String fileName,
-      List<String> lines) {
-    this.messageId = messageId;
-    this.from = from;
-    this.source = source;
-    this.to = to;
-    this.toList = toList;
-    this.ccList = ccList;
-    this.subject = subject;
+	public ExportedMessage(String messageId, String from, String source, String to, String toList, String ccList, //
+			String subject, LocalDateTime dateTime, //
+			LatLongPair location, String locationSource, //
+			String mime, String plainContent, Map<String, byte[]> attachments, boolean isP2p, String fileName,
+			List<String> lines) {
+		this.messageId = messageId;
+		this.from = from;
+		this.source = source;
+		this.to = to;
+		this.toList = toList;
+		this.ccList = ccList;
+		this.subject = subject;
 
-    this.msgDateTime = dateTime;
-    this.msgLocation = location;
-    this.msgLocationSource = locationSource;
+		this.msgDateTime = dateTime;
+		this.msgLocation = location;
+		this.msgLocationSource = locationSource;
 
-    this.mime = mime;
-    this.plainContent = plainContent;
-    this.attachments = attachments;
+		this.mime = mime;
+		this.plainContent = plainContent;
+		this.attachments = attachments;
 
-    this.sortDateTime = dateTime;
-    this.mapLocation = location;
+		this.sortDateTime = dateTime;
+		this.mapLocation = location;
 
-    this.isP2p = isP2p;
-    this.fileName = fileName;
-    this.lines = lines;
-  }
+		this.isP2p = isP2p;
+		this.fileName = fileName;
+		this.lines = lines;
+	}
 
-  public void setSortDateTime(LocalDateTime dateTime) {
-    this.sortDateTime = dateTime;
-  }
+	public void setSortDateTime(LocalDateTime dateTime) {
+		this.sortDateTime = dateTime;
+	}
 
-  public void setMapLocation(LatLongPair location) {
-    this.mapLocation = location;
-  }
+	public void setMapLocation(LatLongPair location) {
+		this.mapLocation = location;
+	}
 
-  public ExportedMessage(ExportedMessage exportedMessage) {
-    this.messageId = exportedMessage.messageId;
-    this.from = exportedMessage.from;
-    this.source = exportedMessage.source;
-    this.to = exportedMessage.to;
-    this.toList = exportedMessage.toList;
-    this.ccList = exportedMessage.ccList;
-    this.subject = exportedMessage.subject;
+	public ExportedMessage(ExportedMessage exportedMessage) {
+		this.messageId = exportedMessage.messageId;
+		this.from = exportedMessage.from;
+		this.source = exportedMessage.source;
+		this.to = exportedMessage.to;
+		this.toList = exportedMessage.toList;
+		this.ccList = exportedMessage.ccList;
+		this.subject = exportedMessage.subject;
 
-    this.msgDateTime = exportedMessage.msgDateTime;
-    this.msgLocation = (exportedMessage.msgLocation != null) ? exportedMessage.msgLocation : LatLongPair.INVALID;
-    this.msgLocationSource = exportedMessage.msgLocationSource;
+		this.msgDateTime = exportedMessage.msgDateTime;
+		this.msgLocation = (exportedMessage.msgLocation != null) ? exportedMessage.msgLocation : LatLongPair.INVALID;
+		this.msgLocationSource = exportedMessage.msgLocationSource;
 
-    this.mime = exportedMessage.mime;
-    this.plainContent = exportedMessage.plainContent;
-    this.attachments = exportedMessage.attachments;
+		this.mime = exportedMessage.mime;
+		this.plainContent = exportedMessage.plainContent;
+		this.attachments = exportedMessage.attachments;
 
-    this.sortDateTime = exportedMessage.sortDateTime;
-    this.mapLocation = exportedMessage.mapLocation;
-    this.isP2p = exportedMessage.isP2p;
-    this.fileName = exportedMessage.fileName;
-    this.lines = exportedMessage.lines;
+		this.sortDateTime = exportedMessage.sortDateTime;
+		this.mapLocation = exportedMessage.mapLocation;
+		this.isP2p = exportedMessage.isP2p;
+		this.fileName = exportedMessage.fileName;
+		this.lines = exportedMessage.lines;
 
-    this.formVersion = "";
-    this.expressVersion = "";
-  }
+		this.formVersion = "";
+		this.expressVersion = "";
+	}
 
-  @Override
-  public String toString() {
-    var nAttachments = attachments == null ? 0 : attachments.size();
-    var attachmentNames = nAttachments == 0 ? "" : String.join(",", attachments.keySet());
-    String attachmentsString = "\n" + nAttachments + " attachments(" + attachmentNames + ")\n";
-    return "ExportedMessage {messageId: " + messageId + ", from: " + from + ", to: " + to + ", subject: " + subject
-        + ", date: " + msgDateTime.toLocalDate() + ", time: " + msgDateTime.toLocalTime() + ", plainContent: \n"
-        + plainContent + attachmentsString + ", fileName: " + fileName + ", fornVersion: " + formVersion
-        + ", expressVersion: " + expressVersion + "}";
-  }
+	@Override
+	public String toString() {
+		var nAttachments = attachments == null ? 0 : attachments.size();
+		var attachmentNames = nAttachments == 0 ? "" : String.join(",", attachments.keySet());
+		String attachmentsString = "\n" + nAttachments + " attachments(" + attachmentNames + ")\n";
+		return "ExportedMessage {messageId: " + messageId + ", from: " + from + ", to: " + to + ", subject: " + subject
+				+ ", date: " + msgDateTime.toLocalDate() + ", time: " + msgDateTime.toLocalTime() + ", plainContent: \n"
+				+ plainContent + attachmentsString + ", fileName: " + fileName + ", fornVersion: " + formVersion
+				+ ", expressVersion: " + expressVersion + "}";
+	}
 
-  public String[] getMimeLines() {
-    return mime.split("\n");
-  }
+	public String[] getMimeLines() {
+		return mime.split("\n");
+	}
 
-  public String getPlainContent() {
-    return plainContent;
-  }
+	public String getPlainContent() {
+		return plainContent;
+	}
 
-  @Override
-  public String[] getHeaders() {
-    return new String[] { "MessageId", "From", "To", "ToList", "CcList", "Subject", //
-        "Date", "Time", "Latitude", "Longitude", "LocSource", //
-        "Plain Content", "#Attachments", "FileName", "FormVersion", "ExpressVersion"//
-    };
-  }
+	@Override
+	public String[] getHeaders() {
+		return new String[] { "MessageId", "From", "To", "ToList", "CcList", "Subject", //
+				"Date", "Time", "Latitude", "Longitude", "LocSource", //
+				"Plain Content", "#Attachments", "FileName", "FormVersion", "ExpressVersion"//
+		};
+	}
 
-  @Override
-  public String[] getValues() {
-    var date = sortDateTime == null ? "" : sortDateTime.toLocalDate().toString();
-    var time = sortDateTime == null ? "" : sortDateTime.toLocalTime().toString();
-    var lat = mapLocation == null ? "" : mapLocation.getLatitude();
-    var lon = mapLocation == null ? "" : mapLocation.getLongitude();
-    var nAttachments = attachments == null ? "" : String.valueOf(attachments.size());
-    return new String[] { messageId, from, to, toList, ccList, subject, //
-        date, time, lat, lon, msgLocationSource, //
-        plainContent, nAttachments, fileName, formVersion, expressVersion };
-  }
+	@Override
+	public String[] getValues() {
+		var date = sortDateTime == null ? "" : sortDateTime.toLocalDate().toString();
+		var time = sortDateTime == null ? "" : sortDateTime.toLocalTime().toString();
+		var lat = mapLocation == null ? "" : mapLocation.getLatitude();
+		var lon = mapLocation == null ? "" : mapLocation.getLongitude();
+		var nAttachments = attachments == null ? "" : String.valueOf(attachments.size());
+		return new String[] { messageId, from, to, toList, ccList, subject, //
+				date, time, lat, lon, msgLocationSource, //
+				plainContent, nAttachments, fileName, formVersion, expressVersion };
+	}
 
-  public MessageType getMessageType() {
-    return MessageType.EXPORTED;
-  }
+	public MessageType getMessageType() {
+		return MessageType.EXPORTED;
+	}
 
-  /**
-   * default behavior will be to return empty string
-   *
-   * @return
-   */
-  @Override
-  public String getMultiMessageComment() {
-    return "";
-  }
+	/**
+	 * default behavior will be to return empty string
+	 *
+	 * @return
+	 */
+	@Override
+	public String getMultiMessageComment() {
+		return "";
+	}
 
-  @Override
-  public int compareTo(IWritableTable other) {
-    var o = (ExportedMessage) other;
-    var cmp = this.sortDateTime.compareTo(o.sortDateTime);
-    if (cmp != 0) {
-      return cmp;
-    }
-    cmp = this.from.compareTo(o.from);
-    return cmp;
-  }
+	@Override
+	public int compareTo(IWritableTable other) {
+		var o = (ExportedMessage) other;
+		var cmp = this.sortDateTime.compareTo(o.sortDateTime);
+		if (cmp != 0) {
+			return cmp;
+		}
+		cmp = this.from.compareTo(o.from);
+		return cmp;
+	}
 
-  /**
-   * should be called from child Message constructors
-   *
-   * @param version
-   * @param expressVersion
-   */
-  public void setParsedFields(String formVersion, String expressVersion) {
-    this.formVersion = formVersion;
-    this.expressVersion = expressVersion;
-  }
+	/**
+	 * should be called from child Message constructors
+	 *
+	 * @param version
+	 * @param expressVersion
+	 */
+	public void setParsedFields(String formVersion, String expressVersion) {
+		this.formVersion = formVersion;
+		this.expressVersion = expressVersion;
+	}
 
 }

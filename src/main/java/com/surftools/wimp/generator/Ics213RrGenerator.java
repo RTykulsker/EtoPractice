@@ -127,7 +127,7 @@ public class Ics213RrGenerator extends AbstractBasePracticeGenerator {
 
 		var lineNumber = 0;
 		for (var line : m.lineItems) {
-			if (line.isEmpty()) {
+			if (line == null || line.isEmpty()) {
 				continue;
 			}
 
@@ -178,7 +178,7 @@ public class Ics213RrGenerator extends AbstractBasePracticeGenerator {
 						timeString, "", "");
 				lineItems.add(lineItem);
 			} else {
-				lineItems.add(LineItem.EMPTY);
+				lineItems.add(null);
 			}
 		}
 		return lineItems;

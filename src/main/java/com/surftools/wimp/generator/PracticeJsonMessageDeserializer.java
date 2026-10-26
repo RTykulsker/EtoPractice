@@ -106,6 +106,7 @@ public class PracticeJsonMessageDeserializer {
 	}
 
 	private ExportedMessage deserialize_ExportedMessage(JsonNode json) {
+		// TODO all as "n/a"
 		var messageId = json.get("messageId").asText();
 		var from = json.get("from").asText();
 		var source = json.get("source").asText();
@@ -162,22 +163,16 @@ public class PracticeJsonMessageDeserializer {
 		var formFrom = json.get("formFrom").asText();
 		var formTo = json.get("formTo").asText();
 		var formSubject = json.get("formSubject").asText();
-		var formDate = json.get("formDate").asText();
-		var formTime = json.get("formTime").asText();
+		var formDate = "n/a";
+		var formTime = "n/a";
 		var formMessage = json.get("formMessage").asText();
 		var approvedBy = json.get("approvedBy").asText();
 		var position = json.get("position").asText();
 		var isExercise = json.get("isExercise").asBoolean();
-		var formLocation = deserialize_LatLongPair(json.get("formLocation"));
-
-		var formVersionNode = json.get("version");
-		if (formVersionNode == null) {
-			formVersionNode = json.get("formVersion");
-		}
-		var formVersion = (formVersionNode == null) ? "" : formVersionNode.asText();
-
+		var formLocation = LatLongPair.ZERO_ZERO;
+		var formVersion = "n/a";
 		var expressVersion = "n/a";
-		var dataSource = json.get("dataSource").asText();
+		var dataSource = "n/a";
 
 		var m = new Ics213Message(exportedMessage, organization, incidentName, //
 				formFrom, formTo, formSubject, formDate, formTime, //
@@ -193,7 +188,7 @@ public class PracticeJsonMessageDeserializer {
 
 		var organization = json.get("organization").asText();
 		var incidentName = json.get("incidentName").asText();
-		var activityDateTime = json.get("activityDateTime").asText();
+		var activityDateTime = "n/a";
 		var requestNumber = json.get("requestNumber").asText();
 
 		var lineItems = new ArrayList<LineItem>();
@@ -201,15 +196,19 @@ public class PracticeJsonMessageDeserializer {
 		var it = jsonLineItems.iterator();
 		while (it.hasNext()) {
 			var jsonLineItem = it.next();
-			var quantity = jsonLineItem.get("quantity").asText();
-			var kind = jsonLineItem.get("kind").asText();
-			var type = jsonLineItem.get("type").asText();
-			var item = jsonLineItem.get("item").asText();
-			var requestedDateTime = jsonLineItem.get("requestedDateTime").asText();
-			var estimatedDateTime = jsonLineItem.get("estimatedDateTime").asText();
-			var cost = jsonLineItem.get("cost").asText();
-			var lineItem = new LineItem(quantity, kind, type, item, requestedDateTime, estimatedDateTime, cost);
-			lineItems.add(lineItem);
+			if (jsonLineItem != null) {
+				var quantity = jsonLineItem.get("quantity").asText();
+				var kind = jsonLineItem.get("kind").asText();
+				var type = jsonLineItem.get("type").asText();
+				var item = jsonLineItem.get("item").asText();
+				var requestedDateTime = jsonLineItem.get("requestedDateTime").asText();
+				var estimatedDateTime = "n/a";
+				var cost = "n/a";
+				var lineItem = new LineItem(quantity, kind, type, item, requestedDateTime, estimatedDateTime, cost);
+				lineItems.add(lineItem);
+			} else {
+				lineItems.add(LineItem.EMPTY);
+			}
 		}
 
 		var delivery = json.get("delivery").asText();
@@ -277,26 +276,31 @@ public class PracticeJsonMessageDeserializer {
 		var it = jsonRadioEntries.iterator();
 		while (it.hasNext()) {
 			var jsonRadioEntry = it.next();
-			var rowNumber = jsonRadioEntry.get("rowNumber").asInt();
-			var zoneGroup = jsonRadioEntry.get("zoneGroup").asText();
-			var channelNumber = jsonRadioEntry.get("channelNumber").asText();
-			var function = jsonRadioEntry.get("function").asText();
-			var channelName = jsonRadioEntry.get("channelName").asText();
-			var assignment = jsonRadioEntry.get("assignment").asText();
-			var rxFrequency = jsonRadioEntry.get("rxFrequency").asText();
-			var rxNarrowWide = jsonRadioEntry.get("rxNarrowWide").asText();
-			var rxTone = jsonRadioEntry.get("rxTone").asText();
-			var txFrequency = jsonRadioEntry.get("txFrequency").asText();
-			var txNarrowWide = jsonRadioEntry.get("txNarrowWide").asText();
-			var txTone = jsonRadioEntry.get("txTone").asText();
-			var mode = jsonRadioEntry.get("mode").asText();
-			var remarks = jsonRadioEntry.get("remarks").asText();
-			var radioEntry = new RadioEntry(rowNumber, //
-					zoneGroup, channelNumber, function, channelName, assignment, //
-					rxFrequency, rxNarrowWide, rxTone, //
-					txFrequency, txNarrowWide, txTone, //
-					mode, remarks);
-			radioEntries.add(radioEntry);
+			if (jsonRadioEntry != null) {
+				var rowNumber = jsonRadioEntry.get("rowNumber").asInt();
+				var zoneGroup = jsonRadioEntry.get("zoneGroup").asText();
+				var channelNumber = jsonRadioEntry.get("channelNumber").asText();
+				var function = jsonRadioEntry.get("function").asText();
+				var channelName = jsonRadioEntry.get("channelName").asText();
+				var assignment = jsonRadioEntry.get("assignment").asText();
+				var rxFrequency = jsonRadioEntry.get("rxFrequency").asText();
+				var rxNarrowWide = jsonRadioEntry.get("rxNarrowWide").asText();
+				var rxTone = jsonRadioEntry.get("rxTone").asText();
+				var txFrequency = jsonRadioEntry.get("txFrequency").asText();
+				var txNarrowWide = jsonRadioEntry.get("txNarrowWide").asText();
+				var txTone = jsonRadioEntry.get("txTone").asText();
+				var mode = jsonRadioEntry.get("mode").asText();
+				var remarks = jsonRadioEntry.get("remarks").asText();
+				var radioEntry = new RadioEntry(rowNumber, //
+						zoneGroup, channelNumber, function, channelName, assignment, //
+						rxFrequency, rxNarrowWide, rxTone, //
+						txFrequency, txNarrowWide, txTone, //
+						mode, remarks);
+				radioEntries.add(radioEntry);
+			} else {
+				radioEntries.add(RadioEntry.EMPTY);
+			}
+
 		}
 
 		var m = new Ics205Message(exportedMessage, organization, incidentName, //
@@ -315,10 +319,10 @@ public class PracticeJsonMessageDeserializer {
 		var organization = json.get("organization").asText();
 		var formLocation = deserialize_LatLongPair(json.get("formLocation"));
 		var precedence = json.get("precedence").asText();
-		var formDateTime = json.get("formDateTime").asText();
+		var formDateTime = "n/a";
 		var task = json.get("task").asText();
 		var formTo = json.get("formTo").asText();
-		var formFrom = json.get("formFrom").asText();
+		var formFrom = "n/a";
 		var isHelpNeeded = json.get("isHelpNeeded").asText();
 		var neededHelp = json.get("neededHelp").asText();
 
@@ -431,9 +435,9 @@ public class PracticeJsonMessageDeserializer {
 
 		var remarks = json.get("remarks").asText();
 		var preparedBy = json.get("preparedBy").asText();
-		var formDateTime = json.get("formDateTime").asText();
+		var formDateTime = "n/a";
 		var facilityName = json.get("facilityName").asText();
-		var radioOperator = json.get("radioOperator").asText();
+		var radioOperator = "n/a";
 		var formLocation = deserialize_LatLongPair(json.get("formLocation"));
 
 		var formVersion = "n/a";
@@ -459,8 +463,8 @@ public class PracticeJsonMessageDeserializer {
 		var message = deserialize_ExportedMessage(json);
 
 		var incidentName = json.get("incidentName").asText();
-		var formDate = json.get("formDate").asText();
-		var formTime = json.get("formTime").asText();
+		var formDate = "n/a";
+		var formTime = "n/a";
 
 		var operationalPeriod = json.get("operationalPeriod").asText();
 		var opFromDate = json.get("opFromDate").asText();
@@ -497,7 +501,7 @@ public class PracticeJsonMessageDeserializer {
 		var json = mapper.readTree(jsonString);
 		var exportedMessage = deserialize_ExportedMessage(json);
 		var isExercise = json.get("isExercise").asBoolean();
-		var formDateTime = json.get("formDateTime").asText();
+		var formDateTime = "n/a";
 		var facilityName = json.get("facilityName").asText();
 		var facilityAddress = json.get("facilityAddress").asText();
 		var facilityContactName = json.get("facilityContactName").asText();

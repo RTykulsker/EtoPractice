@@ -105,6 +105,7 @@ public class PracticeGeneratorTool {
 	private Path newInstructionsPath; // path to where we conditionally write instructions
 	private Path oldReferencePath;
 	private String oldReferencePathString;
+	private String originalCommitMessage;
 	private String commitMessage;
 
 	private Map<String, BucketChooser<MessageType>> poolNameMessageTypeChooserTable;
@@ -184,8 +185,8 @@ public class PracticeGeneratorTool {
 	private void getCommitMessage() throws Exception {
 		var commitMessagePathString = cm.getAsString(GenKey.PATH_COMMIT_MESSAGE);
 		var cutoverDateString = cm.getAsString(GenKey.GENERATOR_CUTOVER_DATE);
-		commitMessage = Files.readString(Path.of(commitMessagePathString));
-		commitMessage += "\nCutover Date: " + cutoverDateString;
+		originalCommitMessage = Files.readString(Path.of(commitMessagePathString));
+		commitMessage = originalCommitMessage + "\nCutover Date: " + cutoverDateString;
 		logger.info("commitMessage:\n" + commitMessage + "\n");
 		var commitSha1Hash = DigestUtils.sha1Hex(commitMessage);
 		logger.info("commit hash: " + commitSha1Hash);
@@ -335,9 +336,10 @@ public class PracticeGeneratorTool {
 				var json = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(m);
 				Files.writeString(Path.of(referencePath.toString(), DTF.format(date) + "-reference.json"), json);
 
-				var markerString = messageType.toString() + "-" + ((enableFinalize) ? "published" : "generated") + "-"
-						+ timestampString + ".txt";
-				Files.writeString(Path.of(referencePath.toString(), markerString), commitMessage);
+				// TODO consider omitting this
+//				var markerString = messageType.toString() + "-" + ((enableFinalize) ? "published" : "generated") + "-"
+//						+ timestampString + ".txt";
+//				Files.writeString(Path.of(referencePath.toString(), markerString), commitMessage);
 
 				Files.writeString(Path.of(instructionPath.toString(), DTF.format(date) + "-instructions.txt"),
 						instructions);
