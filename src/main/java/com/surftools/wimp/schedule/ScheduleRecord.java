@@ -32,32 +32,37 @@ import com.surftools.wimp.core.IWritableTable;
 import com.surftools.wimp.core.MessageType;
 import com.surftools.wimp.generator.PracticeUtils;
 
-public record ScheduleRecord(String name, LocalDate date, MessageType messageType, boolean isPractice, String extraData)
-    implements IWritableTable {
+public record ScheduleRecord(String name, LocalDate date, MessageType messageType, //
+		boolean isPractice, String extraData, String comments) implements IWritableTable {
 
-  @Override
-  public int compareTo(IWritableTable other) {
-    var o = (ScheduleRecord) other;
-    return this.date.compareTo(o.date);
-  }
+	@Override
+	public int compareTo(IWritableTable other) {
+		var o = (ScheduleRecord) other;
+		return this.date.compareTo(o.date);
+	}
 
-  @Override
-  public String[] getHeaders() {
-    final var headers = new String[] { "Date", "Name", "MessageType", "IsPractice", "Extra Data", "Ordinal",
-        "Day Of Week" };
-    return headers;
-  }
+	@Override
+	public String[] getHeaders() {
+		final var headers = new String[] { "Date", "Name", "MessageType", "IsPractice", "Extra Data", "Ordinal",
+				"Day Of Week", "Comments" };
+		return headers;
+	}
 
-  @Override
-  public String[] getValues() {
-    return new String[] { date.toString(), name, messageType == null ? "" : messageType.name(),
-        String.valueOf(isPractice), extraData == null ? "" : extraData,
-        String.valueOf(PracticeUtils.getOrdinalDayOfWeek(date)), date.getDayOfWeek().toString() };
-  }
+	@Override
+	public String[] getValues() {
+		return new String[] { date.toString(), name, messageType == null ? "" : messageType.name(),
+				String.valueOf(isPractice), extraData == null ? "" : extraData,
+				String.valueOf(PracticeUtils.getOrdinalDayOfWeek(date)), date.getDayOfWeek().toString(), comments };
+	}
 
-  public static ScheduleRecord from(String[] fields) {
-    var messageType = MessageType.fromString(fields[2].toLowerCase());
-    return new ScheduleRecord(fields[1], LocalDate.parse(fields[0]), messageType, Boolean.parseBoolean(fields[3]),
-        fields[4]);
-  }
+	public static ScheduleRecord from(String[] fields) {
+		var messageType = MessageType.fromString(fields[2].toLowerCase());
+		try {
+			return new ScheduleRecord(fields[1], LocalDate.parse(fields[0]), messageType, //
+					Boolean.parseBoolean(fields[3]), fields[4], fields[7]);
+		} catch (Exception e) {
+			return null;
+		}
+
+	}
 }

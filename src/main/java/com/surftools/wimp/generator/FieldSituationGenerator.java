@@ -151,7 +151,7 @@ public class FieldSituationGenerator extends AbstractBasePracticeGenerator {
 		sb.append(INDENT + "Precedence: " + m.precedence + NL);
 		sb.append(INDENT + "Date/Time: (click in box and accept date/time)" + NL);
 		sb.append(INDENT + "Task #: " + m.task + NL);
-		sb.append(INDENT + "From: <YOUR CALL>" + NL);
+		sb.append(INDENT + "From: {YOUR CALL}" + NL);
 		sb.append(INDENT + "To: " + m.formTo + NL);
 		sb.append(INDENT + "EMERGENT/LIFE SAFETY Need: " + m.isHelpNeeded + NL);
 

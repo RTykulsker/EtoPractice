@@ -64,6 +64,7 @@ import com.surftools.wimp.core.IWritableTable;
 import com.surftools.wimp.core.MessageType;
 import com.surftools.wimp.generator.IGenerator;
 import com.surftools.wimp.generator.PracticeUtils;
+import com.surftools.wimp.processors.std.ReadProcessor;
 import com.surftools.wimp.processors.std.WriteProcessor;
 import com.surftools.wimp.schedule.ScheduleRecord;
 import com.surftools.wimp.service.email.EmailService;
@@ -110,6 +111,7 @@ public class PracticeGeneratorTool {
 
 	private Map<String, BucketChooser<MessageType>> poolNameMessageTypeChooserTable;
 	private Map<MessageType, Integer> messageTypeCountMap;
+	private Map<LocalDate, ScheduleRecord> oldDateScheduleMap;
 
 	private Random rng;
 
@@ -179,6 +181,15 @@ public class PracticeGeneratorTool {
 			logger.error(GenKey.PATH_REFERENCE + ": " + oldReferencePathString + " doesn't exist. Exiting!");
 			System.exit(1);
 		}
+
+		var oldSchedulePathString = cm.getAsString(GenKey.PATH_SCHEDULE);
+		var listOfFields = ReadProcessor.readCsvFileIntoFieldsArray(Path.of(oldSchedulePathString), ',', false, 1);
+		oldDateScheduleMap = new HashMap<>();
+		for (var fields : listOfFields) {
+			var scheduleRecord = ScheduleRecord.from(fields);
+			oldDateScheduleMap.put(scheduleRecord.date(), scheduleRecord);
+		}
+		logger.info("read " + oldDateScheduleMap.size() + " schedule records from: " + oldSchedulePathString);
 
 	}
 
@@ -335,11 +346,6 @@ public class PracticeGeneratorTool {
 				var objectMapper = JsonMapper.builder().addModule(new JavaTimeModule()).build();
 				var json = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(m);
 				Files.writeString(Path.of(referencePath.toString(), DTF.format(date) + "-reference.json"), json);
-
-				// TODO consider omitting this
-//				var markerString = messageType.toString() + "-" + ((enableFinalize) ? "published" : "generated") + "-"
-//						+ timestampString + ".txt";
-//				Files.writeString(Path.of(referencePath.toString(), markerString), commitMessage);
 
 				Files.writeString(Path.of(instructionPath.toString(), DTF.format(date) + "-instructions.txt"),
 						instructions);
@@ -680,18 +686,24 @@ public class PracticeGeneratorTool {
 					var chooser = input.chooser;
 					var messageType = chooser.next();
 
+					ScheduleRecord output = null;
 					if (date.isAfter(cutoverDate)) {
 						messageTypeCountMap.put(messageType,
 								1 + messageTypeCountMap.getOrDefault(messageType, Integer.valueOf(0)));
-					}
 
-					var output = new ScheduleRecord(input.name, date, messageType, input.isPractice, input.extraData);
+						output = new ScheduleRecord(input.name, date, messageType, input.isPractice, input.extraData,
+								originalCommitMessage);
 
-					var previousOutput = dateScheduleRecordMap.get(date);
-					if (previousOutput != null) {
-						logger.info("Phase: " + sheetName + ", overriding: " + previousOutput + ", with: " + output);
+						var previousOutput = dateScheduleRecordMap.get(date);
+						if (previousOutput != null) {
+							logger.info(
+									"Phase: " + sheetName + ", overriding: " + previousOutput + ", with: " + output);
+						}
+					} else {
+						output = oldDateScheduleMap.get(date);
 					}
 					dateScheduleRecordMap.put(date, output);
+
 				}
 
 				date = date.plusDays(1);
