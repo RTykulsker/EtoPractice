@@ -106,22 +106,22 @@ public class PracticeJsonMessageDeserializer {
 	}
 
 	private ExportedMessage deserialize_ExportedMessage(JsonNode json) {
-		// TODO all as "n/a"
-		var messageId = json.get("messageId").asText();
-		var from = json.get("from").asText();
-		var source = json.get("source").asText();
-		var to = json.get("to").asText();
-		var toList = json.get("toList").asText();
-		var ccList = json.get("ccList").asText();
+		final var NA = "n/a";
+		var messageId = NA;
+		var from = NA;
+		var source = NA;
+		var to = NA;
+		var toList = NA;
+		var ccList = NA;
 		var subject = json.get("subject").asText();
-		var msgDateTime = deserialize_LocalDateTime(json.get("msgDateTime"));
-		var msgLocation = deserialize_LatLongPair(json.get("msgLocation"));
-		var locationSource = json.get("msgLocationSource").asText();
-		var mime = json.get("mime").asText();
-		var plainContent = json.get("plainContent").asText();
+		var msgDateTime = (LocalDateTime) null;
+		var msgLocation = LatLongPair.INVALID;
+		var locationSource = NA;
+		var mime = NA;
+		var plainContent = NA;
 		var attachments = new HashMap<String, byte[]>();
-		var isP2p = json.get("from").asBoolean();
-		var fileName = json.get("fileName").asText();
+		var isP2p = false;
+		var fileName = NA;
 		List<String> lines = null;
 
 		var exportedMessage = new ExportedMessage(messageId, from, source, to, toList, ccList, //
@@ -129,14 +129,12 @@ public class PracticeJsonMessageDeserializer {
 				msgLocation, locationSource, //
 				mime, plainContent, attachments, isP2p, fileName, lines);
 
-		var formNode = json.get("formVersion") == null ? json.get("version") : json.get("formVersion");
-		var formVersion = formNode == null ? "n/a" : formNode.asText();
-		var expressVersion = json.get("expressVersion").asText();
-		exportedMessage.setParsedFields(formVersion, expressVersion);
+		exportedMessage.setParsedFields(NA, NA);
 
 		return exportedMessage;
 	}
 
+	@SuppressWarnings("unused")
 	private LocalDateTime deserialize_LocalDateTime(JsonNode json) {
 		var year = json.get(0).asInt();
 		var month = json.get(1).asInt();
