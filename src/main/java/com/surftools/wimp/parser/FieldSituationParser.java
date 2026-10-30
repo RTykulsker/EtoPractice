@@ -44,191 +44,192 @@ import com.surftools.wimp.message.FieldSituationMessage;
  *
  */
 public class FieldSituationParser extends AbstractBaseParser {
-  private static final String[] OVERRIDE_LAT_LON_TAG_NAMES = new String[] {};
-  private static final String MERGED_LAT_LON_TAG_NAMES;
+	private static final String[] OVERRIDE_LAT_LON_TAG_NAMES = new String[] {};
+	private static final String MERGED_LAT_LON_TAG_NAMES;
 
-  // private static final Map<UnderlyingMessageType, Integer> typeCountMap;
+	// private static final Map<UnderlyingMessageType, Integer> typeCountMap;
 
-  static {
-    var set = new LinkedHashSet<String>();
-    set.addAll(Arrays.asList(DEFAULT_LATLON_TAGS));
-    set.addAll(Arrays.asList(OVERRIDE_LAT_LON_TAG_NAMES));
-    MERGED_LAT_LON_TAG_NAMES = "couldn't find lat/long within tags: " + set.toString();
-  }
+	static {
+		var set = new LinkedHashSet<String>();
+		set.addAll(Arrays.asList(DEFAULT_LATLON_TAGS));
+		set.addAll(Arrays.asList(OVERRIDE_LAT_LON_TAG_NAMES));
+		MERGED_LAT_LON_TAG_NAMES = "couldn't find lat/long within tags: " + set.toString();
+	}
 
-  public FieldSituationParser() {
-  }
+	public FieldSituationParser() {
+	}
 
-  @Override
-  public ExportedMessage parse(ExportedMessage message) {
-    var messageId = message.messageId;
-    var from = message.from;
+	@Override
+	public ExportedMessage parse(ExportedMessage message) {
+		var messageId = message.messageId;
+		var from = message.from;
 
-    UnderlyingMessageType underlyingMessageType = getUnderlyingMessageType(message);
-    if (underlyingMessageType == UnderlyingMessageType.UNSUPPORTED) {
-      return reject(message, RejectType.UNSUPPORTED_TYPE, underlyingMessageType.toString());
-    }
+		UnderlyingMessageType underlyingMessageType = getUnderlyingMessageType(message);
+		if (underlyingMessageType == UnderlyingMessageType.UNSUPPORTED) {
+			return reject(message, RejectType.UNSUPPORTED_TYPE, underlyingMessageType.toString());
+		}
 
-    try {
-      String xmlString = new String(message.attachments.get(underlyingMessageType.toString()));
+		try {
+			String xmlString = new String(message.attachments.get(underlyingMessageType.toString()));
 
-      makeDocument(message.messageId, xmlString);
+			makeDocument(message.messageId, xmlString);
 
-      var formLocation = getLatLongFromXml(null);
-      if (formLocation == null) {
-        return reject(message, RejectType.CANT_PARSE_LATLONG, MERGED_LAT_LON_TAG_NAMES);
-      }
+			var formLocation = getLatLongFromXml(null);
+			if (formLocation == null) {
+				return reject(message, RejectType.CANT_PARSE_LATLONG, MERGED_LAT_LON_TAG_NAMES);
+			}
 
-      String organization = getStringFromXml("title");
-      String precedence = getStringFromXml("precedence");
-      String formDateTime = getStringFromXml("udtgfld");
-      String task = getStringFromXml("msgnr");
-      String formTo = getStringFromXml("msgto");
-      String formFrom = getStringFromXml("msgsender");
-      String isHelpNeeded = getStringFromXml("safetyneed");
-      String neededHelp = getStringFromXml("comm0");
+			String organization = getStringFromXml("title");
+			String precedence = getStringFromXml("precedence");
+			String formDateTime = getStringFromXml("udtgfld");
+			String task = getStringFromXml("msgnr");
+			String formTo = getStringFromXml("msgto");
+			String formFrom = getStringFromXml("msgsender");
+			String isHelpNeeded = getStringFromXml("safetyneed");
+			String neededHelp = getStringFromXml("comm0");
 
-      String city = getStringFromXml("city");
-      String county = getStringFromXml("county");
-      String state = getStringFromXml("state");
-      String territory = getStringFromXml("territory");
+			String city = getStringFromXml("city");
+			String county = getStringFromXml("county");
+			String state = getStringFromXml("state");
+			String territory = getStringFromXml("territory");
 
-      String landlineStatus = getStringFromXml("pots");
-      String landlineComments = getStringFromXml("comm1");
+			String landlineStatus = getStringFromXml("pots");
+			String landlineComments = getStringFromXml("comm1");
 
-      String voipStatus = getStringFromXml("voip");
-      String voipComments = getStringFromXml("comm1a");
+			String voipStatus = getStringFromXml("voip");
+			String voipComments = getStringFromXml("comm1a");
 
-      String cellPhoneStatus = getStringFromXml("cell");
-      String cellPhoneComments = getStringFromXml("comm2");
+			String cellPhoneStatus = getStringFromXml("cell");
+			String cellPhoneComments = getStringFromXml("comm2");
 
-      String cellTextStatus = getStringFromXml("celltext");
-      String cellTextComments = getStringFromXml("comm2a");
+			String cellTextStatus = getStringFromXml("celltext");
+			String cellTextComments = getStringFromXml("comm2a");
 
-      String radioStatus = getStringFromXml("amfm");
-      String radioComments = getStringFromXml("comm3");
+			String radioStatus = getStringFromXml("amfm");
+			String radioComments = getStringFromXml("comm3");
 
-      String tvStatus = getStringFromXml("tvstatus");
-      String tvComments = getStringFromXml("comm4");
+			String tvStatus = getStringFromXml("tvstatus");
+			String tvComments = getStringFromXml("comm4");
 
-      String satTvStatus = getStringFromXml("tvstatusb");
-      String satTvComments = getStringFromXml("comm4b");
+			String satTvStatus = getStringFromXml("tvstatusb");
+			String satTvComments = getStringFromXml("comm4b");
 
-      String cableTvStatus = getStringFromXml("tvstatusc");
-      String cableTvComments = getStringFromXml("comm4c");
+			String cableTvStatus = getStringFromXml("tvstatusc");
+			String cableTvComments = getStringFromXml("comm4c");
 
-      String waterStatus = getStringFromXml("waterworks");
-      String waterComments = getStringFromXml("comm5");
+			String waterStatus = getStringFromXml("waterworks");
+			String waterComments = getStringFromXml("comm5");
 
-      String powerStatus = getStringFromXml("powerworks");
-      String powerComments = getStringFromXml("comm6");
+			String powerStatus = getStringFromXml("powerworks");
+			String powerComments = getStringFromXml("comm6");
 
-      String powerStable = getStringFromXml("powerstable");
-      String powerStableComments = getStringFromXml("comm6a");
+			String powerStable = getStringFromXml("powerstable");
+			String powerStableComments = getStringFromXml("comm6a");
 
-      String naturalGasStatus = getStringFromXml("natgas");
-      String naturalGasComments = getStringFromXml("comm9c");
+			String naturalGasStatus = getStringFromXml("natgas");
+			String naturalGasComments = getStringFromXml("comm9c");
 
-      String internetStatus = getStringFromXml("inter");
-      String internetComments = getStringFromXml("comm7");
+			String internetStatus = getStringFromXml("inter");
+			String internetComments = getStringFromXml("comm7");
 
-      String noaaStatus = getStringFromXml("noaa");
-      String noaaComments = getStringFromXml("noaacom");
+			String noaaStatus = getStringFromXml("noaa");
+			String noaaComments = getStringFromXml("noaacom");
 
-      String noaaAudioDegraded = getStringFromXml("noaab");
-      String noaaAudioDegradedComments = getStringFromXml("noaacomb");
+			String noaaAudioDegraded = getStringFromXml("noaab");
+			String noaaAudioDegradedComments = getStringFromXml("noaacomb");
 
-      String additionalComments = getStringFromXml("message");
-      String poc = getStringFromXml("poc");
-      String formVersion = parseFormVersion(getStringFromXml("templateversion"));
-      var expressVersion = getExpressVersion(message, "Express Version:");
+			String additionalComments = getStringFromXml("message");
+			String poc = getStringFromXml("poc");
+			String formVersion = parseFormVersion(getStringFromXml("templateversion"));
+			var expressVersion = getExpressVersion(message, "Express Version:");
 
-      // TODO verify that I've identified base variables and variants
+			// TODO verify that I've identified base variables and variants
 
-      FieldSituationMessage m = new FieldSituationMessage(//
-          message, organization, formLocation, //
-          precedence, formDateTime, task, formTo, formFrom, isHelpNeeded, neededHelp, //
-          city, county, state, territory, //
-          landlineStatus, landlineComments, voipStatus, voipComments, //
-          cellPhoneStatus, cellPhoneComments, cellTextStatus, cellTextComments, //
-          radioStatus, radioComments, //
-          tvStatus, tvComments, satTvStatus, satTvComments, cableTvStatus, cableTvComments, //
-          waterStatus, waterComments, //
-          powerStatus, powerComments, powerStable, powerStableComments, //
-          naturalGasStatus, naturalGasComments, //
-          internetStatus, internetComments, //
-          noaaStatus, noaaComments, noaaAudioDegraded, noaaAudioDegradedComments, //
-          additionalComments, poc, formVersion, expressVersion);
+			FieldSituationMessage m = new FieldSituationMessage(//
+					message, organization, formLocation, //
+					precedence, formDateTime, task, formTo, formFrom, isHelpNeeded, neededHelp, //
+					city, county, state, territory, //
+					landlineStatus, landlineComments, voipStatus, voipComments, //
+					cellPhoneStatus, cellPhoneComments, cellTextStatus, cellTextComments, //
+					radioStatus, radioComments, //
+					tvStatus, tvComments, satTvStatus, satTvComments, cableTvStatus, cableTvComments, //
+					waterStatus, waterComments, //
+					powerStatus, powerComments, powerStable, powerStableComments, //
+					naturalGasStatus, naturalGasComments, //
+					internetStatus, internetComments, //
+					noaaStatus, noaaComments, noaaAudioDegraded, noaaAudioDegradedComments, //
+					additionalComments, poc, formVersion, expressVersion);
 
-      return m;
-    } catch (Exception e) {
-      return reject(message, RejectType.PROCESSING_ERROR,
-          "mId: " + messageId + ", from: " + from + ", " + e.getMessage());
-    }
-  }
+			return m;
+		} catch (Exception e) {
+			return reject(message, RejectType.PROCESSING_ERROR,
+					"mId: " + messageId + ", from: " + from + ", " + e.getMessage());
+		}
+	}
 
-  /**
-   * return the underlying type, NOT FSR
-   *
-   * @param message
-   * @return
-   */
-  private UnderlyingMessageType getUnderlyingMessageType(ExportedMessage message) {
-    var attachments = message.attachments;
-    if (attachments != null && attachments.size() > 0) {
-      var attachmentNames = attachments.keySet();
+	/**
+	 * return the underlying type, NOT FSR
+	 *
+	 * @param message
+	 * @return
+	 */
+	private UnderlyingMessageType getUnderlyingMessageType(ExportedMessage message) {
+		var attachments = message.attachments;
+		if (attachments != null && attachments.size() > 0) {
+			var attachmentNames = attachments.keySet();
 
-      for (var name : attachmentNames) {
-        if (name.startsWith(MessageType.FIELD_SITUATION.rmsViewerName())) {
-          var umt = UnderlyingMessageType.fromString(name);
-          return umt;
-        }
-      }
-    }
-    return null;
-  }
+			for (var name : attachmentNames) {
+				if (name.startsWith(MessageType.FIELD_SITUATION.rmsViewerName())) {
+					var umt = UnderlyingMessageType.fromString(name);
+					return umt;
+				}
+			}
+		}
+		return null;
+	}
 
-  private String parseFormVersion(String string) {
-    if (string == null) {
-      return null;
-    }
+	private String parseFormVersion(String string) {
+		if (string == null) {
+			return null;
+		}
 
-    String[] fields = string.split(" ");
-    if (fields.length == 5) {
-      return fields[4];
-    } else {
-      return string;
-    }
-  }
+		String[] fields = string.split(" ");
+		if (fields.length == 5) {
+			return fields[4];
+		} else {
+			return string;
+		}
+	}
 
-  private static enum UnderlyingMessageType {
+	private static enum UnderlyingMessageType {
 
-    FIELD_SITUATION_REPORT_20("RMS_Express_Form_Field Situation Report_viewer.xml"), //
-    FIELD_SITUATION_REPORT_23("RMS_Express_Form_Field Situation Report 23_viewer.xml"), //
-    FIELD_SITUATION_REPORT_25("RMS_Express_Form_Field Situation Report 25_viewer.xml"), //
-    FIELD_SITUATION_REPORT_26("RMS_Express_Form_Field Situation Report 26_viewer.xml"), //
-    FIELD_SITUATION_REPORT("RMS_Express_Form_Field Situation Report viewer.xml"), //
-    UNSUPPORTED("unsupported");
+		FIELD_SITUATION_REPORT_20("RMS_Express_Form_Field Situation Report_viewer.xml"), //
+		FIELD_SITUATION_REPORT_23("RMS_Express_Form_Field Situation Report 23_viewer.xml"), //
+		FIELD_SITUATION_REPORT_25("RMS_Express_Form_Field Situation Report 25_viewer.xml"), //
+		FIELD_SITUATION_REPORT_26("RMS_Express_Form_Field Situation Report 26_viewer.xml"), //
+		FIELD_SITUATION_REPORT("RMS_Express_Form_Field Situation Report viewer.xml"), //
+		FIELD_SITUATION_REPORT_NAKED("RMS_Express_Form_Field Situation Report"), // bug in RadioMail
+		UNSUPPORTED("unsupported");
 
-    private final String attachmentName;
+		private final String attachmentName;
 
-    private UnderlyingMessageType(String attachmentName) {
-      this.attachmentName = attachmentName;
-    }
+		private UnderlyingMessageType(String attachmentName) {
+			this.attachmentName = attachmentName;
+		}
 
-    public static UnderlyingMessageType fromString(String string) {
-      for (UnderlyingMessageType umt : UnderlyingMessageType.values()) {
-        if (umt.toString().equals(string)) {
-          return umt;
-        }
-      }
-      return null;
-    }
+		public static UnderlyingMessageType fromString(String string) {
+			for (UnderlyingMessageType umt : UnderlyingMessageType.values()) {
+				if (umt.toString().equals(string)) {
+					return umt;
+				}
+			}
+			return null;
+		}
 
-    @Override
-    public String toString() {
-      return attachmentName;
-    }
+		@Override
+		public String toString() {
+			return attachmentName;
+		}
 
-  }
+	}
 }
