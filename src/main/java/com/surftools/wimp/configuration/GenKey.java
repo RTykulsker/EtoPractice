@@ -39,7 +39,6 @@ public enum GenKey implements IConfigurationKey {
 	PATH_ROOT("path.root"), // dir where reference dirs/files are
 	PATH_REFERENCE("path.reference"), // dir where reference dirs/files are
 	PATH_REFERENCE_HISTORY("path.reference.history"), // path to all generated references
-	PATH_RESOURCES("path.resources"), // path to resources dir
 
 	PATH_SCHEDULE("path.schedule"), // path to the expanded schedule.csv; output
 	PATH_META_SCHEDULE("path.metaSchedule"), // path to the meta-schedule.xlsx; input

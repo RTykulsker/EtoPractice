@@ -39,6 +39,7 @@ import org.kohsuke.args4j.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.surftools.utils.BuildInfo;
 import com.surftools.utils.FileUtils;
 import com.surftools.wimp.configuration.Key;
 import com.surftools.wimp.core.MessageManager;
@@ -93,12 +94,14 @@ public class PracticeProcessorTool {
 
 	public void run() {
 		try {
+			logger.info("begin run");
+			logger.info("Build version: " + BuildInfo.VERSION + ", Build date: " + BuildInfo.BUILD_TIME);
+
 			var cm = new PropertyFileConfigurationManager(configurationFileName, Key.values());
 			var originalExerciseDateString = exerciseDateString;
 			exerciseDateString = parse(exerciseDateString, cm);
 			addDatedLogger(cm);
 
-			logger.info("begin run");
 			var exerciseDate = LocalDate.parse(exerciseDateString);
 
 			var messageType = scheduleRecord.messageType();

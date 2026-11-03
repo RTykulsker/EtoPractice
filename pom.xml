@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.surftools</groupId>
 	<artifactId>eto-practice</artifactId>
-	<version>2.1.0</version>
+	<version>2.1.1</version>
 
 	<name>ETO Practice</name>
 	<url>http://maven.apache.org</url>
@@ -133,7 +133,7 @@
 				</configuration>
 			</plugin>
 			
-			<!-- far jar -->
+			<!-- fat jar -->
 			<plugin>
 			  <groupId>org.apache.maven.plugins</groupId>
 			  <artifactId>maven-assembly-plugin</artifactId>
