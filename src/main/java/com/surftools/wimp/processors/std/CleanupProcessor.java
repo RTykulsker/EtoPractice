@@ -41,161 +41,164 @@ import com.surftools.wimp.practice.tools.PracticeProcessorTool;
 import com.surftools.wimp.utils.config.IConfigurationManager;
 
 public class CleanupProcessor extends AbstractBaseProcessor {
-  private static final Logger logger = LoggerFactory.getLogger(CleanupProcessor.class);
+	private static final Logger logger = LoggerFactory.getLogger(CleanupProcessor.class);
 
-  @Override
-  public void initialize(IConfigurationManager cm, IMessageManager mm) {
-  }
+	@Override
+	public void initialize(IConfigurationManager cm, IMessageManager mm) {
+	}
 
-  @Override
-  public void process() {
-  }
+	@Override
+	public void process() {
+	}
 
-  @Override
-  public void postProcess() {
+	@Override
+	public void postProcess() {
 
-    // move files out of output and into published
-    var outputDir = new File(outputPath.toString());
-    var outputFiles = outputDir.listFiles();
-    for (var file : outputFiles) {
-      if (!file.isFile()) {
-        continue;
-      }
+		// move files out of output and into published
+		var outputDir = new File(outputPath.toString());
+		var outputFiles = outputDir.listFiles();
+		for (var file : outputFiles) {
+			if (!file.isFile()) {
+				continue;
+			}
 
-      var fileName = file.getName();
-      if (fileName.equals("practice-summary.csv")) {
-        try {
-          Files.move(file.toPath(), Path.of(publishedPathName, dateString + "-standard-summary.csv"));
-          logger.info("renamed practice-summary.csv to: " + dateString + "-standard-summary.csv");
-        } catch (Exception e) {
-          logger.error("Exception renaming file: " + file.toString() + ", " + e.getMessage());
-        }
-      }
-    } // end loop over output files
+			var fileName = file.getName();
+			if (fileName.equals("practice-summary.csv")) {
+				try {
+					Files.move(file.toPath(), Path.of(publishedPathName, dateString + "-standard-summary.csv"));
+					logger.info("renamed practice-summary.csv to: " + dateString + "-standard-summary.csv");
+				} catch (Exception e) {
+					logger.error("Exception renaming file: " + file.toString() + ", " + e.getMessage());
+				}
+			}
+		} // end loop over output files
 
-    // copy input/allFeedback.txt to output
-    var allFeedbackSource = Path.of(inputPathName, "allFeedback.txt");
-    var allFeedbackDestination = Path.of(outputPathName, dateString + "-allFeedback.txt");
-    try {
-      Files.copy(allFeedbackSource, allFeedbackDestination);
-      logger.info("copied allFeedback.txt to output/");
-    } catch (Exception e) {
-      logger.error("Exception copying file: " + allFeedbackSource.toString() + ", " + e.getMessage());
-    }
+		// copy input/allFeedback.txt to output
+		var allFeedbackSource = Path.of(inputPathName, "allFeedback.txt");
+		var allFeedbackDestination = Path.of(outputPathName, dateString + "-allFeedback.txt");
+		try {
+			Files.copy(allFeedbackSource, allFeedbackDestination);
+			logger.info("copied allFeedback.txt to output/");
+		} catch (Exception e) {
+			logger.error("Exception copying file: " + allFeedbackSource.toString() + ", " + e.getMessage());
+		}
 
-    // copy sqlite db file to output
-    var sqliteFileName = cm.getAsString(Key.PERSISTENCE_SQLITE_URL);
-    try {
-      var sqlitePath = Path.of(sqliteFileName);
-      var sqliteFile = sqlitePath.toFile();
-      if (sqliteFile.exists()) {
-        var sqliteDestination = Path.of(outputPathName, dateString + "-" + sqlitePath.getFileName());
-        Files.copy(sqlitePath, sqliteDestination);
-        logger.info("copied sqlite database to " + sqliteDestination.toString());
-      }
-    } catch (Exception e) {
-      logger.error("Exception copying sqlite file: " + sqliteFileName.toString() + ", " + e.getMessage());
-    }
+		// copy sqlite db file to output
+		var sqliteFileName = cm.getAsString(Key.PERSISTENCE_SQLITE_URL);
+		if (sqliteFileName != null) {
+			try {
+				var sqlitePath = Path.of(sqliteFileName);
+				var sqliteFile = sqlitePath.toFile();
+				if (sqliteFile.exists()) {
+					var sqliteDestination = Path.of(outputPathName, dateString + "-" + sqlitePath.getFileName());
+					Files.copy(sqlitePath, sqliteDestination);
+					logger.info("copied sqlite database to " + sqliteDestination.toString());
+				}
+			} catch (Exception e) {
+				logger.error("Exception copying sqlite file: " + sqliteFileName.toString() + ", " + e.getMessage());
+			}
+		}
 
-    // copy configurationFile to input
-    var configurationFileSource = Path.of((String) mm.getContextObject(PracticeProcessorTool.CONFIGURATION_FILE_KEY));
-    var configurationFileDestination = Path.of(inputPathName, "configuration.txt");
-    try {
-      Files.copy(configurationFileSource, configurationFileDestination, StandardCopyOption.REPLACE_EXISTING);
-      logger.info("copied configuration to input/");
-    } catch (Exception e) {
-      logger.error("Exception copying file: " + configurationFileSource.toString() + ", " + e.getMessage());
-    }
+		// copy configurationFile to input
+		var configurationFileSource = Path
+				.of((String) mm.getContextObject(PracticeProcessorTool.CONFIGURATION_FILE_KEY));
+		var configurationFileDestination = Path.of(inputPathName, "configuration.txt");
+		try {
+			Files.copy(configurationFileSource, configurationFileDestination, StandardCopyOption.REPLACE_EXISTING);
+			logger.info("copied configuration to input/");
+		} catch (Exception e) {
+			logger.error("Exception copying file: " + configurationFileSource.toString() + ", " + e.getMessage());
+		}
 
-    // rename published files chart, map and Winlink import files
-    var publishedDir = new File(publishedPath.toString());
-    var publishedFiles = publishedDir.listFiles();
-    for (var publishedFile : publishedFiles) {
-      if (!publishedFile.isFile()) {
-        continue;
-      }
+		// rename published files chart, map and Winlink import files
+		var publishedDir = new File(publishedPath.toString());
+		var publishedFiles = publishedDir.listFiles();
+		for (var publishedFile : publishedFiles) {
+			if (!publishedFile.isFile()) {
+				continue;
+			}
 
-      var name = publishedFile.getName();
-      if (name.endsWith("chart.html")) {
-        try {
-          var newFile = Path.of(publishedPathName, dateString + "-chart.html").toFile();
-          publishedFile.renameTo(newFile);
-          logger.info("renamed chart file to: " + newFile.getName());
-        } catch (Exception e) {
-          logger.error("Exception renaming file: " + name, e.getMessage());
-        }
-      }
+			var name = publishedFile.getName();
+			if (name.endsWith("chart.html")) {
+				try {
+					var newFile = Path.of(publishedPathName, dateString + "-chart.html").toFile();
+					publishedFile.renameTo(newFile);
+					logger.info("renamed chart file to: " + newFile.getName());
+				} catch (Exception e) {
+					logger.error("Exception renaming file: " + name, e.getMessage());
+				}
+			}
 
-      if (name.startsWith("leaflet-")) {
-        try {
-          var newName = name.substring("leaflet-".length());
-          var newFile = Path.of(publishedPathName, newName).toFile();
-          publishedFile.renameTo(newFile);
-          logger.info("renamed map file to: " + newFile);
-        } catch (Exception e) {
-          logger.error("Exception renaming file: " + name + ", " + e.getMessage());
-        }
-      }
+			if (name.startsWith("leaflet-")) {
+				try {
+					var newName = name.substring("leaflet-".length());
+					var newFile = Path.of(publishedPathName, newName).toFile();
+					publishedFile.renameTo(newFile);
+					logger.info("renamed map file to: " + newFile);
+				} catch (Exception e) {
+					logger.error("Exception renaming file: " + name + ", " + e.getMessage());
+				}
+			}
 
-    } // end rename loop over files
+		} // end rename loop over files
 
-    // because I'd rather write 50 lines of code than point and click to import two
-    // files into Winlink Express ...
-    try {
-      outputFiles = outputDir.listFiles();
-      var messageLines = new StringBuffer();
-      for (var outputFile : outputFiles) {
-        if (!outputFile.isFile()) {
-          continue;
-        }
+		// because I'd rather write 50 lines of code than point and click to import two
+		// files into Winlink Express ...
+		try {
+			outputFiles = outputDir.listFiles();
+			var messageLines = new StringBuffer();
+			for (var outputFile : outputFiles) {
+				if (!outputFile.isFile()) {
+					continue;
+				}
 
-        var name = outputFile.getName();
-        if (name.endsWith(".xml")) {
-          var lines = Files.readAllLines(Path.of(outputFile.getCanonicalPath()));
-          var inMessages = false;
-          for (var line : lines) {
-            var testLine = line.toLowerCase().trim();
-            if (!inMessages && testLine.equals("<message_list>")) {
-              inMessages = true;
-              continue;
-            }
-            if (inMessages && testLine.equals("</message_list>")) {
-              break; // loop over lines
-            }
-            if (inMessages) {
-              messageLines.append(line + "\n");
-            }
-          } // end loop over lines
-        } // end if .xml file
-      } // end merge outbound message merge loop over files
+				var name = outputFile.getName();
+				if (name.endsWith(".xml")) {
+					var lines = Files.readAllLines(Path.of(outputFile.getCanonicalPath()));
+					var inMessages = false;
+					for (var line : lines) {
+						var testLine = line.toLowerCase().trim();
+						if (!inMessages && testLine.equals("<message_list>")) {
+							inMessages = true;
+							continue;
+						}
+						if (inMessages && testLine.equals("</message_list>")) {
+							break; // loop over lines
+						}
+						if (inMessages) {
+							messageLines.append(line + "\n");
+						}
+					} // end loop over lines
+				} // end if .xml file
+			} // end merge outbound message merge loop over files
 
-      if (messageLines.length() > 0) {
-        final String header = """
-            <?xml version="1.0"?>
-            <Winlink_Express_message_export>
-              <export_parameters>
-                <xml_file_version>1.0</xml_file_version>
-                <winlink_express_version>1.7.24.0</winlink_express_version>
-              </export_parameters>
-              <message_list>
-              """;
+			if (messageLines.length() > 0) {
+				final String header = """
+						<?xml version="1.0"?>
+						<Winlink_Express_message_export>
+						  <export_parameters>
+						    <xml_file_version>1.0</xml_file_version>
+						    <winlink_express_version>1.7.24.0</winlink_express_version>
+						  </export_parameters>
+						  <message_list>
+						  """;
 
-        final String footer = """
-              </message_list>
-            </Winlink_Express_message_export>
-            """;
+				final String footer = """
+						  </message_list>
+						</Winlink_Express_message_export>
+						""";
 
-        messageLines.insert(0, header);
-        messageLines.append(footer);
-        var path = Path.of(winlinkPathName, dateString + "-Winlink-Import-All-Messages.xml");
+				messageLines.insert(0, header);
+				messageLines.append(footer);
+				var path = Path.of(winlinkPathName, dateString + "-Winlink-Import-All-Messages.xml");
 
-        Files.writeString(path, messageLines.toString());
-        logger.info("created merged Winlink import file: " + path.toFile().getName());
-      }
-    } catch (Exception e) {
-      logger.error("Exception merging Winlink message files: " + e.getMessage());
-    }
+				Files.writeString(path, messageLines.toString());
+				logger.info("created merged Winlink import file: " + path.toFile().getName());
+			}
+		} catch (Exception e) {
+			logger.error("Exception merging Winlink message files: " + e.getMessage());
+		}
 
-  } // end postProcess
+	} // end postProcess
 
 }

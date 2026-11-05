@@ -49,400 +49,406 @@ import com.surftools.wimp.persistence.dto.User;
 import com.surftools.wimp.utils.config.IConfigurationManager;
 
 public abstract class AbstractBaseJdbcEngine extends BaseQueryEngine {
-  private static final Logger logger = LoggerFactory.getLogger(AbstractBaseJdbcEngine.class);
+	private static final Logger logger = LoggerFactory.getLogger(AbstractBaseJdbcEngine.class);
 
-  protected boolean dateAsString = true; // true for sqlite, false for postgres
+	protected boolean dateAsString = true; // true for sqlite, false for postgres
 
-  public AbstractBaseJdbcEngine(IConfigurationManager cm) {
-    super(cm);
-  }
+	public AbstractBaseJdbcEngine(IConfigurationManager cm) {
+		super(cm);
+	}
 
-  protected abstract Connection getConnection();
+	protected abstract Connection getConnection();
 
-  @Override
-  public ReturnRecord getAllUsers() {
-    List<User> users = new ArrayList<>();
+	@Override
+	public ReturnRecord getAllUsers() {
+		List<User> users = new ArrayList<>();
 
-    final var sql = "SELECT userIdx, callsign, name, active, dateJoined FROM users";
+		final var sql = "SELECT userIdx, callsign, name, active, dateJoined FROM users";
 
-    try {
-      var connection = getConnection();
-      Statement statement = connection.createStatement();
-      var rs = statement.executeQuery(sql);
-      while (rs.next()) {
-        logger.debug(rs.getString(2));
-        var dateJoined = LocalDate.parse(rs.getString(5));
-        var user = new User(rs.getLong(1), rs.getString(2), rs.getString(3), rs.getBoolean(4), dateJoined);
-        idUserMap.put(user.id(), user);
-        callUserMap.put(user.call(), user);
-        users.add(user);
-      }
-      statement.close();
-      connection.close();
-    } catch (Exception e) {
-      logger.error("SQL Exception: " + e.getMessage());
-      return new ReturnRecord(ReturnStatus.ERROR, e.getMessage(), null);
-    }
+		try {
+			var connection = getConnection();
+			Statement statement = connection.createStatement();
+			var rs = statement.executeQuery(sql);
+			while (rs.next()) {
+				logger.debug(rs.getString(2));
+				var dateJoined = LocalDate.parse(rs.getString(5));
+				var user = new User(rs.getLong(1), rs.getString(2), rs.getString(3), rs.getBoolean(4), dateJoined);
+				idUserMap.put(user.id(), user);
+				callUserMap.put(user.call(), user);
+				users.add(user);
+			}
+			statement.close();
+			connection.close();
+		} catch (Exception e) {
+			logger.error("SQL Exception: " + e.getMessage());
+			return new ReturnRecord(ReturnStatus.ERROR, e.getMessage(), null);
+		}
 
-    return new ReturnRecord(ReturnStatus.OK, "", users);
-  }
+		return new ReturnRecord(ReturnStatus.OK, "", users);
+	}
 
-  @Override
-  public ReturnRecord getAllExercises() {
-    List<Exercise> exercises = new ArrayList<>();
+	@Override
+	public ReturnRecord getAllExercises() {
+		List<Exercise> exercises = new ArrayList<>();
 
-    final var sql = "SELECT exerciseIdx, date, type, name, description FROM exercises";
+		final var sql = "SELECT exerciseIdx, date, type, name, description FROM exercises";
 
-    try {
-      var connection = getConnection();
-      Statement statement = connection.createStatement();
-      var rs = statement.executeQuery(sql);
-      while (rs.next()) {
-        var date = LocalDate.parse(rs.getString(2));
-        var exercise = new Exercise(rs.getLong(1), date, rs.getString(3), rs.getString(4), rs.getString(5));
-        idExerciseMap.put(exercise.id(), exercise);
-        exercises.add(exercise);
-      }
-      statement.close();
-      connection.close();
-    } catch (Exception e) {
-      logger.error("SQL Exception: " + e.getMessage());
-      return new ReturnRecord(ReturnStatus.ERROR, e.getMessage(), null);
-    }
+		try {
+			var connection = getConnection();
+			Statement statement = connection.createStatement();
+			var rs = statement.executeQuery(sql);
+			while (rs.next()) {
+				var date = LocalDate.parse(rs.getString(2));
+				var exercise = new Exercise(rs.getLong(1), date, rs.getString(3), rs.getString(4), rs.getString(5));
+				idExerciseMap.put(exercise.id(), exercise);
+				exercises.add(exercise);
+			}
+			statement.close();
+			connection.close();
+		} catch (Exception e) {
+			logger.error("SQL Exception: " + e.getMessage());
+			return new ReturnRecord(ReturnStatus.ERROR, e.getMessage(), null);
+		}
 
-    return new ReturnRecord(ReturnStatus.OK, "", exercises);
-  }
+		return new ReturnRecord(ReturnStatus.OK, "", exercises);
+	}
 
-  @Override
-  public ReturnRecord getAllEvents() {
-    List<Event> events = new ArrayList<>();
+	@Override
+	public ReturnRecord getAllEvents() {
+		List<Event> events = new ArrayList<>();
 
-    final var sql = "SELECT eventIdx, userIdx, exerciseIdx, latitude, longitude, feedbackCount, FeedbackText, Context FROM Events";
+		final var sql = "SELECT eventIdx, userIdx, exerciseIdx, latitude, longitude, feedbackCount, FeedbackText, Context FROM Events";
 
-    try {
-      var connection = getConnection();
-      Statement statement = connection.createStatement();
-      var rs = statement.executeQuery(sql);
-      while (rs.next()) {
-        var location = new LatLongPair(rs.getDouble(4), rs.getDouble(5));
-        var call = idUserMap.get(rs.getLong(2)).call();
-        var event = new Event(rs.getLong(1), rs.getLong(2), rs.getLong(3), call, //
-            location, rs.getInt(6), rs.getString(7), rs.getString(8));
-        idEventMap.put(event.id(), event);
-        events.add(event);
-      }
-      statement.close();
-      connection.close();
-    } catch (Exception e) {
-      logger.error("SQL Exception: " + e.getMessage());
-      return new ReturnRecord(ReturnStatus.ERROR, e.getMessage(), null);
-    }
+		try {
+			var connection = getConnection();
+			Statement statement = connection.createStatement();
+			var rs = statement.executeQuery(sql);
+			while (rs.next()) {
+				var location = new LatLongPair(rs.getDouble(4), rs.getDouble(5));
+				var call = idUserMap.get(rs.getLong(2)).call();
+				var event = new Event(rs.getLong(1), rs.getLong(2), rs.getLong(3), call, //
+						location, rs.getInt(6), rs.getString(7), rs.getString(8));
+				idEventMap.put(event.id(), event);
+				events.add(event);
+			}
+			statement.close();
+			connection.close();
+		} catch (Exception e) {
+			logger.error("SQL Exception: " + e.getMessage());
+			return new ReturnRecord(ReturnStatus.ERROR, e.getMessage(), null);
+		}
 
-    return new ReturnRecord(ReturnStatus.OK, "", events);
-  }
+		return new ReturnRecord(ReturnStatus.OK, "", events);
+	}
 
-  /**
-   * support an exercise, by inserting events, etc.
-   *
-   * @param input
-   * @return
-   */
-  @Override
-  public ReturnRecord bulkInsert(BulkInsertEntry input) {
-    if (!allowFuture) {
-      var exerciseDate = input.exercise().date();
-      var nowDate = LocalDate.now();
-      if (exerciseDate.isAfter(nowDate)) {
-        var message = "skipping bulkInsert because Exercise date: " + exerciseDate + " is in future of now: " + nowDate;
-        logger.warn("### " + message);
-        return new ReturnRecord(ReturnStatus.ERROR, message, nowDate);
-      }
-    }
+	/**
+	 * support an exercise, by inserting events, etc.
+	 *
+	 * @param input
+	 * @return
+	 */
+	@Override
+	public ReturnRecord bulkInsert(BulkInsertEntry input) {
+		if (!allowFuture) {
+			var exerciseDate = input.exercise().date();
+			var nowDate = LocalDate.now();
+			if (exerciseDate.isAfter(nowDate)) {
+				var message = "skipping bulkInsert because Exercise date: " + exerciseDate + " is in future of now: "
+						+ nowDate;
+				logger.warn("### " + message);
+				return new ReturnRecord(ReturnStatus.ERROR, message, nowDate);
+			}
+		}
 
-    var connection = getConnection();
-    try {
-      connection.setAutoCommit(false); // begin transaction
+		var connection = getConnection();
+		try {
+			connection.setAutoCommit(false); // begin transaction
 
-      var exercise = input.exercise();
-      var exerciseId = bulkInsert_exercise(connection, exercise);
-      exercise = Exercise.updateExerciseId(exercise, exerciseId);
+			var exercise = input.exercise();
+			var exerciseId = bulkInsert_exercise(connection, exercise);
+			exercise = Exercise.updateExerciseId(exercise, exerciseId);
 
-      var events = input.events();
-      for (var event : events) {
-        event = bulkInsert_user(connection, event, exercise);
-        bulkInsert_event(connection, event);
-      }
+			var events = input.events();
+			for (var event : events) {
+				event = bulkInsert_user(connection, event, exercise);
+				bulkInsert_event(connection, event);
+			}
 
-      logger.info("persisted exercise: " + exercise.toString() + ", plus " + events.size() + " events");
+			logger.info("persisted exercise: " + exercise.toString() + ", plus " + events.size() + " events");
 
-      connection.commit();
-      connection.close();
-    } catch (Exception e) {
-      try {
-        connection.rollback(); // roll back transaction on error
-      } catch (Exception ee) {
-        logger.error("SQL Exception rolling back transaction: " + ee.getMessage());
-        return new ReturnRecord(ReturnStatus.ERROR, ee.getMessage(), null);
-      }
-      logger.error("SQL Exception: " + e.getMessage());
-      return new ReturnRecord(ReturnStatus.ERROR, e.getMessage(), null);
-    }
-    return new ReturnRecord(ReturnStatus.OK, null, null);
-  }
+			connection.commit();
+			connection.close();
+		} catch (Exception e) {
+			try {
+				connection.rollback(); // roll back transaction on error
+			} catch (Exception ee) {
+				logger.error("SQL Exception rolling back transaction: " + ee.getMessage());
+				return new ReturnRecord(ReturnStatus.ERROR, ee.getMessage(), null);
+			}
+			logger.error("SQL Exception: " + e.getMessage());
+			return new ReturnRecord(ReturnStatus.ERROR, e.getMessage(), null);
+		}
+		return new ReturnRecord(ReturnStatus.OK, null, null);
+	}
 
-  private Event bulkInsert_event(Connection connection, Event event) throws SQLException {
-    long eventId = -1;
+	private Event bulkInsert_event(Connection connection, Event event) throws SQLException {
+		long eventId = -1;
 
-    var sql = """
-        INSERT INTO Events (UserIDX, ExerciseIDX, Latitude, Longitude, FeedbackCount, FeedbackText, Context)
-          VALUES (?, ?, ?, ?, ?, ?, ?)
-        ON CONFLICT(UserIDX,ExerciseIDX)
-        DO UPDATE SET Latitude=excluded.Latitude, Longitude=excluded.Longitude,
-          FeedbackCount=excluded.FeedbackCount, FeedbackText = excluded.feedbackText, Context=excluded.Context
-        """;
+		var sql = """
+				INSERT INTO Events (UserIDX, ExerciseIDX, Latitude, Longitude, FeedbackCount, FeedbackText, Context)
+				  VALUES (?, ?, ?, ?, ?, ?, ?)
+				ON CONFLICT(UserIDX,ExerciseIDX)
+				DO UPDATE SET Latitude=excluded.Latitude, Longitude=excluded.Longitude,
+				  FeedbackCount=excluded.FeedbackCount, FeedbackText = excluded.feedbackText, Context=excluded.Context
+				""";
 
-    var location = event.location() != null && event.location().isValid() ? event.location() : LatLongPair.ZERO_ZERO;
+		var location = event.location() != null && event.location().isValid() ? event.location()
+				: LatLongPair.ZERO_ZERO;
 
-    var ps1 = connection.prepareStatement(sql);
-    ps1.setLong(1, event.userId());
-    ps1.setLong(2, event.exerciseId());
-    ps1.setDouble(3, location.getLatitudeAsDouble());
-    ps1.setDouble(4, location.getLongitudeAsDouble());
-    ps1.setInt(5, event.feedbackCount());
-    ps1.setString(6, event.feedback());
-    ps1.setString(7, event.context());
-    ps1.executeUpdate();
-    ps1.close();
+		var ps1 = connection.prepareStatement(sql);
+		ps1.setLong(1, event.userId());
+		ps1.setLong(2, event.exerciseId());
+		ps1.setDouble(3, location.getLatitudeAsDouble());
+		ps1.setDouble(4, location.getLongitudeAsDouble());
+		ps1.setInt(5, event.feedbackCount());
+		ps1.setString(6, event.feedback());
+		ps1.setString(7, event.context());
+		ps1.executeUpdate();
+		ps1.close();
 
-    sql = "SELECT EventIDX FROM Events WHERE UserIDX = ? AND ExerciseIDX = ?";
-    ps1 = connection.prepareStatement(sql);
-    ps1.setLong(1, event.userId());
-    ps1.setLong(2, event.exerciseId());
-    var rs = ps1.executeQuery();
-    while (rs.next()) {
-      eventId = rs.getLong(1);
-      if (eventId >= 0) {
-        rs.close();
-        ps1.close();
-        logger.debug("User/call: " + event.call() + ", eventId: " + eventId);
-      }
-    }
-    return Event.updateEventId(event, eventId);
-  }
+		sql = "SELECT EventIDX FROM Events WHERE UserIDX = ? AND ExerciseIDX = ?";
+		ps1 = connection.prepareStatement(sql);
+		ps1.setLong(1, event.userId());
+		ps1.setLong(2, event.exerciseId());
+		var rs = ps1.executeQuery();
+		while (rs.next()) {
+			eventId = rs.getLong(1);
+			if (eventId >= 0) {
+				rs.close();
+				ps1.close();
+				logger.debug("User/call: " + event.call() + ", eventId: " + eventId);
+			}
+		}
+		return Event.updateEventId(event, eventId);
+	}
 
-  private Event bulkInsert_user(Connection connection, Event event, Exercise exercise) throws SQLException {
-    long userId = -1;
-    long exerciseId = exercise.id();
+	private Event bulkInsert_user(Connection connection, Event event, Exercise exercise) throws SQLException {
+		long userId = -1;
+		long exerciseId = exercise.id();
 
-    var sql = """
-        INSERT INTO Users (CallSign, DateJoined) VALUES (?,?)
-        ON CONFLICT(CallSign)
-        DO UPDATE SET Active = 1
-        """;
+		var sql = """
+				INSERT INTO Users (CallSign, DateJoined) VALUES (?,?)
+				ON CONFLICT(CallSign)
+				DO UPDATE SET Active = 1
+				""";
 
-    var ps1 = connection.prepareStatement(sql);
-    ps1.setString(1, event.call());
-    if (dateAsString) {
-      ps1.setString(2, DATE_FORMATTER.format(exercise.date()));
-    } else {
-      ps1.setDate(2, java.sql.Date.valueOf(exercise.date()));
-    }
-    ps1.executeUpdate();
-    ps1.close();
+		var ps1 = connection.prepareStatement(sql);
+		ps1.setString(1, event.call());
+		if (dateAsString) {
+			ps1.setString(2, DATE_FORMATTER.format(exercise.date()));
+		} else {
+			ps1.setDate(2, java.sql.Date.valueOf(exercise.date()));
+		}
+		ps1.executeUpdate();
+		ps1.close();
 
-    sql = "SELECT UserIdX FROM Users WHERE CallSign = ?";
-    ps1 = connection.prepareStatement(sql);
-    ps1.setString(1, event.call());
-    var rs = ps1.executeQuery();
-    while (rs.next()) {
-      userId = rs.getLong(1);
-      if (userId >= 0) {
-        rs.close();
-        ps1.close();
-        logger.debug("User/call: " + event.call() + ", userId: " + userId);
-      }
-    }
-    return Event.updateUserId(event, userId, exerciseId);
-  }
+		sql = "SELECT UserIdX FROM Users WHERE CallSign = ?";
+		ps1 = connection.prepareStatement(sql);
+		ps1.setString(1, event.call());
+		var rs = ps1.executeQuery();
+		while (rs.next()) {
+			userId = rs.getLong(1);
+			if (userId >= 0) {
+				rs.close();
+				ps1.close();
+				logger.debug("User/call: " + event.call() + ", userId: " + userId);
+			}
+		}
+		return Event.updateUserId(event, userId, exerciseId);
+	}
 
-  private long bulkInsert_exercise(Connection connection, Exercise exercise) throws SQLException {
-    var sql = """
-        INSERT INTO Exercises (Date,Type,Name,Description) VALUES (?,?,?,?)
-        ON CONFLICT(Date,Type,Name)
-        DO UPDATE SET Description = excluded.Description
-        """;
+	private long bulkInsert_exercise(Connection connection, Exercise exercise) throws SQLException {
+		var sql = """
+				INSERT INTO Exercises (Date,Type,Name,Description) VALUES (?,?,?,?)
+				ON CONFLICT(Date,Type,Name)
+				DO UPDATE SET Description = excluded.Description
+				""";
 
-    var ps1 = connection.prepareStatement(sql);
-    if (dateAsString) {
-      ps1.setString(1, DATE_FORMATTER.format(exercise.date()));
-    } else {
-      ps1.setDate(1, java.sql.Date.valueOf(exercise.date()));
-    }
-    ps1.setString(2, exercise.type());
-    ps1.setString(3, exercise.name());
-    ps1.setString(4, exercise.description());
-    ps1.executeUpdate();
-    ps1.close();
+		var ps1 = connection.prepareStatement(sql);
+		if (dateAsString) {
+			ps1.setString(1, DATE_FORMATTER.format(exercise.date()));
+		} else {
+			ps1.setDate(1, java.sql.Date.valueOf(exercise.date()));
+		}
+		ps1.setString(2, exercise.type());
+		ps1.setString(3, exercise.name());
+		ps1.setString(4, exercise.description());
+		ps1.executeUpdate();
+		ps1.close();
 
-    long exerciseId = -1;
-    sql = "SELECT exerciseIdx FROM Exercises WHERE Date = ? AND Type = ? AND Name = ?";
-    ps1 = connection.prepareStatement(sql);
-    if (dateAsString) {
-      ps1.setString(1, DATE_FORMATTER.format(exercise.date()));
-    } else {
-      ps1.setDate(1, java.sql.Date.valueOf(exercise.date()));
-    }
-    ps1.setString(2, exercise.type());
-    ps1.setString(3, exercise.name());
-    var rs = ps1.executeQuery();
-    while (rs.next()) {
-      exerciseId = rs.getLong(1);
-      if (exerciseId >= 0) {
-        rs.close();
-        ps1.close();
-        logger.debug("new exerciseId: " + exerciseId);
-      }
-    }
-    return exerciseId;
-  }
+		long exerciseId = -1;
+		sql = "SELECT exerciseIdx FROM Exercises WHERE Date = ? AND Type = ? AND Name = ?";
+		ps1 = connection.prepareStatement(sql);
+		if (dateAsString) {
+			ps1.setString(1, DATE_FORMATTER.format(exercise.date()));
+		} else {
+			ps1.setDate(1, java.sql.Date.valueOf(exercise.date()));
+		}
+		ps1.setString(2, exercise.type());
+		ps1.setString(3, exercise.name());
+		var rs = ps1.executeQuery();
+		while (rs.next()) {
+			exerciseId = rs.getLong(1);
+			if (exerciseId >= 0) {
+				rs.close();
+				ps1.close();
+				logger.debug("new exerciseId: " + exerciseId);
+			}
+		}
+		return exerciseId;
+	}
 
-  @Override
-  public ReturnRecord getHealth() {
-    List<User> users = new ArrayList<>();
+	@Override
+	public ReturnRecord getHealth() {
+		List<User> users = new ArrayList<>();
 
-    final var sql = "SELECT 1";
+		final var sql = "SELECT 1";
 
-    try {
-      var connection = getConnection();
-      Statement statement = connection.createStatement();
-      var rs = statement.executeQuery(sql);
-      if (rs.next()) {
-        var val = rs.getInt(1);
-        if (val != 1) {
-          new ReturnRecord(ReturnStatus.ERROR, "Unexpected value: " + val, null);
-        }
-      }
-      statement.close();
-      connection.close();
-    } catch (Exception e) {
-      logger.error("SQL Exception: " + e.getMessage());
-      return new ReturnRecord(ReturnStatus.ERROR, e.getMessage(), null);
-    }
+		try {
+			var connection = getConnection();
+			if (connection == null) {
+				new ReturnRecord(ReturnStatus.ERROR, "no database connection", null);
+			}
 
-    return new ReturnRecord(ReturnStatus.OK, "", users);
-  }
+			Statement statement = connection.createStatement();
+			var rs = statement.executeQuery(sql);
+			if (rs.next()) {
+				var val = rs.getInt(1);
+				if (val != 1) {
+					new ReturnRecord(ReturnStatus.ERROR, "Unexpected value: " + val, null);
+				}
+			}
+			statement.close();
+			connection.close();
+		} catch (Exception e) {
+			logger.error("SQL Exception: " + e.getMessage());
+			return new ReturnRecord(ReturnStatus.ERROR, e.getMessage(), null);
+		}
 
-  @Override
-  public ReturnRecord updateDateJoined() {
-    handleDirty();
+		return new ReturnRecord(ReturnStatus.OK, "", users);
+	}
 
-    var connection = getConnection();
-    try {
-      connection.setAutoCommit(false); // begin transaction
+	@Override
+	public ReturnRecord updateDateJoined() {
+		handleDirty();
 
-      for (var entry : allJoinMap.values()) {
-        var user = entry.user;
-        var lastExerciseIndex = entry.exercises.size() - 1;
-        var firstExercise = entry.exercises.get(lastExerciseIndex);
-        var firstExerciseDate = firstExercise.date();
-        if (firstExerciseDate.isBefore(entry.dateJoined)) {
-          logger.info("found candidate: call: " + user.call() + ", dateJoined: " + user.dateJoined()
-              + ", firstExercise: " + firstExerciseDate);
-        }
+		var connection = getConnection();
+		try {
+			connection.setAutoCommit(false); // begin transaction
 
-        var sql = "UPDATE Users SET DateJoined = ? WHERE UserIdx = ?";
-        var ps1 = connection.prepareStatement(sql);
-        if (dateAsString) {
-          ps1.setString(1, DATE_FORMATTER.format(firstExerciseDate));
-        } else {
-          ps1.setDate(1, java.sql.Date.valueOf(firstExerciseDate));
-        }
-        ps1.setLong(2, user.id());
-        ps1.executeUpdate();
-        ps1.close();
-      } // end loop over joins
+			for (var entry : allJoinMap.values()) {
+				var user = entry.user;
+				var lastExerciseIndex = entry.exercises.size() - 1;
+				var firstExercise = entry.exercises.get(lastExerciseIndex);
+				var firstExerciseDate = firstExercise.date();
+				if (firstExerciseDate.isBefore(entry.dateJoined)) {
+					logger.info("found candidate: call: " + user.call() + ", dateJoined: " + user.dateJoined()
+							+ ", firstExercise: " + firstExerciseDate);
+				}
 
-      connection.commit();
-      connection.close();
-    } catch (Exception e) {
-      try {
-        connection.rollback(); // roll back transaction on error
-      } catch (Exception ee) {
-        logger.error("SQL Exception rolling back transaction: " + ee.getMessage());
-        return new ReturnRecord(ReturnStatus.ERROR, ee.getMessage(), null);
-      }
-      logger.error("SQL Exception: " + e.getMessage());
-      return new ReturnRecord(ReturnStatus.ERROR, e.getMessage(), null);
-    }
-    return new ReturnRecord(ReturnStatus.OK, null, null);
-  }
+				var sql = "UPDATE Users SET DateJoined = ? WHERE UserIdx = ?";
+				var ps1 = connection.prepareStatement(sql);
+				if (dateAsString) {
+					ps1.setString(1, DATE_FORMATTER.format(firstExerciseDate));
+				} else {
+					ps1.setDate(1, java.sql.Date.valueOf(firstExerciseDate));
+				}
+				ps1.setLong(2, user.id());
+				ps1.executeUpdate();
+				ps1.close();
+			} // end loop over joins
 
-  protected void loadTables() {
-    var ret = getAllUsers();
-    if (ret.status() != ReturnStatus.OK) {
-      throw new RuntimeException("Could not getAllUsers: " + ret.content());
-    }
+			connection.commit();
+			connection.close();
+		} catch (Exception e) {
+			try {
+				connection.rollback(); // roll back transaction on error
+			} catch (Exception ee) {
+				logger.error("SQL Exception rolling back transaction: " + ee.getMessage());
+				return new ReturnRecord(ReturnStatus.ERROR, ee.getMessage(), null);
+			}
+			logger.error("SQL Exception: " + e.getMessage());
+			return new ReturnRecord(ReturnStatus.ERROR, e.getMessage(), null);
+		}
+		return new ReturnRecord(ReturnStatus.OK, null, null);
+	}
 
-    ret = getAllExercises();
-    if (ret.status() != ReturnStatus.OK) {
-      throw new RuntimeException("Could not getAllExercises: " + ret.content());
-    }
+	protected void loadTables() {
+		var ret = getAllUsers();
+		if (ret.status() != ReturnStatus.OK) {
+			throw new RuntimeException("Could not getAllUsers: " + ret.content());
+		}
 
-    ret = getAllEvents();
-    if (ret.status() != ReturnStatus.OK) {
-      throw new RuntimeException("Could not getAllEvents: " + ret.content());
-    }
+		ret = getAllExercises();
+		if (ret.status() != ReturnStatus.OK) {
+			throw new RuntimeException("Could not getAllExercises: " + ret.content());
+		}
 
-    var exercises = new ArrayList<Exercise>(idExerciseMap.values());
-    Collections.sort(exercises);
-    lastExercise = exercises.get(0);
+		ret = getAllEvents();
+		if (ret.status() != ReturnStatus.OK) {
+			throw new RuntimeException("Could not getAllEvents: " + ret.content());
+		}
 
-    join();
+		var exercises = new ArrayList<Exercise>(idExerciseMap.values());
+		Collections.sort(exercises);
+		lastExercise = exercises.get(0);
 
-    var debug = false;
-    if (debug == true) {
-      logger.info("users (call): " + idUserMap.size());
-      logger.info("users (id): " + idUserMap.size());
-      logger.info("users (join): " + allJoinMap.size());
-      logger.info("active users (join): " + activeJoinMap.size());
-      logger.info("exercies: " + idExerciseMap.size());
-      logger.info("events: " + idEventMap.size());
-      logger.info("lastExercise: " + lastExercise);
-    }
-  }
+		join();
 
-  private void handleDirty() {
-    if (isDirty) {
-      idUserMap.clear();
-      callUserMap.clear();
-      idExerciseMap.clear();
-      idEventMap.clear();
+		var debug = false;
+		if (debug == true) {
+			logger.info("users (call): " + idUserMap.size());
+			logger.info("users (id): " + idUserMap.size());
+			logger.info("users (join): " + allJoinMap.size());
+			logger.info("active users (join): " + activeJoinMap.size());
+			logger.info("exercies: " + idExerciseMap.size());
+			logger.info("events: " + idEventMap.size());
+			logger.info("lastExercise: " + lastExercise);
+		}
+	}
 
-      loadTables();
+	private void handleDirty() {
+		if (isDirty) {
+			idUserMap.clear();
+			callUserMap.clear();
+			idExerciseMap.clear();
+			idEventMap.clear();
 
-      isDirty = false;
-    }
-  }
+			loadTables();
 
-  @Override
-  public ReturnRecord getUsersMissingExercises(List<Exercise> filteredExercises, int missLimit) {
+			isDirty = false;
+		}
+	}
 
-    handleDirty();
-    return super.getUsersMissingExercises(filteredExercises, missLimit);
-  }
+	@Override
+	public ReturnRecord getUsersMissingExercises(List<Exercise> filteredExercises, int missLimit) {
 
-  @Override
-  public ReturnRecord getFilteredExercises(Set<String> requiredExerciseTypes, LocalDate fromDate) {
+		handleDirty();
+		return super.getUsersMissingExercises(filteredExercises, missLimit);
+	}
 
-    handleDirty();
-    return super.getFilteredExercises(requiredExerciseTypes, fromDate);
-  }
+	@Override
+	public ReturnRecord getFilteredExercises(Set<String> requiredExerciseTypes, LocalDate fromDate) {
 
-  @Override
-  public ReturnRecord getUsersHistory(List<Exercise> filteredExercises) {
+		handleDirty();
+		return super.getFilteredExercises(requiredExerciseTypes, fromDate);
+	}
 
-    handleDirty();
-    return super.getUsersHistory(filteredExercises);
-  }
+	@Override
+	public ReturnRecord getUsersHistory(List<Exercise> filteredExercises) {
+
+		handleDirty();
+		return super.getUsersHistory(filteredExercises);
+	}
 
 }

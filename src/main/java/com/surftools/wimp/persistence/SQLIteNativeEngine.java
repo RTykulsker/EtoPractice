@@ -37,26 +37,31 @@ import com.surftools.wimp.configuration.Key;
 import com.surftools.wimp.utils.config.IConfigurationManager;
 
 public class SQLIteNativeEngine extends AbstractBaseJdbcEngine {
-  private static final Logger logger = LoggerFactory.getLogger(SQLIteNativeEngine.class);
+	private static final Logger logger = LoggerFactory.getLogger(SQLIteNativeEngine.class);
 
-  private String url;
+	private String url;
 
-  public SQLIteNativeEngine(IConfigurationManager cm) {
-    super(cm);
-    url = cm.getAsString(Key.PERSISTENCE_SQLITE_URL);
-    dateAsString = true; // true for sqlite, false for postgres
-  }
+	public SQLIteNativeEngine(IConfigurationManager cm) {
+		super(cm);
+		url = cm.getAsString(Key.PERSISTENCE_SQLITE_URL);
+		dateAsString = true; // true for sqlite, false for postgres
+	}
 
-  @Override
-  protected Connection getConnection() {
-    Connection connection = null;
-    try {
-      Class.forName("org.sqlite.JDBC");
-      connection = DriverManager.getConnection("jdbc:sqlite:" + url);
-    } catch (Exception e) {
-      logger.error("SQL Exception: " + e.getMessage());
-    }
-    return connection;
-  }
+	@Override
+	protected Connection getConnection() {
+		if (url == null) {
+			logger.error("### no database connection");
+			return null;
+		}
+
+		Connection connection = null;
+		try {
+			Class.forName("org.sqlite.JDBC");
+			connection = DriverManager.getConnection("jdbc:sqlite:" + url);
+		} catch (Exception e) {
+			logger.error("SQL Exception: " + e.getMessage());
+		}
+		return connection;
+	}
 
 }
