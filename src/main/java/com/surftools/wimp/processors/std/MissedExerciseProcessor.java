@@ -50,85 +50,85 @@ import com.surftools.wimp.utils.config.IConfigurationManager;
  * compose outbound messages to folks who missed latest exercise
  */
 public class MissedExerciseProcessor extends AbstractBaseProcessor {
-  private static final Logger logger = LoggerFactory.getLogger(MissedExerciseProcessor.class);
+	private static final Logger logger = LoggerFactory.getLogger(MissedExerciseProcessor.class);
 
-  @Override
-  public void initialize(IConfigurationManager cm, IMessageManager mm) {
+	@Override
+	public void initialize(IConfigurationManager cm, IMessageManager mm) {
 
-  }
+	}
 
-  @Override
-  public void process() {
-  }
+	@Override
+	public void process() {
+	}
 
-  @Override
-  public void postProcess() {
-    var db = new PersistenceManager(cm);
-    var ret = db.getHealth();
-    if (ret.status() != ReturnStatus.OK) {
-      logger.error("Health Check failed: " + ret.content());
-      return;
-    }
+	@Override
+	public void postProcess() {
+		var db = new PersistenceManager(cm);
+		var ret = db.getHealth();
+		if (ret.status() != ReturnStatus.OK) {
+			logger.error("Health Check failed: " + ret.content());
+			return;
+		}
 
-    ret = db.getFilteredExercises(null, date);
-    if (ret.status() != ReturnStatus.OK) {
-      logger.error("Could not get filteredExercises database: " + ret.content());
-      return;
-    }
-    @SuppressWarnings("unchecked")
-    var filteredExercises = (List<Exercise>) ret.data();
+		ret = db.getFilteredExercises(null, date);
+		if (ret.status() != ReturnStatus.OK) {
+			logger.error("Could not get filteredExercises database: " + ret.content());
+			return;
+		}
+		@SuppressWarnings("unchecked")
+		var filteredExercises = (List<Exercise>) ret.data();
 
-    var missLimit = cm.getAsInt(Key.PERSISTENCE_MISS_LIMIT, 3);
-    ret = db.getUsersMissingExercises(filteredExercises, missLimit);
-    if (ret.status() != ReturnStatus.OK) {
-      logger.error("Could not get missed Exercise records from database: " + ret.content());
-      return;
-    }
+		var missLimit = cm.getAsInt(Key.PERSISTENCE_MISS_LIMIT, 3);
+		ret = db.getUsersMissingExercises(filteredExercises, missLimit);
+		if (ret.status() != ReturnStatus.OK) {
+			logger.error("Could not get missed Exercise records from database: " + ret.content());
+			return;
+		}
 
-    @SuppressWarnings("unchecked")
-    List<JoinedUser> joinedUsers = (List<JoinedUser>) ret.data();
-    if (joinedUsers.size() == 0) {
-      logger.warn("no Users with missed exercises");
-      return;
-    }
+		@SuppressWarnings("unchecked")
+		List<JoinedUser> joinedUsers = (List<JoinedUser>) ret.data();
+		if (joinedUsers.size() == 0) {
+			logger.warn("no Users with missed exercises");
+			return;
+		}
 
-    var template = DEFAULT_TEMPLATE;
-    var templatePath = cm.getAsString(Key.PERSISTENCE_MISS_BODY_PATH);
-    if (templatePath != null) {
-      try {
-        template = Files.readString(Path.of(templatePath));
-      } catch (Exception e) {
-        logger.error("Exception reading template: " + templatePath + ". using default");
-      }
-    }
+		var template = DEFAULT_TEMPLATE;
+		var templatePath = cm.getAsString(Key.PERSISTENCE_MISS_BODY_PATH);
+		if (templatePath != null) {
+			try {
+				template = Files.readString(Path.of(templatePath));
+			} catch (Exception e) {
+				logger.error("Exception reading template: " + templatePath + ". using default");
+			}
+		}
 
-    var dateString = cm.getAsString(Key.EXERCISE_DATE);
-    var outboundMessages = new ArrayList<OutboundMessage>();
-    var from = cm.getAsString(Key.OUTBOUND_MESSAGE_SENDER);
-    var subject = cm.getAsString(Key.PERSISTENCE_MISS_SUBJECT, "We missed you!");
-    var instructions = (String) mm.getContextObject(PracticeProcessorTool.INSTRUCTIONS_KEY);
-    for (var joinedUser : joinedUsers) {
-      var to = joinedUser.user.call();
-      // inside loop, because we might want to show name, count of missed exercises,
-      // etc.
-      template = template.replace("#DATE#", dateString);
-      template = template.replace("#INSTRUCTIONS#", instructions);
-      var body = template;
-      var outboundMessage = new OutboundMessage(from, to, subject, body, null);
-      outboundMessages.add(outboundMessage);
-    }
+		var dateString = cm.getAsString(Key.EXERCISE_DATE);
+		var outboundMessages = new ArrayList<OutboundMessage>();
+		var from = cm.getAsString(Key.OUTBOUND_MESSAGE_SENDER);
+		var subject = cm.getAsString(Key.PERSISTENCE_MISS_SUBJECT, "We missed you!");
+		var instructions = (String) mm.getContextObject(PracticeProcessorTool.COOKED_INSTRUCTIONS_KEY);
+		for (var joinedUser : joinedUsers) {
+			var to = joinedUser.user.call();
+			// inside loop, because we might want to show name, count of missed exercises,
+			// etc.
+			template = template.replace("#DATE#", dateString);
+			template = template.replace("#INSTRUCTIONS#", instructions);
+			var body = template;
+			var outboundMessage = new OutboundMessage(from, to, subject, body, null);
+			outboundMessages.add(outboundMessage);
+		}
 
-    var filename = "Winlink_MissedExercise_ImportMesages-" + dateString + ".xml";
-    var service = new OutboundMessageService(cm, mm, null, filename);
-    service.sendAll(outboundMessages);
-  }
+		var filename = "Winlink_MissedExercise_ImportMesages-" + dateString + ".xml";
+		var service = new OutboundMessageService(cm, mm, null, filename);
+		service.sendAll(outboundMessages);
+	}
 
-  private static String DEFAULT_TEMPLATE = """
-      We noticed that you missed the last regularly scheduled ETO Practice exercise on #DATE#.
+	private static String DEFAULT_TEMPLATE = """
+			We noticed that you missed the last regularly scheduled ETO Practice exercise on #DATE#.
 
-      Here are the instructions for the next ETO Practice exercise.
-      #INSTRUCTIONS#
+			Here are the instructions for the next ETO Practice exercise.
+			#INSTRUCTIONS#
 
-      We look forward to seeing your Winlink message addressed to ETO-PRACTICE!
-            """;
+			We look forward to seeing your Winlink message addressed to ETO-PRACTICE!
+			      """;
 }

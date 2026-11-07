@@ -28,6 +28,7 @@ package com.surftools.wimp.processors.std;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
@@ -37,14 +38,18 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
+import javax.activation.DataHandler;
 import javax.mail.Authenticator;
 import javax.mail.Message;
 import javax.mail.PasswordAuthentication;
 import javax.mail.Session;
 import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart;
 
+import org.apache.commons.mail.ByteArrayDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,6 +57,7 @@ import com.surftools.utils.FileUtils;
 import com.surftools.utils.UtcDateTime;
 import com.surftools.wimp.configuration.Key;
 import com.surftools.wimp.core.IMessageManager;
+import com.surftools.wimp.practice.tools.PracticeProcessorTool;
 import com.surftools.wimp.service.outboundMessage.AbstractBaseOutboundMessageEngine;
 import com.surftools.wimp.utils.config.IConfigurationManager;
 
@@ -400,8 +406,32 @@ public class FinalizeProcessor extends AbstractBaseProcessor {
 					}
 				}
 
-				emailMessage.setText(body);
+				var instructions = (String) mm.getContextObject(PracticeProcessorTool.RAW_INSTRUCTIONS_KEY);
+				if (instructions == null || instructions.length() == 0) {
+					var sourceOfTruthText = "No instructions on GDrive://ETO Exercises/ETO-PRACTICE/instructions/ for next exercise. Possibly 3rd Thursday training exercise.";
+					body += "\n" + sourceOfTruthText;
 
+					emailMessage.setText(body);
+				} else {
+					var yearString = dateString.substring(0, 4);
+					var sourceOfTruthText = "Be sure to compare attached instructions against GDrive://ETO Exercises/ETO-PRACTICE/instructions/"
+							+ yearString + "/" + dateString;
+					body += "\n" + sourceOfTruthText;
+
+					var multipart = new MimeMultipart();
+					var bodyPart = new MimeBodyPart();
+					bodyPart.setText(body);
+					multipart.addBodyPart(bodyPart);
+
+					var attachmentPart = new MimeBodyPart();
+					@SuppressWarnings("deprecation")
+					var dataSource = new ByteArrayDataSource(instructions.getBytes(StandardCharsets.UTF_8),
+							"text/plain");
+					attachmentPart.setDataHandler(new DataHandler(dataSource));
+					attachmentPart.setFileName(dateString + "-instructions.txt");
+					multipart.addBodyPart(attachmentPart);
+					emailMessage.setContent(multipart);
+				}
 				Transport.send(emailMessage);
 
 				logger.info("email sent via Internet");

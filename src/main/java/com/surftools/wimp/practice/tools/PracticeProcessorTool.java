@@ -27,6 +27,7 @@ SOFTWARE.
 
 package com.surftools.wimp.practice.tools;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
@@ -44,6 +45,7 @@ import com.surftools.utils.FileUtils;
 import com.surftools.wimp.configuration.Key;
 import com.surftools.wimp.core.MessageManager;
 import com.surftools.wimp.generator.PracticeJsonMessageDeserializer;
+import com.surftools.wimp.message.ExportedMessage;
 import com.surftools.wimp.processors.std.PipelineProcessor;
 import com.surftools.wimp.schedule.ScheduleCheckResult;
 import com.surftools.wimp.schedule.ScheduleManager;
@@ -57,7 +59,8 @@ import ch.qos.logback.core.FileAppender;
 
 public class PracticeProcessorTool {
 	public static final String REFERENCE_MESSAGE_KEY = "referenceMessage";
-	public static final String INSTRUCTIONS_KEY = "instructions";
+	public static final String COOKED_INSTRUCTIONS_KEY = "cookedInstructions";
+	public static final String RAW_INSTRUCTIONS_KEY = "rawInstructions";
 	public static final String CONFIGURATION_FILE_KEY = "configurationFileName";
 
 	static {
@@ -65,6 +68,7 @@ public class PracticeProcessorTool {
 	}
 
 	private static final Logger logger = LoggerFactory.getLogger(PracticeProcessorTool.class);
+	private PropertyFileConfigurationManager cm;
 
 	@Option(name = "--exerciseDate", usage = "date of practice exercise in yyyy-MM-dd format", required = true)
 	private String exerciseDateString = null;
@@ -97,7 +101,8 @@ public class PracticeProcessorTool {
 			logger.info("begin run");
 			logger.info("Build version: " + BuildInfo.VERSION + ", Build date: " + BuildInfo.BUILD_TIME);
 
-			var cm = new PropertyFileConfigurationManager(configurationFileName, Key.values());
+			cm = new PropertyFileConfigurationManager(configurationFileName, Key.values());
+			var mm = new MessageManager();
 			var originalExerciseDateString = exerciseDateString;
 			exerciseDateString = parse(exerciseDateString, cm);
 			addDatedLogger(cm);
@@ -122,9 +127,13 @@ public class PracticeProcessorTool {
 			logger.info("reference home: " + referencePathName);
 			var referencePath = Path.of(referencePathName, exerciseYearString, exerciseDateString,
 					exerciseDateString + "-reference.json");
-			var jsonString = copyReferenceFilesToInputIfNeededAndRead(referencePath, exerciseYearString, cm);
-			var deserializer = new PracticeJsonMessageDeserializer();
-			var referenceMessage = deserializer.deserialize(jsonString, messageType);
+			var referenceFile = referencePath.toFile();
+			ExportedMessage referenceMessage = null;
+			if (referenceFile.exists()) {
+				var jsonString = copyReferenceFilesToInputIfNeededAndRead(referencePath, exerciseYearString, cm);
+				var deserializer = new PracticeJsonMessageDeserializer();
+				referenceMessage = deserializer.deserialize(jsonString, messageType);
+			}
 
 			var winlinkCallsign = cm.getAsString(Key.WINLINK_NOTIFICATION_SOURCE);
 			logger.info("Winlink callsign: " + winlinkCallsign);
@@ -160,6 +169,8 @@ public class PracticeProcessorTool {
 								String.valueOf(nextExerciseYear), nextExerciseDateString,
 								nextExerciseDateString + "-instructions.txt");
 						instructionText = Files.readString(instructionPath);
+						mm.putContextObject(RAW_INSTRUCTIONS_KEY, instructionText);
+						checkSourceOfTruth(nextExerciseDateString, instructionText);
 						sb.append("\n\n" + DASHES_72 + "\n\n");
 						sb.append("INSTRUCTIONS for " + nextExerciseDateString + "\n\n");
 						sb.append(instructionText);
@@ -194,9 +205,8 @@ public class PracticeProcessorTool {
 
 			cm.putBoolean(Key.ENABLE_FINALIZE, enableFinalize);
 
-			var mm = new MessageManager();
 			mm.putContextObject(REFERENCE_MESSAGE_KEY, referenceMessage);
-			mm.putContextObject(INSTRUCTIONS_KEY, instructionText);
+			mm.putContextObject(COOKED_INSTRUCTIONS_KEY, instructionText);
 			mm.putContextObject(CONFIGURATION_FILE_KEY, configurationFileName);
 
 			var pipeline = new PipelineProcessor();
@@ -347,4 +357,32 @@ public class PracticeProcessorTool {
 
 		return scheduleRecord.date().toString();
 	}
+
+	private void checkSourceOfTruth(String nextExerciseDateString, String instructionText) throws IOException {
+		if (!enableFinalize) {
+			logger.info("sourceOfTruth: skipping because not finalizing");
+			return;
+		}
+
+		var sotRootString = cm.getAsString(Key.PATH_SOURCE_OF_TRUTH);
+		if (sotRootString == null || sotRootString.isBlank()) {
+			logger.info("sourceOfTruth: skipping because" + Key.PATH_SOURCE_OF_TRUTH.toString() + " not defined");
+			return;
+		}
+
+		var exerciseYear = nextExerciseDateString.substring(0, 4);
+		var sotPath = Path.of(sotRootString, exerciseYear, nextExerciseDateString,
+				nextExerciseDateString + "-instructions.txt");
+		var sotInstructionText = Files.readString(sotPath);
+
+		if (sotInstructionText.equals(instructionText)) {
+			logger.info("sourceOfTruth: comparison perfect");
+			return;
+		}
+
+		logger.error("sourceOfTruth does not match local instructions, exiting");
+		System.exit(1);
+
+	}
+
 }

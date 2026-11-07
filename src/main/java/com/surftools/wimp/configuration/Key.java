@@ -44,6 +44,7 @@ public enum Key implements IConfigurationKey {
 	PATH_SCHEDULE("path.schedule"), // path to the expanded schedule.csv
 	PATH_DOGFOOD("path.dogfood"), // path to csv of eto volunteers
 	PATH_HINT_CONTENT("path.hintContent"), // path to FILE where hints for better messages are stored
+	PATH_SOURCE_OF_TRUTH("path.sourceOfTruth"), // path to a single folder
 
 	MAP_TEMPLATE_METHOD("map.template.method"), // "fast" or "slow", default "fast"
 

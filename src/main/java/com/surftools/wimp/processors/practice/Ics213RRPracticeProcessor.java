@@ -27,103 +27,128 @@ SOFTWARE.
 
 package com.surftools.wimp.processors.practice;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.surftools.wimp.core.IMessageManager;
 import com.surftools.wimp.core.MessageType;
+import com.surftools.wimp.generator.PracticeJsonMessageDeserializer;
 import com.surftools.wimp.message.ExportedMessage;
 import com.surftools.wimp.message.Ics213RRMessage;
 import com.surftools.wimp.practice.misc.PracticeSummary;
 import com.surftools.wimp.utils.config.IConfigurationManager;
 
 public class Ics213RRPracticeProcessor extends BasePracticeProcessor {
-  private final Logger logger = LoggerFactory.getLogger(Ics213RRPracticeProcessor.class);
+	private final Logger logger = LoggerFactory.getLogger(Ics213RRPracticeProcessor.class);
 
-  @Override
-  public void initialize(IConfigurationManager cm, IMessageManager mm) {
-    super.initialize(cm, mm, MessageType.ICS_213_RR);
-  }
+	private Ics213RRMessage wrongRef;
 
-  @Override
-  protected void specificProcessing(ExportedMessage message) {
-    var m = (Ics213RRMessage) message;
-    var ref = (Ics213RRMessage) referenceMessage;
+	@Override
+	public void initialize(IConfigurationManager cm, IMessageManager mm) {
+		super.initialize(cm, mm, MessageType.ICS_213_RR);
 
-    count(sts.test_2line("Message Subject should be #EV", ref.subject, m.subject));
-    count(sts.test("Message Location should be valid", m.msgLocation.isValid(), m.msgLocation.toString()));
+		var wrongInstructionsFileName = "wrong-2026-11-12-reference.json";
+		var wrongPath = Path.of(inputPathName, wrongInstructionsFileName);
+		var jsonString = (String) null;
+		try {
+			jsonString = Files.readString(wrongPath);
+		} catch (Exception e) {
+			;
+		}
+		var deserializer = new PracticeJsonMessageDeserializer();
+		wrongRef = (Ics213RRMessage) deserializer.deserialize(jsonString, MessageType.ICS_213_RR);
+	}
 
-    count(sts.test("Organization Name should be #EV", ref.organization, m.organization));
-    count(sts.test("Incident Name should be #EV", ref.incidentName, m.incidentName));
+	@Override
+	protected void specificProcessing(ExportedMessage message) {
+		var m = (Ics213RRMessage) message;
+		var ref = (Ics213RRMessage) referenceMessage;
 
-    count(sts.testIfPresent("Form Date should be present", m.activityDateTime));
-    count(sts.testIfPresent("Form Time should be present", m.activityDateTime));
+		if (m.approvedBy.startsWith("P")) {
+			getCounter("Early Instructions").increment(true);
+			ref = wrongRef;
+		} else {
+			getCounter("Early Instructions").increment(false);
+		}
 
-    count(sts.test("Resource Request Number should be #EV", ref.requestNumber, m.requestNumber));
+		count(sts.test_2line("Message Subject should be #EV", ref.subject, m.subject));
+		count(sts.test("Message Location should be valid", m.msgLocation.isValid(), m.msgLocation.toString()));
 
-    var maxLineItems = Math.min(ref.lineItems.size(), m.lineItems.size());
-    if (m.lineItems.size() != ref.lineItems.size()) {
-      logger.warn("### from: " + m.from + ",mId: " + m.messageId + ", m.items: " + m.lineItems.size() + ", ref.items: "
-          + ref.lineItems.size());
-    }
-    for (var i = 0; i < maxLineItems; ++i) {
-      var lineNumber = i + 1;
-      sts.setExplanationPrefix("(line " + lineNumber + ")");
-      var item = m.lineItems.get(i);
-      var refItem = ref.lineItems.get(i);
-      if (refItem.isEmpty()) {
-        count(sts.testIfEmpty("Quantity should be empty", item.quantity()));
-        count(sts.testIfEmpty("Kind should be empty", item.kind()));
-        count(sts.testIfEmpty("Type should be empty", item.type()));
-        count(sts.testIfEmpty("Item should be empty", item.item()));
-        count(sts.testIfEmpty("Requested Date/Time should be empty", item.requestedDateTime()));
-        count(sts.testIfEmpty("Estimated Date/Time should be empty", item.estimatedDateTime()));
-        count(sts.testIfEmpty("Cost should be empty", item.cost()));
-      } else {
-        count(sts.test("Quantity should be #EV", refItem.quantity(), item.quantity()));
+		count(sts.test("Organization Name should be #EV", ref.organization, m.organization));
+		count(sts.test("Incident Name should be #EV", ref.incidentName, m.incidentName));
 
-        if (refItem.kind().isEmpty()) {
-          count(sts.testIfEmpty("Kind should be empty", item.kind()));
-        } else {
-          count(sts.test("Kind should be #EV", refItem.kind(), item.kind()));
-        }
+		count(sts.testIfPresent("Form Date should be present", m.activityDateTime));
+		count(sts.testIfPresent("Form Time should be present", m.activityDateTime));
 
-        if (refItem.type().isEmpty()) {
-          count(sts.testIfEmpty("Type should be empty", item.type()));
-        } else {
-          count(sts.test("Type should be #EV", refItem.type(), item.type()));
-        }
+		count(sts.test("Resource Request Number should be #EV", ref.requestNumber, m.requestNumber));
 
-        count(sts.test_2line("Item should be #EV", refItem.item(), item.item()));
+		var maxLineItems = Math.min(ref.lineItems.size(), m.lineItems.size());
+		if (m.lineItems.size() != ref.lineItems.size()) {
+			logger.warn("### from: " + m.from + ",mId: " + m.messageId + ", m.items: " + m.lineItems.size()
+					+ ", ref.items: " + ref.lineItems.size());
+		}
+		for (var i = 0; i < maxLineItems; ++i) {
+			var lineNumber = i + 1;
+			sts.setExplanationPrefix("(line " + lineNumber + ")");
+			var item = m.lineItems.get(i);
+			var refItem = ref.lineItems.get(i);
+			if (refItem.isEmpty()) {
+				count(sts.testIfEmpty("Quantity should be empty", item.quantity()));
+				count(sts.testIfEmpty("Kind should be empty", item.kind()));
+				count(sts.testIfEmpty("Type should be empty", item.type()));
+				count(sts.testIfEmpty("Item should be empty", item.item()));
+				count(sts.testIfEmpty("Requested Date/Time should be empty", item.requestedDateTime()));
+				count(sts.testIfEmpty("Estimated Date/Time should be empty", item.estimatedDateTime()));
+				count(sts.testIfEmpty("Cost should be empty", item.cost()));
+			} else {
+				count(sts.test("Quantity should be #EV", refItem.quantity(), item.quantity()));
 
-        count(sts.test("Requested Date/Time should be #EV", refItem.requestedDateTime(), item.requestedDateTime()));
+				if (refItem.kind().isEmpty()) {
+					count(sts.testIfEmpty("Kind should be empty", item.kind()));
+				} else {
+					count(sts.test("Kind should be #EV", refItem.kind(), item.kind()));
+				}
 
-        count(sts.testIfEmpty("Estimated Date/Time should be empty", item.estimatedDateTime()));
-        count(sts.testIfEmpty("Cost should be empty", item.cost()));
-      }
-    }
+				if (refItem.type().isEmpty()) {
+					count(sts.testIfEmpty("Type should be empty", item.type()));
+				} else {
+					count(sts.test("Type should be #EV", refItem.type(), item.type()));
+				}
 
-    sts.setExplanationPrefix("");
+				count(sts.test_2line("Item should be #EV", refItem.item(), item.item()));
 
-    count(sts.test("Delivery/Reporting Location should be #EV", ref.delivery, m.delivery));
-    count(sts.test("Substitutes should be #EV", ref.substitutes, m.substitutes));
-    count(sts.test("Requested by should be #EV", ref.requestedBy, m.requestedBy));
-    count(sts.test("Priority should be #EV", ref.priority, m.priority));
-    count(sts.test("Approved by should be #EV", ref.approvedBy, m.approvedBy));
+				count(sts.test("Requested Date/Time should be #EV", refItem.requestedDateTime(),
+						item.requestedDateTime()));
 
-    count(sts.testIfEmpty("Logistics Order Number should be empty", m.logisticsOrderNumber));
-    count(sts.testIfEmpty("Supplier Phone Number should be empty", m.supplierInfo));
-    count(sts.testIfEmpty("Supplier Name should be empty", m.supplierName));
-    count(sts.testIfEmpty("Supplier POC should be empty", m.supplierPointOfContact));
-    count(sts.testIfEmpty("Supply Notes should be empty", m.supplyNotes));
-    count(sts.testIfEmpty("Logistics Authorizer should be empty", m.logisticsAuthorizer));
-    count(sts.testIfEmpty("Logistics Date/Time should be empty", m.logisticsDateTime));
-    count(sts.testIfEmpty("Logistics Ordered by should be empty", m.orderedBy));
-    count(sts.testIfEmpty("Finance Comments should be empty", m.financeComments));
-    count(sts.testIfEmpty("Finance Section Chief Name should be empty", m.financeName));
-    count(sts.testIfEmpty("Finance Date/Time should be empty", m.financeDateTime));
+				count(sts.testIfEmpty("Estimated Date/Time should be empty", item.estimatedDateTime()));
+				count(sts.testIfEmpty("Cost should be empty", item.cost()));
+			}
+		}
 
-    var practiceSummary = new PracticeSummary(m, sts);
-    practiceSummaries.add(practiceSummary);
-  }
+		sts.setExplanationPrefix("");
+
+		count(sts.test("Delivery/Reporting Location should be #EV", ref.delivery, m.delivery));
+		count(sts.test("Substitutes should be #EV", ref.substitutes, m.substitutes));
+		count(sts.test("Requested by should be #EV", ref.requestedBy, m.requestedBy));
+		count(sts.test("Priority should be #EV", ref.priority, m.priority));
+		count(sts.test("Approved by should be #EV", ref.approvedBy, m.approvedBy));
+
+		count(sts.testIfEmpty("Logistics Order Number should be empty", m.logisticsOrderNumber));
+		count(sts.testIfEmpty("Supplier Phone Number should be empty", m.supplierInfo));
+		count(sts.testIfEmpty("Supplier Name should be empty", m.supplierName));
+		count(sts.testIfEmpty("Supplier POC should be empty", m.supplierPointOfContact));
+		count(sts.testIfEmpty("Supply Notes should be empty", m.supplyNotes));
+		count(sts.testIfEmpty("Logistics Authorizer should be empty", m.logisticsAuthorizer));
+		count(sts.testIfEmpty("Logistics Date/Time should be empty", m.logisticsDateTime));
+		count(sts.testIfEmpty("Logistics Ordered by should be empty", m.orderedBy));
+		count(sts.testIfEmpty("Finance Comments should be empty", m.financeComments));
+		count(sts.testIfEmpty("Finance Section Chief Name should be empty", m.financeName));
+		count(sts.testIfEmpty("Finance Date/Time should be empty", m.financeDateTime));
+
+		var practiceSummary = new PracticeSummary(m, sts);
+		practiceSummaries.add(practiceSummary);
+	}
 }
