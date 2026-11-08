@@ -104,6 +104,7 @@ public class PracticeGeneratorTool {
 	private Path generationPath; // path to top-level of where we write stuff
 	private Path instructionsPath; // path to where we always write instructions
 	private Path newInstructionsPath; // path to where we conditionally write instructions
+	private String newInstructionsPathString;
 	private Path oldReferencePath;
 	private String oldReferencePathString;
 	private String originalCommitMessage;
@@ -287,6 +288,7 @@ public class PracticeGeneratorTool {
 
 		newInstructionsPath = Path.of(generationPathString, "new-instructions");
 		FileUtils.makeDirIfNeeded(newInstructionsPath);
+		newInstructionsPathString = newInstructionsPath.toString();
 
 		var startYear = startDate.getYear();
 		var endYear = endDate.getYear();
@@ -431,6 +433,11 @@ public class PracticeGeneratorTool {
 		Files.copy(Path.of(generationPathString, "schedule.csv"), Path.of(oldSchedulePathString),
 				StandardCopyOption.REPLACE_EXISTING);
 		logger.info("copied schedule.csv to " + oldSchedulePathString);
+
+		// copy schedule.csv to newInstructions
+		Files.copy(Path.of(generationPathString, "schedule.csv"), Path.of(newInstructionsPathString, "schedule.csv"),
+				StandardCopyOption.REPLACE_EXISTING);
+		logger.info("copied schedule.csv to " + newInstructionsPathString);
 
 		// copy new-instructions to all REMOTE publication sinks
 		var publishingPathsString = cm.getAsString(GenKey.PATH_PUBLICATION).split(",");
