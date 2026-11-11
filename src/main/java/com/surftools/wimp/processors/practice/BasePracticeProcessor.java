@@ -200,7 +200,7 @@ public abstract class BasePracticeProcessor extends AbstractBaseProcessor {
 				}
 			} // endif nagContentPathName
 
-			hintOnPerfect = cm.getAsBoolean(Key.WINLINK_NOTIFICATION_HINT_ON_PERFECT);
+			hintOnPerfect = cm.getAsBoolean(Key.WINLINK_NOTIFICATION_HINT_ON_PERFECT, false);
 
 			var hintContentPathName = cm.getAsString(Key.PATH_HINT_CONTENT);
 			if (hintContentPathName != null) {

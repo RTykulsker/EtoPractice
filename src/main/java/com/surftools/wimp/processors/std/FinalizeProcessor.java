@@ -48,8 +48,8 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
+import javax.mail.util.ByteArrayDataSource;
 
-import org.apache.commons.mail.ByteArrayDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -131,7 +131,7 @@ public class FinalizeProcessor extends AbstractBaseProcessor {
 	} // end postProcess
 
 	private boolean initialize_publish() {
-		var isEnabledViaConfig = cm.getAsBoolean(Key.ENABLE_FINALIZE_PUBLISHED);
+		var isEnabledViaConfig = cm.getAsBoolean(Key.ENABLE_FINALIZE_PUBLISHED, true);
 		if (!isEnabledViaConfig) {
 			logger.warn("### published finalizing not enabled via configuration");
 			return false;
@@ -166,7 +166,7 @@ public class FinalizeProcessor extends AbstractBaseProcessor {
 	}
 
 	private boolean initialize_archive() {
-		var isEnabledViaConfig = cm.getAsBoolean(Key.ENABLE_FINALIZE_ARCHIVE);
+		var isEnabledViaConfig = cm.getAsBoolean(Key.ENABLE_FINALIZE_ARCHIVE, true);
 		if (!isEnabledViaConfig) {
 			logger.warn("### archive finalizing not enabled via configuration");
 			return false;
@@ -208,7 +208,7 @@ public class FinalizeProcessor extends AbstractBaseProcessor {
 	}
 
 	private boolean initialize_email_via_internet() {
-		var isEnabledViaConfig = cm.getAsBoolean(Key.ENABLE_FINALIZE_EMAIL_INTERNET);
+		var isEnabledViaConfig = cm.getAsBoolean(Key.ENABLE_FINALIZE_EMAIL_INTERNET, true);
 		if (!isEnabledViaConfig) {
 			logger.warn("### email via Internet finalizing not enabled via configuration");
 			return false;
@@ -294,7 +294,7 @@ public class FinalizeProcessor extends AbstractBaseProcessor {
 	}
 
 	private boolean initialize_email_via_winlink() {
-		var isEnabledViaConfig = cm.getAsBoolean(Key.ENABLE_FINALIZE_EMAIL_WINLINK);
+		var isEnabledViaConfig = cm.getAsBoolean(Key.ENABLE_FINALIZE_EMAIL_WINLINK, false);
 		if (!isEnabledViaConfig) {
 			logger.warn("### email via Winlink finalizing not enabled via configuration");
 			return false;
@@ -327,7 +327,7 @@ public class FinalizeProcessor extends AbstractBaseProcessor {
 	}
 
 	private boolean initialize_snapshot() {
-		var isEnabledViaConfig = cm.getAsBoolean(Key.ENABLE_FINALIZE_SNAPSHOT);
+		var isEnabledViaConfig = cm.getAsBoolean(Key.ENABLE_FINALIZE_SNAPSHOT, true);
 		if (!isEnabledViaConfig) {
 			logger.warn("### snapshot finalizing not enabled via configuration");
 			return false;
@@ -424,7 +424,6 @@ public class FinalizeProcessor extends AbstractBaseProcessor {
 					multipart.addBodyPart(bodyPart);
 
 					var attachmentPart = new MimeBodyPart();
-					@SuppressWarnings("deprecation")
 					var dataSource = new ByteArrayDataSource(instructions.getBytes(StandardCharsets.UTF_8),
 							"text/plain");
 					attachmentPart.setDataHandler(new DataHandler(dataSource));
