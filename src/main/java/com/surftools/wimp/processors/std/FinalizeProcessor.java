@@ -413,9 +413,11 @@ public class FinalizeProcessor extends AbstractBaseProcessor {
 
 					emailMessage.setText(body);
 				} else {
-					var yearString = dateString.substring(0, 4);
+					var nextExerciseDateString = (String) mm
+							.getContextObject(PracticeProcessorTool.NEXT_EXERCISE_DATE_STRING);
+					var yearString = nextExerciseDateString.substring(0, 4);
 					var sourceOfTruthText = "Be sure to compare attached instructions against GDrive://ETO Exercises/ETO-PRACTICE/instructions/"
-							+ yearString + "/" + dateString;
+							+ yearString + "/" + nextExerciseDateString;
 					body += "\n" + sourceOfTruthText;
 
 					var multipart = new MimeMultipart();
@@ -427,7 +429,7 @@ public class FinalizeProcessor extends AbstractBaseProcessor {
 					var dataSource = new ByteArrayDataSource(instructions.getBytes(StandardCharsets.UTF_8),
 							"text/plain");
 					attachmentPart.setDataHandler(new DataHandler(dataSource));
-					attachmentPart.setFileName(dateString + "-instructions.txt");
+					attachmentPart.setFileName(nextExerciseDateString + "-instructions.txt");
 					multipart.addBodyPart(attachmentPart);
 					emailMessage.setContent(multipart);
 				}

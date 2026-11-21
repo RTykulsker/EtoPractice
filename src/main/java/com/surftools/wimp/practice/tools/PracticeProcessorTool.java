@@ -62,6 +62,7 @@ public class PracticeProcessorTool {
 	public static final String COOKED_INSTRUCTIONS_KEY = "cookedInstructions";
 	public static final String RAW_INSTRUCTIONS_KEY = "rawInstructions";
 	public static final String CONFIGURATION_FILE_KEY = "configurationFileName";
+	public static final String NEXT_EXERCISE_DATE_STRING = "nextExerciseDateString";
 
 	static {
 		System.setProperty("logback.configurationFile", "resources/logback.xml");
@@ -170,6 +171,7 @@ public class PracticeProcessorTool {
 								nextExerciseDateString + "-instructions.txt");
 						instructionText = Files.readString(instructionPath);
 						mm.putContextObject(RAW_INSTRUCTIONS_KEY, instructionText);
+						mm.putContextObject(NEXT_EXERCISE_DATE_STRING, nextExerciseDateString);
 						checkSourceOfTruth(nextExerciseDateString, instructionText);
 						sb.append("\n\n" + DASHES_72 + "\n\n");
 						sb.append("INSTRUCTIONS for " + nextExerciseDateString + "\n\n");
