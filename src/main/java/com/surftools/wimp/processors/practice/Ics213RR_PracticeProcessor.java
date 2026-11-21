@@ -37,8 +37,8 @@ import com.surftools.wimp.message.Ics213RRMessage;
 import com.surftools.wimp.practice.misc.PracticeSummary;
 import com.surftools.wimp.utils.config.IConfigurationManager;
 
-public class Ics213RR_ORIG_PracticeProcessor extends BasePracticeProcessor {
-  private final Logger logger = LoggerFactory.getLogger(Ics213RR_ORIG_PracticeProcessor.class);
+public class Ics213RR_PracticeProcessor extends BasePracticeProcessor {
+  private final Logger logger = LoggerFactory.getLogger(Ics213RR_PracticeProcessor.class);
 
   @Override
   public void initialize(IConfigurationManager cm, IMessageManager mm) {

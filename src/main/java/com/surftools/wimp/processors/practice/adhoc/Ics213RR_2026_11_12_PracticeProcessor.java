@@ -2,7 +2,7 @@
 
 The MIT License (MIT)
 
-Copyright (c) 2025, Robert Tykulsker
+Copyright (c) 2026, Robert Tykulsker
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -25,7 +25,7 @@ SOFTWARE.
 
 */
 
-package com.surftools.wimp.processors.practice;
+package com.surftools.wimp.processors.practice.adhoc;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -39,10 +39,14 @@ import com.surftools.wimp.generator.PracticeJsonMessageDeserializer;
 import com.surftools.wimp.message.ExportedMessage;
 import com.surftools.wimp.message.Ics213RRMessage;
 import com.surftools.wimp.practice.misc.PracticeSummary;
+import com.surftools.wimp.processors.practice.BasePracticeProcessor;
 import com.surftools.wimp.utils.config.IConfigurationManager;
 
-public class Ics213RRPracticeProcessor extends BasePracticeProcessor {
-	private final Logger logger = LoggerFactory.getLogger(Ics213RRPracticeProcessor.class);
+/**
+ * because somehow the wrong instructions were published for 2026-11-12
+ */
+public class Ics213RR_2026_11_12_PracticeProcessor extends BasePracticeProcessor {
+	private final Logger logger = LoggerFactory.getLogger(Ics213RR_2026_11_12_PracticeProcessor.class);
 
 	private Ics213RRMessage wrongRef;
 
